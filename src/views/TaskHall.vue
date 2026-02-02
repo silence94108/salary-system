@@ -133,7 +133,7 @@ fetchTasks()
 
           <!-- 项目名称 -->
           <div class="project-name">
-            {{ task.name || '接取后可见项目全称' }}
+            接取后可见项目全称
           </div>
 
           <!-- 项目信息 -->
