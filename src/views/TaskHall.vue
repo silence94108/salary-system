@@ -220,32 +220,17 @@ function closeDetail() {
   showTakeForm.value = false
 }
 
-// 从详情弹窗点击接取任务按钮
-async function handleReceiveFromDetail() {
+// 判断是否为图片文件
+function isImageFile(url: string): boolean {
+  if (!url) return false
+  const ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase()
+  return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'].includes(ext)
+}
+
+// 提交接取任务（表单模式）
+async function submitTakeTask() {
   if (!currentTask.value) return
 
-  // 如果是查看模式，先检查再显示表单
-  if (!showTakeForm.value) {
-    try {
-      const checkRes = await checkTaskStatus()
-      if (checkRes.code === 1 && checkRes.data !== 0) {
-        ElMessageBox.alert(
-          '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
-          '正在执行其他任务',
-          { type: 'warning' }
-        )
-        return
-      }
-      // 显示表单
-      showTakeForm.value = true
-    } catch (error) {
-      console.error('检查任务状态失败:', error)
-      ElMessage.error('检查任务状态失败，请稍后再试')
-    }
-    return
-  }
-
-  // 已显示表单，验证备注并提交
   if (!taskRemark.value.trim()) {
     ElMessage.warning('请填写接取任务备注说明')
     return
@@ -283,6 +268,29 @@ async function handleReceiveFromDetail() {
     ElMessage.error('接取任务失败，请稍后再试')
   } finally {
     takeLoading.value = false
+  }
+}
+
+// 从详情弹窗点击接取任务按钮（查看模式）
+async function handleReceiveFromDetail() {
+  if (!currentTask.value) return
+
+  // 查看模式，先检查再显示表单
+  try {
+    const checkRes = await checkTaskStatus()
+    if (checkRes.code === 1 && checkRes.data !== 0) {
+      ElMessageBox.alert(
+        '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
+        '正在执行其他任务',
+        { type: 'warning' }
+      )
+      return
+    }
+    // 显示表单
+    showTakeForm.value = true
+  } catch (error) {
+    console.error('检查任务状态失败:', error)
+    ElMessage.error('检查任务状态失败，请稍后再试')
   }
 }
 
@@ -398,21 +406,31 @@ fetchTasks()
     <el-dialog
       v-model="detailVisible"
       title="任务详情"
-      :width="isMobile ? '95%' : '650px'"
+      :width="isMobile ? '95%' : '700px'"
       :close-on-click-modal="false"
       @close="closeDetail"
     >
-      <div v-loading="detailLoading">
+      <div v-loading="detailLoading" class="task-detail-content">
         <template v-if="currentTask">
-          <el-descriptions :column="descColumn" border>
-            <el-descriptions-item label="发布公司" :span="descColumn">
+          <!-- 基本信息 -->
+          <el-descriptions :column="isMobile ? 1 : 3" border>
+            <el-descriptions-item label="发布公司" :span="isMobile ? 1 : 2">
               {{ currentTask.company || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="项目名称" :span="descColumn">
-              {{ currentTask.name || '接取后可见项目全称' }}
+            <el-descriptions-item label="佣金">
+              <template v-if="currentTask.moneytype === 2">
+                接取后分配（佣金总额：¥{{ currentTask.bountymoney || '0' }}）
+              </template>
+              <template v-else>
+                <span style="color: #409eff; font-weight: 600;">¥{{ currentTask.money || currentTask.bountymoney || '0' }}</span>
+                <span v-if="currentTask.moneytype === 1">/人</span>
+              </template>
             </el-descriptions-item>
-            <el-descriptions-item label="项目类型">
-              {{ currentTask.hallTypeTitle || '-' }}
+          </el-descriptions>
+
+          <el-descriptions :column="isMobile ? 1 : 3" border style="margin-top: -1px;">
+            <el-descriptions-item label="项目名称">
+              {{ currentTask.name || '-' }}
             </el-descriptions-item>
             <el-descriptions-item label="发布人">
               {{ currentTask.username || '-' }}
@@ -420,60 +438,98 @@ fetchTasks()
             <el-descriptions-item label="发布时间">
               {{ currentTask.ordertime || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="截止时间">
-              {{ currentTask.enddatatime || '-' }}
+          </el-descriptions>
+
+          <el-descriptions :column="isMobile ? 1 : 3" border style="margin-top: -1px;">
+            <el-descriptions-item label="接单方式">
+              {{ currentTask.tasktype ? (currentTask.tasktype == 1 ? '先抢先得' : '需要审批') : '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="工期" v-if="currentTask.hall_duration">
-              {{ currentTask.hall_duration }} 个工作日
+            <el-descriptions-item label="需求人数">
+              {{ currentTask.num || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="工期状态">
-              <el-tag v-if="currentTask.syday" :type="getOverdueType(currentTask)" size="small">
-                {{ getOverdueText(currentTask) }}
-              </el-tag>
-              <span v-else>-</span>
-            </el-descriptions-item>
-            <el-descriptions-item label="佣金" :span="descColumn">
-              <div :class="{ 'mobile-money': isMobile }">
-                <span style="color: #409eff; font-weight: 600; font-size: 16px;">
-                  ¥{{ parseFloat(currentTask.hall_total_money || currentTask.bountymoney || '0').toFixed(2) }}
-                </span>
-                <span :style="isMobile ? 'display: block; margin-top: 4px; color: #666; font-size: 12px;' : 'margin-left: 16px; color: #666;'">
-                  （基础：¥{{ parseFloat(currentTask.hall_money || currentTask.bountymoney || '0').toFixed(2) }}，
-                  加价：<span style="color: #e6a23c;">¥{{ parseFloat(currentTask.hall_user_money || '0').toFixed(2) }}</span>）
-                </span>
-              </div>
-            </el-descriptions-item>
-            <el-descriptions-item label="接单方式" v-if="currentTask.tasktype">
-              {{ currentTask.tasktype == 1 ? '先抢先得' : '需要审批' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="需求人数" v-if="currentTask.num">
-              {{ currentTask.num }}
-            </el-descriptions-item>
-            <el-descriptions-item label="备注" :span="descColumn" v-if="currentTask.description">
-              {{ currentTask.description }}
+            <el-descriptions-item label="客户名称" v-if="currentTask.customername">
+              {{ currentTask.customername }}
             </el-descriptions-item>
           </el-descriptions>
 
+          <!-- 条件区域 -->
+          <div class="condition-section">
+            <div class="condition-label">条件：</div>
+            <div class="condition-list">
+              <div v-if="currentTask.datatime" class="condition-item">
+                时间：{{ currentTask.datatime }} - {{ currentTask.enddatatime }}
+              </div>
+              <div v-if="currentTask.position" class="condition-item">
+                岗位/工种：{{ currentTask.position }}
+              </div>
+              <div v-if="currentTask.positionlistarr && currentTask.positionlistarr.length" class="condition-item">
+                岗位资质：
+                <span v-for="(item, index) in currentTask.positionlistarr" :key="index">
+                  {{ item.position }}：{{ item.aptitude }}<span v-if="index < currentTask.positionlistarr.length - 1">；</span>
+                </span>
+              </div>
+              <div v-if="currentTask.aptitudetxt" class="condition-item">
+                人员资质：{{ currentTask.aptitudetxt }}
+              </div>
+              <div v-if="currentTask.appointlist && currentTask.appointlist.length" class="condition-item">
+                指定人员：{{ currentTask.appointlist.filter(u => u.username).map(u => u.username).join('、') }}
+              </div>
+              <template v-if="Array.isArray(currentTask.description)">
+                <div v-for="(citem, cindex) in currentTask.description" :key="cindex" class="condition-item">
+                  {{ citem.condition_title }}：{{ citem.condition }}
+                </div>
+              </template>
+              <div v-else-if="currentTask.description" class="condition-item">
+                备注：{{ currentTask.description }}
+              </div>
+            </div>
+          </div>
+
+          <!-- 附件区域 -->
+          <div class="attachment-section" v-if="currentTask.filelist && currentTask.filelist.length">
+            <div class="attachment-label">附件：</div>
+            <div class="attachment-list">
+              <div v-for="(item, index) in currentTask.filelist" :key="index" class="attachment-item">
+                <el-image
+                  v-if="isImageFile(item.fileurl)"
+                  :src="item.fileurl"
+                  :preview-src-list="[item.fileurl]"
+                  fit="contain"
+                  style="width: 64px; height: 64px;"
+                />
+                <el-link v-else :href="item.fileurl" target="_blank" type="primary">
+                  {{ item.filename }}
+                </el-link>
+              </div>
+            </div>
+          </div>
+
           <!-- 接取备注表单（仅在接取模式显示） -->
           <div class="take-form" v-if="showTakeForm">
-            <el-form label-position="top">
+            <el-form label-position="left" :label-width="isMobile ? '100px' : '140px'">
               <el-form-item label="接取任务备注说明" required>
                 <el-input
                   v-model="taskRemark"
                   type="textarea"
-                  :rows="3"
+                  :rows="4"
                   placeholder="请填写备注说明"
                 />
               </el-form-item>
             </el-form>
+            <div class="take-form-buttons">
+              <el-button type="primary" @click="submitTakeTask" :loading="takeLoading" style="width: 150px;">
+                {{ currentTask?.tasktype == 1 ? '接取任务' : '申请接任务' }}
+              </el-button>
+              <el-button @click="closeDetail" style="width: 150px;">取消</el-button>
+            </div>
           </div>
         </template>
       </div>
 
-      <template #footer>
+      <template #footer v-if="!showTakeForm">
         <el-button @click="closeDetail">取消</el-button>
         <el-button type="primary" @click="handleReceiveFromDetail" :loading="takeLoading">
-          {{ showTakeForm ? (currentTask?.tasktype == 1 ? '接取任务' : '申请接任务') : '接取任务' }}
+          接取任务
         </el-button>
       </template>
     </el-dialog>
@@ -704,5 +760,75 @@ export default {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #eee;
+}
+
+.take-form-buttons {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.take-form-buttons .el-button + .el-button {
+  margin-left: 30px;
+}
+
+.condition-section {
+  display: flex;
+  margin-top: 16px;
+}
+
+.condition-label {
+  color: #606266;
+  font-weight: 500;
+  flex-shrink: 0;
+  width: 50px;
+}
+
+.condition-list {
+  flex: 1;
+}
+
+.condition-item {
+  padding: 4px 10px;
+  background: #f8f8f8;
+  margin-bottom: 10px;
+  line-height: 1.5;
+  font-size: 13px;
+  color: #333;
+}
+
+.attachment-section {
+  display: flex;
+  margin-top: 16px;
+}
+
+.attachment-label {
+  color: #606266;
+  font-weight: 500;
+  flex-shrink: 0;
+  width: 50px;
+}
+
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.attachment-item {
+  text-align: center;
+}
+
+/* 手机端弹窗适配 */
+@media screen and (max-width: 768px) {
+  .condition-section,
+  .attachment-section {
+    flex-direction: column;
+  }
+
+  .condition-label,
+  .attachment-label {
+    width: auto;
+    margin-bottom: 8px;
+  }
 }
 </style>
