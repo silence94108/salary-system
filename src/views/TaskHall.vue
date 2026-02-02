@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getTaskHallList, checkTaskStatus, takeTask, getTaskDetail } from '@/api/project'
 import type { TaskOrder } from '@/types'
@@ -8,6 +8,21 @@ import type { TaskOrder } from '@/types'
 const tasks = ref<TaskOrder[]>([])
 const loading = ref(false)
 const total = ref(0)
+const isMobile = ref(false)
+
+// 检测是否手机端
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 // 详情弹窗
 const detailVisible = ref(false)
@@ -15,6 +30,9 @@ const detailLoading = ref(false)
 const currentTask = ref<any>(null)
 const taskRemark = ref('')
 const takeLoading = ref(false)
+
+// descriptions 列数
+const descColumn = computed(() => isMobile.value ? 1 : 2)
 
 // 筛选条件
 const filters = reactive({
@@ -329,17 +347,17 @@ fetchTasks()
     <el-dialog
       v-model="detailVisible"
       title="任务详情"
-      width="650px"
+      :width="isMobile ? '95%' : '650px'"
       :close-on-click-modal="false"
       @close="closeDetail"
     >
       <div v-loading="detailLoading">
         <template v-if="currentTask">
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="发布公司" :span="2">
+          <el-descriptions :column="descColumn" border>
+            <el-descriptions-item label="发布公司" :span="descColumn">
               {{ currentTask.company || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="项目名称" :span="2">
+            <el-descriptions-item label="项目名称" :span="descColumn">
               {{ currentTask.name || '接取后可见项目全称' }}
             </el-descriptions-item>
             <el-descriptions-item label="项目类型">
@@ -363,14 +381,16 @@ fetchTasks()
               </el-tag>
               <span v-else>-</span>
             </el-descriptions-item>
-            <el-descriptions-item label="佣金" :span="2">
-              <span style="color: #409eff; font-weight: 600; font-size: 16px;">
-                ¥{{ parseFloat(currentTask.hall_total_money || currentTask.bountymoney || '0').toFixed(2) }}
-              </span>
-              <span style="margin-left: 16px; color: #666;">
-                （基础：¥{{ parseFloat(currentTask.hall_money || currentTask.bountymoney || '0').toFixed(2) }}，
-                加价：<span style="color: #e6a23c;">¥{{ parseFloat(currentTask.hall_user_money || '0').toFixed(2) }}</span>）
-              </span>
+            <el-descriptions-item label="佣金" :span="descColumn">
+              <div :class="{ 'mobile-money': isMobile }">
+                <span style="color: #409eff; font-weight: 600; font-size: 16px;">
+                  ¥{{ parseFloat(currentTask.hall_total_money || currentTask.bountymoney || '0').toFixed(2) }}
+                </span>
+                <span :style="isMobile ? 'display: block; margin-top: 4px; color: #666; font-size: 12px;' : 'margin-left: 16px; color: #666;'">
+                  （基础：¥{{ parseFloat(currentTask.hall_money || currentTask.bountymoney || '0').toFixed(2) }}，
+                  加价：<span style="color: #e6a23c;">¥{{ parseFloat(currentTask.hall_user_money || '0').toFixed(2) }}</span>）
+                </span>
+              </div>
             </el-descriptions-item>
             <el-descriptions-item label="接单方式" v-if="currentTask.tasktype">
               {{ currentTask.tasktype == 1 ? '先抢先得' : '需要审批' }}
@@ -378,7 +398,7 @@ fetchTasks()
             <el-descriptions-item label="需求人数" v-if="currentTask.num">
               {{ currentTask.num }}
             </el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2" v-if="currentTask.description">
+            <el-descriptions-item label="备注" :span="descColumn" v-if="currentTask.description">
               {{ currentTask.description }}
             </el-descriptions-item>
           </el-descriptions>
@@ -595,6 +615,37 @@ export default {
 
   .task-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* 手机端弹窗适配 */
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 5vh auto !important;
+    max-height: 90vh;
+  }
+
+  :deep(.el-dialog__body) {
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+    padding: 15px;
+  }
+
+  :deep(.el-descriptions) {
+    font-size: 13px;
+  }
+
+  :deep(.el-descriptions__label) {
+    width: 80px !important;
+    min-width: 80px !important;
+  }
+
+  :deep(.el-descriptions__content) {
+    word-break: break-all;
+  }
+
+  :deep(.el-descriptions-item__container) {
+    display: flex;
+    flex-direction: column;
   }
 }
 
