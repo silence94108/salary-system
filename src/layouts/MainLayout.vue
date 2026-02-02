@@ -78,8 +78,8 @@ function toggleSidebar() {
       :class="['layout-aside', { 'mobile-aside': isMobile, 'mobile-show': sidebarVisible }]"
     >
       <div class="logo">
-        <span v-if="!isCollapse || isMobile">薪资系统</span>
-        <span v-else>S</span>
+        <span v-if="!isCollapse || isMobile">抢单平台</span>
+        <span v-else>抢</span>
       </div>
 
       <el-menu
