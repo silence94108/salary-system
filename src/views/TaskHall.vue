@@ -161,19 +161,10 @@ fetchTasks()
 
           <!-- 金额信息 -->
           <div class="money-info">
-            <div class="money-item">
-              <span class="label">金额：</span>
-              <span class="label">总佣金：</span>
-              <span class="value primary">¥{{ parseFloat(task.hall_total_money || '0').toFixed(2) }}</span>
-            </div>
-            <div class="money-item">
-              <span class="label">基础佣金：</span>
-              <span class="value">¥{{ parseFloat(task.hall_money || '0').toFixed(2) }}</span>
-            </div>
-            <div class="money-item">
-              <span class="label">加价佣金：</span>
-              <span class="value warning">¥{{ parseFloat(task.hall_user_money || '0').toFixed(2) }}</span>
-            </div>
+            <span class="label">金额：</span>
+            <span>总佣金：<span class="value primary">¥{{ parseFloat(task.hall_total_money || '0').toFixed(2) }}</span></span>
+            <span>基础佣金：<span class="value">¥{{ parseFloat(task.hall_money || '0').toFixed(2) }}</span></span>
+            <span>加价佣金：<span class="value warning">¥{{ parseFloat(task.hall_user_money || '0').toFixed(2) }}</span></span>
           </div>
 
           <!-- 备注 -->
@@ -317,32 +308,29 @@ export default {
 .money-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 4px 16px;
   margin-bottom: 12px;
   padding: 10px;
   background: #f9f9f9;
   border-radius: 6px;
-}
-
-.money-item {
-  display: flex;
-  align-items: center;
   font-size: 13px;
-}
-
-.money-item .label {
   color: #666;
 }
 
-.money-item .value {
-  font-weight: 600;
+.money-info .label {
+  color: #666;
 }
 
-.money-item .value.primary {
+.money-info .value {
+  font-weight: 600;
+  color: #333;
+}
+
+.money-info .value.primary {
   color: #409eff;
 }
 
-.money-item .value.warning {
+.money-info .value.warning {
   color: #e6a23c;
 }
 
@@ -399,11 +387,6 @@ export default {
 
   .task-grid {
     grid-template-columns: 1fr;
-  }
-
-  .money-info {
-    flex-direction: column;
-    gap: 6px;
   }
 }
 </style>
