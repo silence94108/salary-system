@@ -16,7 +16,13 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: '/salary'
+        redirect: '/tasks'
+      },
+      {
+        path: 'tasks',
+        name: 'MyTasks',
+        component: () => import('@/views/MyTasks.vue'),
+        meta: { title: '我的任务' }
       },
       {
         path: 'salary',
@@ -50,7 +56,7 @@ router.beforeEach((to, from, next) => {
     next('/login')
   } else if (to.path === '/login' && token) {
     // 已登录访问登录页，跳转主页
-    next('/salary')
+    next('/tasks')
   } else {
     next()
   }

@@ -24,8 +24,8 @@ function checkMobile() {
 
 // 菜单配置
 const menuItems = [
+  { index: '/tasks', icon: 'List', title: '我的任务' },
   { index: '/salary', icon: 'Money', title: '薪资计算' }
-  // 后续可以添加更多菜单
 ]
 
 // 初始化
@@ -146,9 +146,9 @@ function toggleSidebar() {
 </template>
 
 <script lang="ts">
-import { Fold, Expand, ArrowDown, Money } from '@element-plus/icons-vue'
+import { Fold, Expand, ArrowDown, Money, List } from '@element-plus/icons-vue'
 export default {
-  components: { Fold, Expand, ArrowDown, Money }
+  components: { Fold, Expand, ArrowDown, Money, List }
 }
 </script>
 
