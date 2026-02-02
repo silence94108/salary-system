@@ -370,6 +370,9 @@ export default {
   justify-content: center;
   padding: 16px 0;
   flex-shrink: 0;
+  background: #f0f2f5;
+  position: sticky;
+  bottom: 0;
 }
 
 /* 手机端适配 */
