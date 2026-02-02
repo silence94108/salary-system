@@ -13,6 +13,8 @@ const total = ref(0)
 const detailVisible = ref(false)
 const detailLoading = ref(false)
 const currentTask = ref<any>(null)
+const taskRemark = ref('')
+const takeLoading = ref(false)
 
 // 筛选条件
 const filters = reactive({
@@ -92,8 +94,15 @@ function getOverdueText(task: any): string {
   return `剩余${task.syday}天`
 }
 
-// 接取任务
+// 接取任务（直接接取，用于项目类型）
 async function handleReceive(task: TaskOrder) {
+  // 对于任务类型(orderType === 1)，需要先打开详情弹窗填写备注
+  if (task.orderType === 1) {
+    await handleDetail(task)
+    return
+  }
+
+  // 项目类型(orderType === 2 或其他)直接确认接取
   try {
     // 先检查是否有执行中的任务
     const checkRes = await checkTaskStatus()
@@ -108,7 +117,7 @@ async function handleReceive(task: TaskOrder) {
 
     // 确认接取
     await ElMessageBox.confirm(
-      '接单后需要根据内容执行，请及时把控工期进度。',
+      '接单后需要根据内容指派，请及时把控工期进度。',
       '确认接取',
       {
         confirmButtonText: '确定接单',
@@ -119,8 +128,8 @@ async function handleReceive(task: TaskOrder) {
 
     // 接取任务
     const res = await takeTask({ id: task.id, remark: '1' })
-    if (res.code === 1) {
-      ElMessage.success('接单成功，祝您工作愉快！')
+    if (res.code === 1 || res.code === 0) {
+      ElMessage.success(res.msg || '接单成功，祝您工作愉快！')
       // 从列表中移除已接取的任务
       tasks.value = tasks.value.filter(t => t.id !== task.id)
       total.value = total.value - 1
@@ -141,10 +150,11 @@ async function handleReceive(task: TaskOrder) {
 async function handleDetail(task: TaskOrder) {
   detailLoading.value = true
   detailVisible.value = true
+  taskRemark.value = ''
   try {
     const res = await getTaskDetail({ id: task.id })
     if (res.code === 1) {
-      currentTask.value = res.data
+      currentTask.value = res.data || task
     } else {
       currentTask.value = task
     }
@@ -160,13 +170,50 @@ async function handleDetail(task: TaskOrder) {
 function closeDetail() {
   detailVisible.value = false
   currentTask.value = null
+  taskRemark.value = ''
 }
 
 // 从详情弹窗接取任务
 async function handleReceiveFromDetail() {
-  if (currentTask.value) {
-    closeDetail()
-    await handleReceive(currentTask.value)
+  if (!currentTask.value) return
+
+  // 验证备注
+  if (!taskRemark.value.trim()) {
+    ElMessage.warning('请填写接取任务备注说明')
+    return
+  }
+
+  takeLoading.value = true
+  try {
+    // 先检查是否有执行中的任务
+    const checkRes = await checkTaskStatus()
+    if (checkRes.code === 1 && checkRes.data !== 0) {
+      ElMessageBox.alert(
+        '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
+        '正在执行其他任务',
+        { type: 'warning' }
+      )
+      return
+    }
+
+    // 接取任务
+    const res = await takeTask({ id: currentTask.value.id, remark: taskRemark.value })
+    if (res.code === 1 || res.code === 0) {
+      ElMessage.success(res.msg || '接单成功，祝您工作愉快！')
+      closeDetail()
+      // 从列表中移除已接取的任务
+      tasks.value = tasks.value.filter(t => t.id !== currentTask.value.id)
+      total.value = total.value - 1
+      // 刷新列表
+      fetchTasks()
+    } else {
+      ElMessage.error(res.msg || '接单失败，请稍后再试')
+    }
+  } catch (error: any) {
+    console.error('接取任务失败:', error)
+    ElMessage.error('接取任务失败，请稍后再试')
+  } finally {
+    takeLoading.value = false
   }
 }
 
@@ -282,34 +329,33 @@ fetchTasks()
     <el-dialog
       v-model="detailVisible"
       title="任务详情"
-      width="600px"
+      width="650px"
       :close-on-click-modal="false"
       @close="closeDetail"
     >
       <div v-loading="detailLoading">
         <template v-if="currentTask">
-          <el-descriptions :column="1" border>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="发布公司" :span="2">
+              {{ currentTask.company || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="项目名称" :span="2">
+              {{ currentTask.name || '接取后可见项目全称' }}
+            </el-descriptions-item>
             <el-descriptions-item label="项目类型">
               {{ currentTask.hallTypeTitle || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="项目工期">
-              {{ currentTask.ordertime?.split(' ')[0] || '-' }} 至 {{ currentTask.enddatatime?.split(' ')[0] || '-' }}
-              <span v-if="currentTask.hall_duration" style="margin-left: 16px; color: #666;">
-                （工期：{{ currentTask.hall_duration }} 个工作日）
-              </span>
+            <el-descriptions-item label="发布人">
+              {{ currentTask.username || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="总佣金">
-              <span style="color: #409eff; font-weight: 600;">
-                ¥{{ parseFloat(currentTask.hall_total_money || currentTask.bountymoney || '0').toFixed(2) }}
-              </span>
+            <el-descriptions-item label="发布时间">
+              {{ currentTask.ordertime || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="基础佣金">
-              ¥{{ parseFloat(currentTask.hall_money || currentTask.bountymoney || '0').toFixed(2) }}
+            <el-descriptions-item label="截止时间">
+              {{ currentTask.enddatatime || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="加价佣金">
-              <span style="color: #e6a23c;">
-                ¥{{ parseFloat(currentTask.hall_user_money || '0').toFixed(2) }}
-              </span>
+            <el-descriptions-item label="工期" v-if="currentTask.hall_duration">
+              {{ currentTask.hall_duration }} 个工作日
             </el-descriptions-item>
             <el-descriptions-item label="工期状态">
               <el-tag v-if="currentTask.syday" :type="getOverdueType(currentTask)" size="small">
@@ -317,25 +363,47 @@ fetchTasks()
               </el-tag>
               <span v-else>-</span>
             </el-descriptions-item>
-            <el-descriptions-item label="备注" v-if="currentTask.description">
+            <el-descriptions-item label="佣金" :span="2">
+              <span style="color: #409eff; font-weight: 600; font-size: 16px;">
+                ¥{{ parseFloat(currentTask.hall_total_money || currentTask.bountymoney || '0').toFixed(2) }}
+              </span>
+              <span style="margin-left: 16px; color: #666;">
+                （基础：¥{{ parseFloat(currentTask.hall_money || currentTask.bountymoney || '0').toFixed(2) }}，
+                加价：<span style="color: #e6a23c;">¥{{ parseFloat(currentTask.hall_user_money || '0').toFixed(2) }}</span>）
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="接单方式" v-if="currentTask.tasktype">
+              {{ currentTask.tasktype == 1 ? '先抢先得' : '需要审批' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="需求人数" v-if="currentTask.num">
+              {{ currentTask.num }}
+            </el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2" v-if="currentTask.description">
               {{ currentTask.description }}
             </el-descriptions-item>
           </el-descriptions>
 
-          <div class="detail-tip">
-            <el-alert
-              title="接取后可查看完整项目信息"
-              type="info"
-              :closable="false"
-              show-icon
-            />
+          <!-- 接取备注表单 -->
+          <div class="take-form">
+            <el-form label-position="top">
+              <el-form-item label="接取任务备注说明" required>
+                <el-input
+                  v-model="taskRemark"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请填写备注说明"
+                />
+              </el-form-item>
+            </el-form>
           </div>
         </template>
       </div>
 
       <template #footer>
-        <el-button @click="closeDetail">关闭</el-button>
-        <el-button type="primary" @click="handleReceiveFromDetail">接取任务</el-button>
+        <el-button @click="closeDetail">取消</el-button>
+        <el-button type="primary" @click="handleReceiveFromDetail" :loading="takeLoading">
+          {{ currentTask?.tasktype == 1 ? '接取任务' : '申请接任务' }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -530,7 +598,9 @@ export default {
   }
 }
 
-.detail-tip {
+.take-form {
   margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
 }
 </style>
