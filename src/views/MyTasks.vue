@@ -196,7 +196,17 @@ function getSummaries({ columns, data }: { columns: any[]; data: TaskOrder[] }) 
       const total = data.reduce((sum, row) => {
         return sum + parseFloat(row.bountymoney || '0')
       }, 0)
-      sums[index] = total.toFixed(2) + ' 元'
+      sums[index] = total.toFixed(2)
+    } else if (column.property === 'base_bountymoney') {
+      const total = data.reduce((sum, row) => {
+        return sum + parseFloat(row.base_bountymoney || row.bountymoney || '0')
+      }, 0)
+      sums[index] = total.toFixed(2)
+    } else if (column.property === 'add_bountymoney') {
+      const total = data.reduce((sum, row) => {
+        return sum + parseFloat(row.add_bountymoney || '0')
+      }, 0)
+      sums[index] = total.toFixed(2)
     } else {
       sums[index] = ''
     }
@@ -289,10 +299,22 @@ fetchTasks()
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="bountymoney" label="佣金" width="110">
-          <template #default="{ row }">
-            {{ parseFloat(row.bountymoney || '0').toFixed(2) }} 元
-          </template>
+        <el-table-column label="项目/任务佣金" align="center">
+          <el-table-column prop="bountymoney" label="总佣金（元）" width="110" align="right">
+            <template #default="{ row }">
+              {{ parseFloat(row.bountymoney || '0').toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="base_bountymoney" label="基础佣金（元）" width="120" align="right">
+            <template #default="{ row }">
+              {{ parseFloat(row.base_bountymoney || row.bountymoney || '0').toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="add_bountymoney" label="加价佣金（元）" width="120" align="right">
+            <template #default="{ row }">
+              {{ parseFloat(row.add_bountymoney || '0').toFixed(2) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column prop="hallTypeTitle" label="任务类型" width="100" show-overflow-tooltip />
         <el-table-column prop="performtime" label="接单时间" width="170" />
