@@ -410,7 +410,7 @@ export default {
 
 .pagination-wrap {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 12px;
   flex-shrink: 0;
 }
