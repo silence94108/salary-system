@@ -24,6 +24,7 @@ function checkMobile() {
 
 // 菜单配置
 const menuItems = [
+  { index: '/hall', icon: 'Grid', title: '任务大厅' },
   { index: '/tasks', icon: 'List', title: '我的任务' },
   { index: '/salary', icon: 'Money', title: '薪资计算' }
 ]
@@ -146,9 +147,9 @@ function toggleSidebar() {
 </template>
 
 <script lang="ts">
-import { Fold, Expand, ArrowDown, Money, List } from '@element-plus/icons-vue'
+import { Fold, Expand, ArrowDown, Money, List, Grid } from '@element-plus/icons-vue'
 export default {
-  components: { Fold, Expand, ArrowDown, Money, List }
+  components: { Fold, Expand, ArrowDown, Money, List, Grid }
 }
 </script>
 

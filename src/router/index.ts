@@ -16,7 +16,13 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: '/tasks'
+        redirect: '/hall'
+      },
+      {
+        path: 'hall',
+        name: 'TaskHall',
+        component: () => import('@/views/TaskHall.vue'),
+        meta: { title: '任务大厅' }
       },
       {
         path: 'tasks',
