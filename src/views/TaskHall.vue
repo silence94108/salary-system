@@ -180,17 +180,17 @@ fetchTasks()
           </div>
         </el-card>
       </div>
-    </div>
 
-    <!-- 分页 -->
-    <div class="pagination-wrap" v-if="total > 0">
-      <el-pagination
-        v-model:current-page="pagination.page"
-        :page-size="pagination.limit"
-        :total="total"
-        layout="total, prev, pager, next"
-        @current-change="handlePageChange"
-      />
+      <!-- 分页 -->
+      <div class="pagination-wrap" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          :page-size="pagination.limit"
+          :total="total"
+          layout="total, prev, pager, next"
+          @current-change="handlePageChange"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -356,11 +356,7 @@ export default {
 .pagination-wrap {
   display: flex;
   justify-content: center;
-  padding: 16px 0;
-  flex-shrink: 0;
-  background: #f0f2f5;
-  position: sticky;
-  bottom: 0;
+  padding: 20px 0;
 }
 
 /* 手机端适配 */
