@@ -30,6 +30,7 @@ const detailLoading = ref(false)
 const currentTask = ref<any>(null)
 const taskRemark = ref('')
 const takeLoading = ref(false)
+const showTakeForm = ref(false) // 是否显示接取表单
 
 // descriptions 列数
 const descColumn = computed(() => isMobile.value ? 1 : 2)
@@ -114,9 +115,25 @@ function getOverdueText(task: any): string {
 
 // 接取任务（直接接取，用于项目类型）
 async function handleReceive(task: TaskOrder) {
-  // 对于任务类型(orderType === 1)，需要先打开详情弹窗填写备注
+  // 对于任务类型(orderType === 1)，需要先检查再打开详情弹窗填写备注
   if (task.orderType === 1) {
-    await handleDetail(task)
+    // 先检查是否有执行中的任务
+    try {
+      const checkRes = await checkTaskStatus()
+      if (checkRes.code === 1 && checkRes.data !== 0) {
+        ElMessageBox.alert(
+          '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
+          '正在执行其他任务',
+          { type: 'warning' }
+        )
+        return
+      }
+      // 打开详情弹窗并显示表单
+      await openDetailWithForm(task)
+    } catch (error) {
+      console.error('检查任务状态失败:', error)
+      ElMessage.error('检查任务状态失败，请稍后再试')
+    }
     return
   }
 
@@ -164,10 +181,32 @@ async function handleReceive(task: TaskOrder) {
   }
 }
 
-// 查看详情
+// 打开详情弹窗（带表单，用于接取）
+async function openDetailWithForm(task: TaskOrder) {
+  detailLoading.value = true
+  detailVisible.value = true
+  showTakeForm.value = true
+  taskRemark.value = ''
+  try {
+    const res = await getTaskDetail({ id: task.id })
+    if (res.code === 1) {
+      currentTask.value = res.data || task
+    } else {
+      currentTask.value = task
+    }
+  } catch (error) {
+    console.error('获取任务详情失败:', error)
+    currentTask.value = task
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+// 查看详情（仅查看，不带表单）
 async function handleDetail(task: TaskOrder) {
   detailLoading.value = true
   detailVisible.value = true
+  showTakeForm.value = false
   taskRemark.value = ''
   try {
     const res = await getTaskDetail({ id: task.id })
@@ -189,13 +228,35 @@ function closeDetail() {
   detailVisible.value = false
   currentTask.value = null
   taskRemark.value = ''
+  showTakeForm.value = false
 }
 
-// 从详情弹窗接取任务
+// 从详情弹窗点击接取任务按钮
 async function handleReceiveFromDetail() {
   if (!currentTask.value) return
 
-  // 验证备注
+  // 如果是查看模式，先检查再显示表单
+  if (!showTakeForm.value) {
+    try {
+      const checkRes = await checkTaskStatus()
+      if (checkRes.code === 1 && checkRes.data !== 0) {
+        ElMessageBox.alert(
+          '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
+          '正在执行其他任务',
+          { type: 'warning' }
+        )
+        return
+      }
+      // 显示表单
+      showTakeForm.value = true
+    } catch (error) {
+      console.error('检查任务状态失败:', error)
+      ElMessage.error('检查任务状态失败，请稍后再试')
+    }
+    return
+  }
+
+  // 已显示表单，验证备注并提交
   if (!taskRemark.value.trim()) {
     ElMessage.warning('请填写接取任务备注说明')
     return
@@ -203,7 +264,7 @@ async function handleReceiveFromDetail() {
 
   takeLoading.value = true
   try {
-    // 先检查是否有执行中的任务
+    // 再次检查是否有执行中的任务
     const checkRes = await checkTaskStatus()
     if (checkRes.code === 1 && checkRes.data !== 0) {
       ElMessageBox.alert(
@@ -215,12 +276,13 @@ async function handleReceiveFromDetail() {
     }
 
     // 接取任务
-    const res = await takeTask({ id: currentTask.value.id, remark: taskRemark.value })
+    const taskId = currentTask.value.id
+    const res = await takeTask({ id: taskId, remark: taskRemark.value })
     if (res.code === 1 || res.code === 0) {
       ElMessage.success(res.msg || '接单成功，祝您工作愉快！')
       closeDetail()
       // 从列表中移除已接取的任务
-      tasks.value = tasks.value.filter(t => t.id !== currentTask.value.id)
+      tasks.value = tasks.value.filter(t => t.id !== taskId)
       total.value = total.value - 1
       // 刷新列表
       fetchTasks()
@@ -403,8 +465,8 @@ fetchTasks()
             </el-descriptions-item>
           </el-descriptions>
 
-          <!-- 接取备注表单 -->
-          <div class="take-form">
+          <!-- 接取备注表单（仅在接取模式显示） -->
+          <div class="take-form" v-if="showTakeForm">
             <el-form label-position="top">
               <el-form-item label="接取任务备注说明" required>
                 <el-input
@@ -422,7 +484,7 @@ fetchTasks()
       <template #footer>
         <el-button @click="closeDetail">取消</el-button>
         <el-button type="primary" @click="handleReceiveFromDetail" :loading="takeLoading">
-          {{ currentTask?.tasktype == 1 ? '接取任务' : '申请接任务' }}
+          {{ showTakeForm ? (currentTask?.tasktype == 1 ? '接取任务' : '申请接任务') : '接取任务' }}
         </el-button>
       </template>
     </el-dialog>
