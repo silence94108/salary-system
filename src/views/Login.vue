@@ -2,7 +2,9 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { User, Lock } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -11,13 +13,13 @@ const formRef = ref<FormInstance>()
 const loading = ref(false)
 
 const loginForm = reactive({
-  username: '',
+  user_name: '',
   password: ''
 })
 
 const rules: FormRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
+  user_name: [
+    { required: true, message: '请输入手机号/用户名', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' }
@@ -32,13 +34,16 @@ async function handleLogin() {
 
     loading.value = true
     try {
-      const result = await userStore.login({
-        username: loginForm.username,
-        password: loginForm.password
-      })
+      const result = await userStore.login(
+        loginForm.user_name,
+        loginForm.password
+      )
 
       if (result.success) {
+        ElMessage.success('登录成功')
         router.push('/salary')
+      } else {
+        ElMessage.error(result.message || '登录失败')
       }
     } finally {
       loading.value = false
@@ -62,10 +67,10 @@ async function handleLogin() {
         class="login-form"
         @keyup.enter="handleLogin"
       >
-        <el-form-item prop="username">
+        <el-form-item prop="user_name">
           <el-input
-            v-model="loginForm.username"
-            placeholder="请输入用户名"
+            v-model="loginForm.user_name"
+            placeholder="请输入手机号/用户名"
             size="large"
             :prefix-icon="User"
           />
@@ -97,13 +102,6 @@ async function handleLogin() {
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import { User, Lock } from '@element-plus/icons-vue'
-export default {
-  components: { User, Lock }
-}
-</script>
 
 <style scoped>
 .login-container {

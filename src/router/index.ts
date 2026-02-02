@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { getCookie } from '@/utils/cookie'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -41,7 +42,7 @@ router.beforeEach((to, from, next) => {
   // 设置页面标题
   document.title = (to.meta.title as string) || '薪资计算系统'
 
-  const token = localStorage.getItem('token')
+  const token = getCookie('token')
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth !== false)
 
   if (requiresAuth && !token) {

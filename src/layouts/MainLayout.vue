@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
@@ -10,6 +10,17 @@ const userStore = useUserStore()
 const projectStore = useProjectStore()
 
 const isCollapse = ref(false)
+const isMobile = ref(false)
+const sidebarVisible = ref(false)
+
+// 检测是否手机端
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 768
+  if (isMobile.value) {
+    isCollapse.value = true
+    sidebarVisible.value = false
+  }
+}
 
 // 菜单配置
 const menuItems = [
@@ -19,15 +30,26 @@ const menuItems = [
 
 // 初始化
 onMounted(() => {
-  // 获取项目数据
-  projectStore.fetchProjects()
-  // 初始化底薪
-  projectStore.initBaseSalary()
+  // 初始化用户信息（从 localStorage 恢复）
+  userStore.initUserInfo()
+  // 初始化底薪（按用户隔离）
+  const username = userStore.userInfo?.username || userStore.userInfo?.name || ''
+  projectStore.initBaseSalary(username)
+  // 检测设备
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 // 菜单点击
 function handleMenuSelect(index: string) {
   router.push(index)
+  if (isMobile.value) {
+    sidebarVisible.value = false
+  }
 }
 
 // 退出登录
@@ -37,22 +59,32 @@ function handleLogout() {
 
 // 切换侧边栏
 function toggleSidebar() {
-  isCollapse.value = !isCollapse.value
+  if (isMobile.value) {
+    sidebarVisible.value = !sidebarVisible.value
+  } else {
+    isCollapse.value = !isCollapse.value
+  }
 }
 </script>
 
 <template>
   <el-container class="layout-container">
+    <!-- 手机端遮罩 -->
+    <div v-if="isMobile && sidebarVisible" class="sidebar-mask" @click="sidebarVisible = false"></div>
+
     <!-- 侧边栏 -->
-    <el-aside :width="isCollapse ? '64px' : '200px'" class="layout-aside">
+    <el-aside
+      :width="isMobile ? '200px' : (isCollapse ? '64px' : '200px')"
+      :class="['layout-aside', { 'mobile-aside': isMobile, 'mobile-show': sidebarVisible }]"
+    >
       <div class="logo">
-        <span v-if="!isCollapse">薪资系统</span>
+        <span v-if="!isCollapse || isMobile">薪资系统</span>
         <span v-else>S</span>
       </div>
 
       <el-menu
         :default-active="route.path"
-        :collapse="isCollapse"
+        :collapse="isMobile ? false : isCollapse"
         :collapse-transition="false"
         background-color="#304156"
         text-color="#bfcbd9"
@@ -78,17 +110,20 @@ function toggleSidebar() {
             class="collapse-btn"
             @click="toggleSidebar"
           >
-            <Fold v-if="!isCollapse" />
+            <Fold v-if="!isCollapse && !isMobile" />
             <Expand v-else />
           </el-icon>
           <span class="page-title">{{ route.meta.title }}</span>
         </div>
 
         <div class="header-right">
+          <span v-if="userStore.companyName && !isMobile" class="company-name">
+            {{ userStore.companyName }}
+          </span>
           <el-dropdown @command="handleLogout">
             <span class="user-info">
               <el-avatar :size="32" icon="UserFilled" />
-              <span class="username">{{ userStore.userInfo?.name || '用户' }}</span>
+              <span v-if="!isMobile" class="username">{{ userStore.userInfo?.username || userStore.userInfo?.name || '用户' }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -191,9 +226,55 @@ export default {
   font-size: 14px;
 }
 
+.company-name {
+  font-size: 14px;
+  color: #666;
+  margin-right: 16px;
+  padding-right: 16px;
+  border-right: 1px solid #ddd;
+}
+
 .layout-main {
   background: #f0f2f5;
   padding: 20px;
   overflow-y: auto;
+}
+
+/* 手机端适配 */
+.sidebar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.mobile-aside {
+  position: fixed;
+  top: 0;
+  left: -200px;
+  height: 100%;
+  z-index: 999;
+  transition: left 0.3s;
+}
+
+.mobile-aside.mobile-show {
+  left: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .layout-header {
+    padding: 0 12px;
+  }
+
+  .page-title {
+    font-size: 14px;
+  }
+
+  .layout-main {
+    padding: 12px;
+  }
 }
 </style>

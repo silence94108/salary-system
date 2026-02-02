@@ -11,6 +11,7 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',
     port: 5173,
     // 如果需要代理后端接口，取消下面注释并配置
     // proxy: {
