@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getTaskHallList, checkTaskStatus, takeTask, getTaskDetail } from '@/api/project'
+import { getTaskHallList, checkTaskStatus, takeTask, getProjectDetail } from '@/api/project'
 import type { TaskOrder } from '@/types'
 
 // 任务列表
@@ -177,7 +177,7 @@ async function openDetailWithForm(task: TaskOrder) {
   showTakeForm.value = true
   taskRemark.value = ''
   try {
-    const res = await getTaskDetail({ id: task.id })
+    const res = await getProjectDetail({ id: task.id })
     if (res.code === 1) {
       currentTask.value = res.data || task
     } else {
@@ -198,7 +198,7 @@ async function handleDetail(task: TaskOrder) {
   showTakeForm.value = false
   taskRemark.value = ''
   try {
-    const res = await getTaskDetail({ id: task.id })
+    const res = await getProjectDetail({ id: task.id })
     if (res.code === 1) {
       currentTask.value = res.data || task
     } else {
