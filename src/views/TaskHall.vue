@@ -113,7 +113,7 @@ function getOverdueText(task: any): string {
   return `剩余${task.syday}天`
 }
 
-// 接取任务（直接接取，用于项目类型）
+// 接取任务
 async function handleReceive(task: TaskOrder) {
   // 对于任务类型(orderType === 1)，需要先检查再打开详情弹窗填写备注
   if (task.orderType === 1) {
@@ -137,19 +137,8 @@ async function handleReceive(task: TaskOrder) {
     return
   }
 
-  // 项目类型(orderType === 2 或其他)直接确认接取
+  // 项目类型(orderType === 2 或其他)直接确认接取，不检查执行中任务
   try {
-    // 先检查是否有执行中的任务
-    const checkRes = await checkTaskStatus()
-    if (checkRes.code === 1 && checkRes.data !== 0) {
-      ElMessageBox.alert(
-        '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
-        '正在执行其他任务',
-        { type: 'warning' }
-      )
-      return
-    }
-
     // 确认接取
     await ElMessageBox.confirm(
       '接单后需要根据内容指派，请及时把控工期进度。',
