@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { getMyTaskList } from '@/api/project'
 import type { TaskOrder } from '@/types'
 
@@ -7,6 +7,26 @@ import type { TaskOrder } from '@/types'
 const tasks = ref<TaskOrder[]>([])
 const loading = ref(false)
 const total = ref(0)
+const isMobile = ref(false)
+
+// 检测是否手机端
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
+// 分页布局
+const paginationLayout = computed(() => {
+  return isMobile.value ? 'prev, pager, next' : 'total, sizes, prev, pager, next, jumper'
+})
 
 // 筛选条件
 const filters = reactive({
@@ -340,7 +360,7 @@ fetchTasks()
           v-model:page-size="pagination.limit"
           :page-sizes="[10, 20, 50, 100]"
           :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
+          :layout="paginationLayout"
           background
           @size-change="handleSizeChange"
           @current-change="handlePageChange"
@@ -423,6 +443,27 @@ export default {
 @media screen and (max-width: 768px) {
   .my-tasks {
     gap: 10px;
+    height: auto;
+    overflow: visible;
+  }
+
+  .table-card {
+    flex: none;
+    overflow: visible;
+  }
+
+  .table-card :deep(.el-card__body) {
+    flex: none;
+    overflow: visible;
+  }
+
+  .table-wrapper {
+    flex: none;
+    overflow: visible;
+  }
+
+  .table-wrapper :deep(.el-table) {
+    height: auto !important;
   }
 
   .filter-card :deep(.el-form--inline .el-form-item) {
