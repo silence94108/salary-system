@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { getTaskHallList } from '@/api/project'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getTaskHallList, checkTaskStatus, takeTask, getTaskDetail } from '@/api/project'
 import type { TaskOrder } from '@/types'
 
 // 任务列表
 const tasks = ref<TaskOrder[]>([])
 const loading = ref(false)
 const total = ref(0)
+
+// 详情弹窗
+const detailVisible = ref(false)
+const detailLoading = ref(false)
+const currentTask = ref<any>(null)
 
 // 筛选条件
 const filters = reactive({
@@ -84,6 +90,84 @@ function getOverdueType(task: any): string {
 function getOverdueText(task: any): string {
   if (task.syday < 0) return `逾期${Math.abs(task.syday)}天`
   return `剩余${task.syday}天`
+}
+
+// 接取任务
+async function handleReceive(task: TaskOrder) {
+  try {
+    // 先检查是否有执行中的任务
+    const checkRes = await checkTaskStatus()
+    if (checkRes.code === 1 && checkRes.data !== 0) {
+      ElMessageBox.alert(
+        '您当前有执行中任务未申请完结，无法申请接取新任务。请及时完成并申请完结执行中的任务，即可接取新任务。',
+        '正在执行其他任务',
+        { type: 'warning' }
+      )
+      return
+    }
+
+    // 确认接取
+    await ElMessageBox.confirm(
+      '接单后需要根据内容执行，请及时把控工期进度。',
+      '确认接取',
+      {
+        confirmButtonText: '确定接单',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+
+    // 接取任务
+    const res = await takeTask({ id: task.id, remark: '1' })
+    if (res.code === 1) {
+      ElMessage.success('接单成功，祝您工作愉快！')
+      // 从列表中移除已接取的任务
+      tasks.value = tasks.value.filter(t => t.id !== task.id)
+      total.value = total.value - 1
+      // 刷新列表
+      fetchTasks()
+    } else {
+      ElMessage.error(res.msg || '接单失败，请稍后再试')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('接取任务失败:', error)
+      ElMessage.error('接取任务失败，请稍后再试')
+    }
+  }
+}
+
+// 查看详情
+async function handleDetail(task: TaskOrder) {
+  detailLoading.value = true
+  detailVisible.value = true
+  try {
+    const res = await getTaskDetail({ id: task.id })
+    if (res.code === 1) {
+      currentTask.value = res.data
+    } else {
+      currentTask.value = task
+    }
+  } catch (error) {
+    console.error('获取任务详情失败:', error)
+    currentTask.value = task
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+// 关闭详情弹窗
+function closeDetail() {
+  detailVisible.value = false
+  currentTask.value = null
+}
+
+// 从详情弹窗接取任务
+async function handleReceiveFromDetail() {
+  if (currentTask.value) {
+    closeDetail()
+    await handleReceive(currentTask.value)
+  }
 }
 
 // 初始化加载
@@ -175,8 +259,8 @@ fetchTasks()
 
           <!-- 操作按钮 -->
           <div class="card-footer">
-            <el-button type="primary" size="small">接取</el-button>
-            <el-button size="small">详情</el-button>
+            <el-button type="primary" size="small" @click="handleReceive(task)">接取</el-button>
+            <el-button size="small" @click="handleDetail(task)">详情</el-button>
           </div>
         </el-card>
       </div>
@@ -193,6 +277,67 @@ fetchTasks()
         />
       </div>
     </div>
+
+    <!-- 任务详情弹窗 -->
+    <el-dialog
+      v-model="detailVisible"
+      title="任务详情"
+      width="600px"
+      :close-on-click-modal="false"
+      @close="closeDetail"
+    >
+      <div v-loading="detailLoading">
+        <template v-if="currentTask">
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="项目类型">
+              {{ currentTask.hallTypeTitle || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="项目工期">
+              {{ currentTask.ordertime?.split(' ')[0] || '-' }} 至 {{ currentTask.enddatatime?.split(' ')[0] || '-' }}
+              <span v-if="currentTask.hall_duration" style="margin-left: 16px; color: #666;">
+                （工期：{{ currentTask.hall_duration }} 个工作日）
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="总佣金">
+              <span style="color: #409eff; font-weight: 600;">
+                ¥{{ parseFloat(currentTask.hall_total_money || currentTask.bountymoney || '0').toFixed(2) }}
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="基础佣金">
+              ¥{{ parseFloat(currentTask.hall_money || currentTask.bountymoney || '0').toFixed(2) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="加价佣金">
+              <span style="color: #e6a23c;">
+                ¥{{ parseFloat(currentTask.hall_user_money || '0').toFixed(2) }}
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="工期状态">
+              <el-tag v-if="currentTask.syday" :type="getOverdueType(currentTask)" size="small">
+                {{ getOverdueText(currentTask) }}
+              </el-tag>
+              <span v-else>-</span>
+            </el-descriptions-item>
+            <el-descriptions-item label="备注" v-if="currentTask.description">
+              {{ currentTask.description }}
+            </el-descriptions-item>
+          </el-descriptions>
+
+          <div class="detail-tip">
+            <el-alert
+              title="接取后可查看完整项目信息"
+              type="info"
+              :closable="false"
+              show-icon
+            />
+          </div>
+        </template>
+      </div>
+
+      <template #footer>
+        <el-button @click="closeDetail">关闭</el-button>
+        <el-button type="primary" @click="handleReceiveFromDetail">接取任务</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -383,5 +528,9 @@ export default {
   .task-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.detail-tip {
+  margin-top: 20px;
 }
 </style>
