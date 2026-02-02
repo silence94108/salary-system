@@ -415,6 +415,10 @@ export default {
   flex-shrink: 0;
 }
 
+.pagination-wrap :deep(.el-pagination__sizes .el-select) {
+  width: 100px;
+}
+
 /* 手机端适配 */
 @media screen and (max-width: 768px) {
   .my-tasks {
