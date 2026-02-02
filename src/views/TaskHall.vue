@@ -341,7 +341,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
+  height: calc(100vh - 100px);
   overflow: hidden;
 }
 

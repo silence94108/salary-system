@@ -276,8 +276,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
-  overflow-y: auto;
 }
 
 .card-header {
