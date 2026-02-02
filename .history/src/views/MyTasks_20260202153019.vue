@@ -259,8 +259,7 @@ fetchTasks()
         </div>
       </template>
 
-      <div class="table-wrapper">
-        <el-table :data="tasks" v-loading="loading" stripe height="100%">
+      <el-table :data="tasks" v-loading="loading" stripe>
         <el-table-column prop="hall_customer" label="项目名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="statustxt" label="状态" width="90">
           <template #default="{ row }">
@@ -289,7 +288,6 @@ fetchTasks()
           <el-empty description="暂无任务数据" />
         </template>
       </el-table>
-      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrap" v-if="total > 0">
@@ -319,32 +317,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
-  overflow: hidden;
-}
-
-.filter-card {
-  flex-shrink: 0;
-}
-
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.table-card :deep(.el-card__body) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-bottom: 12px;
-}
-
-.table-wrapper {
-  flex: 1;
-  overflow: hidden;
 }
 
 .filter-form {
@@ -368,8 +340,7 @@ export default {
 .pagination-wrap {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
-  flex-shrink: 0;
+  margin-top: 16px;
 }
 
 /* 手机端适配 */

@@ -244,7 +244,7 @@ export default {
 .layout-main {
   background: #f0f2f5;
   padding: 20px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* 手机端适配 */
