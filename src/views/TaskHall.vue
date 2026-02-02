@@ -188,6 +188,7 @@ fetchTasks()
           :page-size="pagination.limit"
           :total="total"
           layout="total, prev, pager, next"
+          background
           @current-change="handlePageChange"
         />
       </div>
