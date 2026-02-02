@@ -25,7 +25,7 @@ onUnmounted(() => {
 
 // 分页布局
 const paginationLayout = computed(() => {
-  return isMobile.value ? 'prev, pager, next' : 'total, sizes, prev, pager, next, jumper'
+  return isMobile.value ? 'prev, next' : 'total, sizes, prev, pager, next, jumper'
 })
 
 // 筛选条件
