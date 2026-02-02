@@ -11,92 +11,23 @@ const total = ref(0)
 // 筛选条件
 const filters = reactive({
   name: '',
-  status: '',
-  hall_type: '',
-  enddatatime: [] as string[],
-  performtime: [] as [Date, Date] | [],
-  completiontime: [] as [Date, Date] | []
+  hall_type: ''
 })
 
 // 分页
 const pagination = reactive({
   page: 1,
-  limit: 12
+  limit: 9
 })
-
-// 日期快捷选项
-const dateShortcuts = [
-  {
-    text: '本月',
-    value: () => {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), now.getMonth(), 1)
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-      return [start, end]
-    }
-  },
-  {
-    text: '上月',
-    value: () => {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
-      return [start, end]
-    }
-  },
-  {
-    text: '近3个月',
-    value: () => {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-      return [start, end]
-    }
-  },
-  {
-    text: '近半年',
-    value: () => {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), now.getMonth() - 5, 1)
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-      return [start, end]
-    }
-  },
-  {
-    text: '今年',
-    value: () => {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), 0, 1)
-      const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59)
-      return [start, end]
-    }
-  }
-]
-
-// 格式化日期为 YYYY-MM-DD HH:mm:ss
-function formatDateTime(date: Date, isEnd = false): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const time = isEnd ? '23:59:59' : '00:00:00'
-  return `${year}-${month}-${day} ${time}`
-}
 
 // 查询任务列表
 async function fetchTasks() {
   loading.value = true
   try {
-    const performtimeParam = filters.performtime.length === 2
-      ? [formatDateTime(filters.performtime[0]), formatDateTime(filters.performtime[1], true)]
-      : []
-    const completiontimeParam = filters.completiontime.length === 2
-      ? [formatDateTime(filters.completiontime[0]), formatDateTime(filters.completiontime[1], true)]
-      : []
-
     const res = await getTaskHallList({
       page: pagination.page,
       limit: pagination.limit,
-      status: filters.status,
+      status: '',
       name: filters.name,
       orderType: '',
       hall_type: filters.hall_type,
@@ -104,10 +35,10 @@ async function fetchTasks() {
       sort: 'id',
       enterpriseSide: 'pc',
       bountymoney: [],
-      completiontime: completiontimeParam,
-      enddatatime: filters.enddatatime || [],
+      completiontime: [],
+      enddatatime: [],
       ordertime: [],
-      performtime: performtimeParam
+      performtime: []
     })
 
     if (res.data) {
@@ -132,11 +63,7 @@ function handleSearch() {
 // 重置筛选
 function handleReset() {
   filters.name = ''
-  filters.status = ''
   filters.hall_type = ''
-  filters.enddatatime = []
-  filters.performtime = []
-  filters.completiontime = []
   pagination.page = 1
   fetchTasks()
 }
@@ -147,57 +74,16 @@ function handlePageChange(page: number) {
   fetchTasks()
 }
 
-function handleSizeChange(size: number) {
-  pagination.limit = size
-  pagination.page = 1
-  fetchTasks()
+// 获取逾期标签类型
+function getOverdueType(task: any): string {
+  if (task.syday < 0) return 'danger'
+  return 'warning'
 }
 
-// 状态颜色映射
-const statusColorMap: Record<string, string> = {
-  '待接单': '#fa367a',
-  '已接单': '#f08b25',
-  '发布中': '#fa367a',
-  '已发布': '#fa367a',
-  '已逾期': '#d7000f',
-  '核对中': '#409eff',
-  '待质检': '#409eff',
-  '已完结': '#3b9b4f',
-  '已驳回': '#d7000f'
-}
-
-function getStatusColor(status: string): string {
-  return statusColorMap[status] || '#909399'
-}
-
-// 表格合计
-function getSummaries({ columns, data }: { columns: any[]; data: TaskOrder[] }) {
-  const sums: string[] = []
-  columns.forEach((column, index) => {
-    if (index === 0) {
-      sums[index] = '合计'
-      return
-    }
-    if (column.property === 'bountymoney') {
-      const total = data.reduce((sum, row) => {
-        return sum + parseFloat(row.bountymoney || '0')
-      }, 0)
-      sums[index] = total.toFixed(2)
-    } else if (column.property === 'base_bountymoney') {
-      const total = data.reduce((sum, row) => {
-        return sum + parseFloat(row.base_bountymoney || row.bountymoney || '0')
-      }, 0)
-      sums[index] = total.toFixed(2)
-    } else if (column.property === 'add_bountymoney') {
-      const total = data.reduce((sum, row) => {
-        return sum + parseFloat(row.add_bountymoney || '0')
-      }, 0)
-      sums[index] = total.toFixed(2)
-    } else {
-      sums[index] = ''
-    }
-  })
-  return sums
+// 获取逾期文本
+function getOverdueText(task: any): string {
+  if (task.syday < 0) return `逾期${Math.abs(task.syday)}天`
+  return `剩余${task.syday}天`
 }
 
 // 初始化加载
@@ -210,49 +96,7 @@ fetchTasks()
     <el-card shadow="never" class="filter-card">
       <el-form :inline="true" class="filter-form" @submit.prevent="handleSearch">
         <el-form-item label="项目名称">
-          <el-input v-model="filters.name" placeholder="搜索项目名称" clearable />
-        </el-form-item>
-
-        <el-form-item label="任务状态">
-          <el-select v-model="filters.status" placeholder="全部状态" clearable style="width: 120px">
-            <el-option label="待接单" value="1" />
-            <el-option label="已接单" value="2" />
-            <el-option label="已完结" value="3" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="接单时间">
-          <el-date-picker
-            v-model="filters.performtime"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            :shortcuts="dateShortcuts"
-          />
-        </el-form-item>
-
-        <el-form-item label="完结时间">
-          <el-date-picker
-            v-model="filters.completiontime"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            :shortcuts="dateShortcuts"
-          />
-        </el-form-item>
-
-        <el-form-item label="截止时间">
-          <el-date-picker
-            v-model="filters.enddatatime"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            :shortcuts="dateShortcuts"
-          />
+          <el-input v-model="filters.name" placeholder="搜索项目名称" clearable style="width: 200px" />
         </el-form-item>
 
         <el-form-item>
@@ -266,66 +110,97 @@ fetchTasks()
       </el-form>
     </el-card>
 
-    <!-- 任务列表 -->
-    <el-card shadow="never" class="table-card">
-      <template #header>
-        <div class="table-header">
-          <span>任务大厅</span>
-          <span class="total-text">共 {{ total }} 条</span>
-        </div>
-      </template>
-
-      <div class="table-wrapper">
-        <el-table :data="tasks" v-loading="loading" stripe height="100%" show-summary :summary-method="getSummaries">
-        <el-table-column prop="name" label="项目名称" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="statusInfo" label="状态" width="90">
-          <template #default="{ row }">
-            <el-tag size="small" :color="getStatusColor(row.statusInfo)" style="color: #fff; border: none;">
-              {{ row.statusInfo }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="项目/任务佣金" align="center">
-          <el-table-column prop="bountymoney" label="总佣金（元）" width="110" align="right">
-            <template #default="{ row }">
-              {{ parseFloat(row.bountymoney || '0').toFixed(2) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="base_bountymoney" label="基础佣金（元）" width="120" align="right">
-            <template #default="{ row }">
-              {{ parseFloat(row.base_bountymoney || row.bountymoney || '0').toFixed(2) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="add_bountymoney" label="加价佣金（元）" width="120" align="right">
-            <template #default="{ row }">
-              {{ parseFloat(row.add_bountymoney || '0').toFixed(2) }}
-            </template>
-          </el-table-column>
-        </el-table-column>
-        <el-table-column prop="hallTypeTitle" label="任务类型" width="120" show-overflow-tooltip />
-        <el-table-column prop="ordertime" label="发布时间" width="170" />
-        <el-table-column prop="enddatatime" label="截止时间" width="110" />
-        <el-table-column prop="company" label="发布企业" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="username" label="发布人" width="100" />
-        <template #empty>
-          <el-empty description="暂无任务数据" />
-        </template>
-      </el-table>
+    <!-- 任务卡片列表 -->
+    <div class="task-list" v-loading="loading">
+      <div v-if="tasks.length === 0 && !loading" class="empty-wrapper">
+        <el-empty description="暂无待接任务" />
       </div>
 
-      <!-- 分页 -->
-      <div class="pagination-wrap" v-if="total > 0">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.limit"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
+      <div v-else class="task-grid">
+        <el-card v-for="task in tasks" :key="task.id" class="task-card" shadow="hover">
+          <!-- 卡片头部 -->
+          <div class="card-header">
+            <div class="header-left">
+              <span v-if="task.timeout" class="timeout-tag">{{ task.timeout }}</span>
+            </div>
+            <div class="header-right">
+              <el-tag v-if="task.syday" :type="getOverdueType(task)" size="small">
+                {{ getOverdueText(task) }}
+              </el-tag>
+              <el-tag type="danger" size="small" effect="plain">{{ task.statusInfo }}</el-tag>
+            </div>
+          </div>
+
+          <!-- 项目名称 -->
+          <div class="project-name">
+            {{ task.name || '接取后可见项目全称' }}
+          </div>
+
+          <!-- 项目信息 -->
+          <div class="project-info">
+            <div class="info-row">
+              <span class="label">项目类型：</span>
+              <span class="value">{{ task.hallTypeTitle }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">项目工期：</span>
+              <span class="value">
+                开始日期：{{ task.ordertime?.split(' ')[0] || '-' }}
+              </span>
+            </div>
+            <div class="info-row">
+              <span class="label"></span>
+              <span class="value">
+                截止日期：{{ task.enddatatime || '-' }}
+              </span>
+              <span class="duration" v-if="task.hall_duration">
+                工期：{{ task.hall_duration }} 个工作日
+              </span>
+            </div>
+          </div>
+
+          <!-- 金额信息 -->
+          <div class="money-info">
+            <div class="money-item">
+              <span class="label">金额：</span>
+              <span class="label">总佣金：</span>
+              <span class="value primary">¥{{ parseFloat(task.hall_total_money || '0').toFixed(2) }}</span>
+            </div>
+            <div class="money-item">
+              <span class="label">基础佣金：</span>
+              <span class="value">¥{{ parseFloat(task.hall_money || '0').toFixed(2) }}</span>
+            </div>
+            <div class="money-item">
+              <span class="label">加价佣金：</span>
+              <span class="value warning">¥{{ parseFloat(task.hall_user_money || '0').toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- 备注 -->
+          <div class="remark" v-if="task.description">
+            <span class="label">备注：</span>
+            <span class="value">{{ task.description }}</span>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="card-footer">
+            <el-button type="primary" size="small">接取</el-button>
+            <el-button size="small">详情</el-button>
+          </div>
+        </el-card>
       </div>
-    </el-card>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pagination-wrap" v-if="total > 0">
+      <el-pagination
+        v-model:current-page="pagination.page"
+        :page-size="pagination.limit"
+        :total="total"
+        layout="total, prev, pager, next"
+        @current-change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -341,32 +216,12 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(100vh - 100px);
-  overflow: hidden;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .filter-card {
   flex-shrink: 0;
-}
-
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.table-card :deep(.el-card__body) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-bottom: 12px;
-}
-
-.table-wrapper {
-  flex: 1;
-  overflow: hidden;
 }
 
 .filter-form {
@@ -375,22 +230,136 @@ export default {
   gap: 0;
 }
 
-.table-header {
+.task-list {
+  flex: 1;
+  min-height: 200px;
+}
+
+.empty-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.task-card {
+  border-radius: 8px;
+}
+
+.task-card .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
-.total-text {
+.header-right {
+  display: flex;
+  gap: 8px;
+}
+
+.timeout-tag {
+  color: #f56c6c;
+  font-size: 12px;
+}
+
+.project-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #409eff;
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.project-info {
+  margin-bottom: 12px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
   font-size: 13px;
-  color: #999;
-  font-weight: normal;
+}
+
+.info-row .label {
+  color: #666;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.info-row .value {
+  color: #333;
+}
+
+.info-row .duration {
+  margin-left: auto;
+  color: #666;
+}
+
+.money-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.money-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}
+
+.money-item .label {
+  color: #666;
+}
+
+.money-item .value {
+  font-weight: 600;
+}
+
+.money-item .value.primary {
+  color: #409eff;
+}
+
+.money-item .value.warning {
+  color: #e6a23c;
+}
+
+.remark {
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: #666;
+}
+
+.remark .label {
+  color: #666;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
 }
 
 .pagination-wrap {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
+  justify-content: center;
+  padding: 16px 0;
   flex-shrink: 0;
 }
 
@@ -412,19 +381,17 @@ export default {
     flex-direction: column;
   }
 
-  .filter-card :deep(.el-input),
-  .filter-card :deep(.el-select),
-  .filter-card :deep(.el-date-editor) {
+  .filter-card :deep(.el-input) {
     width: 100% !important;
   }
 
-  .pagination-wrap {
-    justify-content: center;
+  .task-grid {
+    grid-template-columns: 1fr;
   }
 
-  .pagination-wrap :deep(.el-pagination) {
-    flex-wrap: wrap;
-    justify-content: center;
+  .money-info {
+    flex-direction: column;
+    gap: 6px;
   }
 }
 </style>
