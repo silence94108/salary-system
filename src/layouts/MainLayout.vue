@@ -78,8 +78,8 @@ function toggleSidebar() {
       :class="['layout-aside', { 'mobile-aside': isMobile, 'mobile-show': sidebarVisible }]"
     >
       <div class="logo">
+        <img src="/logo.svg" alt="logo" class="logo-img" />
         <span v-if="!isCollapse || isMobile">抢单平台</span>
-        <span v-else>抢</span>
       </div>
 
       <el-menu
@@ -167,11 +167,18 @@ export default {
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-left: 20px;
+  gap: 8px;
   color: #fff;
   font-size: 18px;
   font-weight: bold;
   background: rgba(0, 0, 0, 0.1);
+}
+
+.logo-img {
+  width: 28px;
+  height: 28px;
 }
 
 .el-menu {
