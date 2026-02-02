@@ -21,7 +21,7 @@ const filters = reactive({
 // 分页
 const pagination = reactive({
   page: 1,
-  limit: 16
+  limit: 12
 })
 
 // 日期快捷选项
@@ -184,6 +184,26 @@ function getStatusColor(status: string): string {
   return statusColorMap[status] || '#909399'
 }
 
+// 表格合计
+function getSummaries({ columns, data }: { columns: any[]; data: TaskOrder[] }) {
+  const sums: string[] = []
+  columns.forEach((column, index) => {
+    if (index === 0) {
+      sums[index] = '合计'
+      return
+    }
+    if (column.property === 'bountymoney') {
+      const total = data.reduce((sum, row) => {
+        return sum + parseFloat(row.bountymoney || '0')
+      }, 0)
+      sums[index] = total.toFixed(2) + ' 元'
+    } else {
+      sums[index] = ''
+    }
+  })
+  return sums
+}
+
 // 初始化加载
 fetchTasks()
 </script>
@@ -260,7 +280,7 @@ fetchTasks()
       </template>
 
       <div class="table-wrapper">
-        <el-table :data="tasks" v-loading="loading" stripe height="100%">
+        <el-table :data="tasks" v-loading="loading" stripe height="100%" show-summary :summary-method="getSummaries">
         <el-table-column prop="hall_customer" label="项目名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="statustxt" label="状态" width="90">
           <template #default="{ row }">
@@ -269,7 +289,7 @@ fetchTasks()
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="佣金" width="110">
+        <el-table-column prop="bountymoney" label="佣金" width="110">
           <template #default="{ row }">
             {{ parseFloat(row.bountymoney || '0').toFixed(2) }} 元
           </template>
