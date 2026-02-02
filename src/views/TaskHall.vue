@@ -277,11 +277,11 @@ fetchTasks()
 
       <div class="table-wrapper">
         <el-table :data="tasks" v-loading="loading" stripe height="100%" show-summary :summary-method="getSummaries">
-        <el-table-column prop="hall_customer" label="项目名称" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="statustxt" label="状态" width="90">
+        <el-table-column prop="name" label="项目名称" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="statusInfo" label="状态" width="90">
           <template #default="{ row }">
-            <el-tag size="small" :color="getStatusColor(row.statustxt)" style="color: #fff; border: none;">
-              {{ row.statustxt }}
+            <el-tag size="small" :color="getStatusColor(row.statusInfo)" style="color: #fff; border: none;">
+              {{ row.statusInfo }}
             </el-tag>
           </template>
         </el-table-column>
@@ -302,11 +302,11 @@ fetchTasks()
             </template>
           </el-table-column>
         </el-table-column>
-        <el-table-column prop="hallTypeTitle" label="任务类型" width="100" show-overflow-tooltip />
-        <el-table-column prop="performtime" label="接单时间" width="170" />
-        <el-table-column prop="enddatatime" label="截止时间" width="170" />
-        <el-table-column prop="completiontime" label="完结时间" width="170" />
-        <el-table-column prop="company" label="发布企业" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="hallTypeTitle" label="任务类型" width="120" show-overflow-tooltip />
+        <el-table-column prop="ordertime" label="发布时间" width="170" />
+        <el-table-column prop="enddatatime" label="截止时间" width="110" />
+        <el-table-column prop="company" label="发布企业" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="username" label="发布人" width="100" />
         <template #empty>
           <el-empty description="暂无任务数据" />
         </template>
