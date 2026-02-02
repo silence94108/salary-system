@@ -250,6 +250,14 @@ export default {
 
 .task-card {
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-card :deep(.el-card__body) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .task-card .card-header {
@@ -354,6 +362,7 @@ export default {
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid #eee;
+  margin-top: auto;
 }
 
 .pagination-wrap {
