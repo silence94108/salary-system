@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getTaskHallList, checkTaskStatus, takeTask, getProjectDetail } from '@/api/project'
 import type { TaskOrder } from '@/types'
@@ -31,9 +31,6 @@ const currentTask = ref<any>(null)
 const taskRemark = ref('')
 const takeLoading = ref(false)
 const showTakeForm = ref(false) // 是否显示接取表单
-
-// descriptions 列数
-const descColumn = computed(() => isMobile.value ? 1 : 2)
 
 // 筛选条件
 const filters = reactive({
@@ -465,14 +462,14 @@ fetchTasks()
               <div v-if="currentTask.positionlistarr && currentTask.positionlistarr.length" class="condition-item">
                 岗位资质：
                 <span v-for="(item, index) in currentTask.positionlistarr" :key="index">
-                  {{ item.position }}：{{ item.aptitude }}<span v-if="index < currentTask.positionlistarr.length - 1">；</span>
+                  {{ item.position }}：{{ item.aptitude }}<span v-if="Number(index) < currentTask.positionlistarr.length - 1">；</span>
                 </span>
               </div>
               <div v-if="currentTask.aptitudetxt" class="condition-item">
                 人员资质：{{ currentTask.aptitudetxt }}
               </div>
               <div v-if="currentTask.appointlist && currentTask.appointlist.length" class="condition-item">
-                指定人员：{{ currentTask.appointlist.filter(u => u.username).map(u => u.username).join('、') }}
+                指定人员：{{ currentTask.appointlist.filter((u: any) => u.username).map((u: any) => u.username).join('、') }}
               </div>
               <template v-if="Array.isArray(currentTask.description)">
                 <div v-for="(citem, cindex) in currentTask.description" :key="cindex" class="condition-item">

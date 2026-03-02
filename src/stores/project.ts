@@ -17,7 +17,7 @@ export const useProjectStore = defineStore('project', () => {
   function getMonthRange(month: string): [string, string] {
     const [year, mon] = month.split('-').map(Number)
     const start = `${month}-01 00:00:00`
-    const lastDay = new Date(year, mon, 0).getDate()
+    const lastDay = new Date(year!, mon!, 0).getDate()
     const end = `${month}-${String(lastDay).padStart(2, '0')} 23:59:59`
     return [start, end]
   }
