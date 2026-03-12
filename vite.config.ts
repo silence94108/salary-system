@@ -1,26 +1,41 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import detectPort from 'detect-port'
 import { resolve } from 'path'
 
-// https://vite.dev/config/
-export default defineConfig({
-  base: '/salary-system/',
-  plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src')
+export default defineConfig(async () => {
+  const basePort = 5173
+  const port = await detectPort(basePort)
+  if (port !== basePort) {
+    console.log(`[dev] port ${basePort} in use, switched to ${port}`)
+  }
+
+  return {
+    base: '/salary-system/',
+    plugins: [
+      vue(),
+      {
+        name: 'log-dev-port',
+        configureServer(server) {
+          server.httpServer?.once('listening', () => {
+            const address = server.httpServer?.address()
+            const actualPort =
+              typeof address === 'object' && address && 'port' in address
+                ? address.port
+                : server.config.server.port
+            console.log(`[dev] server listening on http://localhost:${actualPort}`)
+          })
+        }
+      }
+    ],
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src')
+      }
+    },
+    server: {
+      host: '0.0.0.0',
+      port
     }
-  },
-  server: {
-    host: '0.0.0.0',
-    port: 5173,
-    // 如果需要代理后端接口，取消下面注释并配置
-    // proxy: {
-    //   '/api': {
-    //     target: 'http://your-backend-server:port',
-    //     changeOrigin: true,
-    //     // rewrite: (path) => path.replace(/^\/api/, '')
-    //   }
-    // }
   }
 })

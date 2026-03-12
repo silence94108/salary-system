@@ -1,71 +1,126 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { Refresh } from '@element-plus/icons-vue'
 import { useProjectStore } from '@/stores/project'
 import type { Project, CommissionResult } from '@/types'
 
 const projectStore = useProjectStore()
 
-// 当前选择的计算月份
 const calcMonth = ref('')
 
-// 初始化
 onMounted(() => {
-  // 设置默认月份为当前月
   const now = new Date()
   calcMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  projectStore.fetchSalaryDateList()
 })
 
-// 监听月份变化，自动查询
-watch(calcMonth, (month) => {
-  if (month) {
-    projectStore.fetchByMonth(month)
-  }
-}, { immediate: true })
+watch(
+  calcMonth,
+  (month) => {
+    if (month) {
+      projectStore.fetchByMonth(month)
+    }
+  },
+  { immediate: true }
+)
 
-// 完结项目佣金总额（原始）
 const monthFinishedTotal = computed(() => {
   return projectStore.projects.reduce((sum, p) => sum + (p.commission || 0), 0)
 })
 
-// 计算每个项目的结果
 function getResult(project: Project): CommissionResult {
   return projectStore.calculateCommission(project)
 }
 
-// 实得佣金合计
 const totalCommission = computed(() => {
   return projectStore.projects.reduce((sum, p) => sum + getResult(p).actualCommission, 0)
 })
 
-// 当月实际底薪（含工龄工资）
 const currentBaseSalary = computed(() => {
   if (!calcMonth.value) return projectStore.baseSalary
   return projectStore.getSalaryByOrderMonth(calcMonth.value)
 })
 
-// 当月应发薪资
 const totalSalary = computed(() => {
   return currentBaseSalary.value + totalCommission.value
 })
 
-// 修改底薪
+const salaryRows = computed(() => {
+  const list = projectStore.salaryDateList || []
+  if (!Array.isArray(list) || list.length === 0) return []
+
+  // If API already returns flat month rows
+  const first = list[0]
+  if (first && (first.date || first.total || first.salary_structure_id)) {
+    return list
+  }
+
+  const rows: any[] = []
+  list.forEach((group: any) => {
+    const title = group?.title || ''
+    const months = Array.isArray(group?.month) ? group.month : []
+    months.forEach((m: any) => {
+      rows.push({
+        ...m,
+        _groupTitle: title
+      })
+    })
+  })
+  return rows
+})
+
 function handleBaseSalaryChange(value: number) {
   projectStore.setBaseSalary(value)
 }
 
-// 修改入职日期
 function handleEntryDateChange(value: string) {
   if (value) {
     projectStore.setEntryDate(value)
   }
 }
 
-// 刷新项目数据
 function refreshProjects() {
   projectStore.fetchByMonth(calcMonth.value)
 }
 
-// 规则对应的样式
+function getSalaryMonth(row: any): string {
+  return (
+    row.date ||
+    row.month ||
+    row.salary_month ||
+    row.salaryMonth ||
+    row.salary_date ||
+    row.salaryDate ||
+    row.time ||
+    ''
+  )
+}
+
+function getSalaryAmount(row: any): number {
+  const value =
+    row.total ??
+    row.actual_salary ??
+    row.actualSalary ??
+    row.salary ??
+    row.salary_money ??
+    row.salaryMoney ??
+    row.money ??
+    row.amount ??
+    row.actual_money ??
+    row.actualMoney ??
+    0
+  const num = typeof value === 'string' ? parseFloat(value) : Number(value)
+  return Number.isFinite(num) ? num : 0
+}
+
+function getSalaryConfirmText(row: any): string {
+  const v = row.salary_structure_is_confirm
+  if (v === '1' || v === 1) return '已确认'
+  if (v === '2' || v === 2) return '待确认'
+  if (v === false || v === '0' || v === 0) return '未生成'
+  return '-'
+}
+
 function getRuleType(ruleNum: number): string {
   const types: Record<number, string> = {
     1: 'success',
@@ -79,7 +134,6 @@ function getRuleType(ruleNum: number): string {
 
 <template>
   <div class="salary-calc">
-    <!-- 设置区域 -->
     <el-card class="setting-card" shadow="never">
       <template #header>
         <div class="card-header">
@@ -124,7 +178,6 @@ function getRuleType(ruleNum: number): string {
       </el-form>
     </el-card>
 
-    <!-- 统计卡片 -->
     <el-row :gutter="16" class="stat-row">
       <el-col :xs="24" :sm="8">
         <el-card shadow="never" class="stat-card">
@@ -146,7 +199,6 @@ function getRuleType(ruleNum: number): string {
       </el-col>
     </el-row>
 
-    <!-- 完结项目明细 -->
     <el-card shadow="never" class="table-card">
       <template #header>
         <span>{{ calcMonth }} 完结项目明细</span>
@@ -159,7 +211,7 @@ function getRuleType(ruleNum: number): string {
       >
         <el-table-column prop="name" label="项目名称" min-width="150" />
         <el-table-column prop="orderMonth" label="接单月份" width="110" />
-        <el-table-column label="月接单总额" width="130">
+        <el-table-column label="本月接单总额" width="130">
           <template #default="{ row }">
             {{ projectStore.getOrderMonthTotal(row.orderMonth).toFixed(2) }} 元
           </template>
@@ -169,7 +221,7 @@ function getRuleType(ruleNum: number): string {
             {{ row.orderstatus }}
           </template>
         </el-table-column>
-        <el-table-column label="抢单佣金" width="120">
+        <el-table-column label="接单佣金" width="120">
           <template #default="{ row }">
             {{ (row.commission || 0).toFixed(2) }} 元
           </template>
@@ -206,11 +258,10 @@ function getRuleType(ruleNum: number): string {
       </el-table>
     </el-card>
 
-    <!-- 薪资汇总 -->
     <el-card shadow="never" class="summary-card" v-if="projectStore.projects.length > 0">
       <div class="summary-row">
         <div class="summary-item">
-          <div class="label">底薪（含工龄）</div>
+          <div class="label">底薪(含工龄)</div>
           <div class="value">{{ currentBaseSalary.toFixed(2) }} 元</div>
         </div>
         <div class="summary-item">
@@ -224,7 +275,52 @@ function getRuleType(ruleNum: number): string {
       </div>
     </el-card>
 
-    <!-- 规则说明 -->
+    <el-card shadow="never" class="salary-date-card">
+      <template #header>
+        <div class="card-header">
+          <span>每月实际工资</span>
+          <el-button
+            type="primary"
+            link
+            @click="projectStore.fetchSalaryDateList"
+            :loading="projectStore.salaryDateLoading"
+          >
+            <el-icon><Refresh /></el-icon> 刷新
+          </el-button>
+        </div>
+      </template>
+
+      <el-table
+        :data="salaryRows"
+        v-loading="projectStore.salaryDateLoading"
+        stripe
+      >
+        <el-table-column label="月份" width="120">
+          <template #default="{ row }">
+            {{ getSalaryMonth(row) || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="实际工资" width="140">
+          <template #default="{ row }">
+            {{ getSalaryAmount(row).toFixed(2) }} 元
+          </template>
+        </el-table-column>
+        <el-table-column label="结构确认" width="120">
+          <template #default="{ row }">
+            {{ getSalaryConfirmText(row) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="备注">
+          <template #default="{ row }">
+            {{ row.remark || row.note || row.status || row._groupTitle || '-' }}
+          </template>
+        </el-table-column>
+        <template #empty>
+          <el-empty description="暂无工资记录" />
+        </template>
+      </el-table>
+    </el-card>
+
     <el-card shadow="never" class="rule-card">
       <template #header>
         <span>佣金计算规则</span>
@@ -233,43 +329,36 @@ function getRuleType(ruleNum: number): string {
       <el-row :gutter="16">
         <el-col :xs="12" :sm="6">
           <div class="rule-item rule-1">
-            <div class="rule-title">规则① 高业绩</div>
+            <div class="rule-title">规则Ⅰ 高业绩</div>
             <div class="rule-desc">佣金 ≥ 底薪×2</div>
-            <div class="rule-rate">提成 70%（超期50%）</div>
+            <div class="rule-rate">提成 70%(超期 50%)</div>
           </div>
         </el-col>
         <el-col :xs="12" :sm="6">
           <div class="rule-item rule-2">
-            <div class="rule-title">规则② 达标</div>
+            <div class="rule-title">规则Ⅱ 达标</div>
             <div class="rule-desc">佣金 ≥ 底薪</div>
             <div class="rule-rate">提成 50%</div>
           </div>
         </el-col>
         <el-col :xs="12" :sm="6">
           <div class="rule-item rule-3">
-            <div class="rule-title">规则③ 基础</div>
+            <div class="rule-title">规则Ⅲ 基础</div>
             <div class="rule-desc">底薪/2 ≤ 佣金 &lt; 底薪</div>
             <div class="rule-rate">提成 30%</div>
           </div>
         </el-col>
         <el-col :xs="12" :sm="6">
           <div class="rule-item rule-4">
-            <div class="rule-title">规则④ 保底</div>
+            <div class="rule-title">规则Ⅳ 保底</div>
             <div class="rule-desc">佣金 &lt; 底薪/2</div>
-            <div class="rule-rate">提成 0%（只发底薪）</div>
+            <div class="rule-rate">提成 0%(只发底薪)</div>
           </div>
         </el-col>
       </el-row>
     </el-card>
   </div>
 </template>
-
-<script lang="ts">
-import { Refresh } from '@element-plus/icons-vue'
-export default {
-  components: { Refresh }
-}
-</script>
 
 <style scoped>
 .salary-calc {
@@ -405,7 +494,6 @@ export default {
   color: #333;
 }
 
-/* 手机端适配 */
 @media screen and (max-width: 768px) {
   .salary-calc {
     gap: 10px;
