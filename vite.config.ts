@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import detectPort from 'detect-port'
 import { resolve } from 'path'
@@ -16,7 +16,7 @@ export default defineConfig(async () => {
       vue(),
       {
         name: 'log-dev-port',
-        configureServer(server) {
+        configureServer(server: ViteDevServer) {
           server.httpServer?.once('listening', () => {
             const address = server.httpServer?.address()
             const actualPort =

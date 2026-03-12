@@ -205,6 +205,15 @@ const hrService: AxiosInstance = setupHrInterceptors(
   })
 )
 
+// ============ HR Legacy 系统接口实例 ============
+// https://hr.china9.cn/index.php/baseapi
+const hrLegacyService: AxiosInstance = setupHrInterceptors(
+  axios.create({
+    baseURL: import.meta.env.VITE_HR_LEGACY_BASE_URL || 'https://hr.china9.cn/index.php/baseapi',
+    timeout: 0 // 永不超时
+  })
+)
+
 // ============ 业务 API 接口实例 ============
 // https://api.china9.cn/api
 const apiService: AxiosInstance = setupApiInterceptors(
@@ -232,6 +241,22 @@ export const hrRequest = {
   }
 }
 
+// HR Legacy 系统请求 (https://hr.china9.cn/index.php/baseapi)
+export const hrLegacyRequest = {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyService.get(url, config)
+  },
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyService.post(url, data, config)
+  },
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyService.put(url, data, config)
+  },
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyService.delete(url, config)
+  }
+}
+
 // 业务 API 请求 (https://api.china9.cn/api)
 export const apiRequest = {
   get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
@@ -251,5 +276,5 @@ export const apiRequest = {
 // 默认导出 API 请求
 export const request = apiRequest
 
-export { hrService, apiService }
+export { hrService, hrLegacyService, apiService }
 export default apiService

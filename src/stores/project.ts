@@ -1,8 +1,25 @@
-﻿import { defineStore } from 'pinia'
+import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getMyTaskList } from '@/api/project'
 import { getSalaryDateList } from '@/api/salary'
 import type { Project, CommissionResult, TaskOrder } from '@/types'
+
+type UnknownRecord = Record<string, unknown>
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function extractArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value
+  if (isRecord(value)) {
+    const candidates: unknown[] = [value.data, value.list, value.month]
+    for (const v of candidates) {
+      if (Array.isArray(v)) return v
+    }
+  }
+  return []
+}
 
 export const useProjectStore = defineStore('project', () => {
   const projects = ref<Project[]>([])
@@ -13,7 +30,7 @@ export const useProjectStore = defineStore('project', () => {
   const currentMonth = ref('')
   const orderMonthTotals = ref<Record<string, number>>({})
 
-  const salaryDateList = ref<any[]>([])
+  const salaryDateList = ref<unknown[]>([])
   const salaryDateLoading = ref(false)
 
   function getMonthRange(month: string): [string, string] {
@@ -87,19 +104,11 @@ export const useProjectStore = defineStore('project', () => {
   async function fetchSalaryDateList() {
     salaryDateLoading.value = true
     try {
-      const res: any = await getSalaryDateList()
-      const data = res?.data ?? res
-      if (Array.isArray(data)) {
-        salaryDateList.value = data
-      } else if (Array.isArray(data?.data)) {
-        salaryDateList.value = data.data
-      } else if (Array.isArray(data?.list)) {
-        salaryDateList.value = data.list
-      } else {
-        salaryDateList.value = []
-      }
+      const res = await getSalaryDateList()
+      // hrRequest 响应拦截器返回的是 response.data（HrResponse<T>）
+      salaryDateList.value = extractArray(res?.data ?? res)
     } catch (error) {
-      console.error('??????????:', error)
+      console.error('获取薪资月份列表失败:', error)
       salaryDateList.value = []
     } finally {
       salaryDateLoading.value = false

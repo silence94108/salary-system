@@ -1,8 +1,23 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import { useProjectStore } from '@/stores/project'
 import type { Project, CommissionResult } from '@/types'
+import type { SalaryDateItem } from '@/api/salary'
+
+type UnknownRecord = Record<string, unknown>
+
+type SalaryRow = SalaryDateItem & {
+  _groupTitle?: string
+}
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function asSalaryDateItem(value: unknown): SalaryDateItem {
+  return isRecord(value) ? (value as SalaryDateItem) : {}
+}
 
 const projectStore = useProjectStore()
 
@@ -45,23 +60,24 @@ const totalSalary = computed(() => {
   return currentBaseSalary.value + totalCommission.value
 })
 
-const salaryRows = computed(() => {
+const salaryRows = computed<SalaryRow[]>(() => {
   const list = projectStore.salaryDateList || []
   if (!Array.isArray(list) || list.length === 0) return []
 
-  // If API already returns flat month rows
-  const first = list[0]
+  const first = asSalaryDateItem(list[0])
+  // 如果 API 已经返回了“按月份平铺”的行结构，就直接使用
   if (first && (first.date || first.total || first.salary_structure_id)) {
-    return list
+    return list.map((v) => ({ ...asSalaryDateItem(v) }))
   }
 
-  const rows: any[] = []
-  list.forEach((group: any) => {
-    const title = group?.title || ''
-    const months = Array.isArray(group?.month) ? group.month : []
-    months.forEach((m: any) => {
+  const rows: SalaryRow[] = []
+  list.forEach((group) => {
+    if (!isRecord(group)) return
+    const title = typeof group.title === 'string' ? group.title : ''
+    const months = Array.isArray(group.month) ? group.month : []
+    months.forEach((m) => {
       rows.push({
-        ...m,
+        ...asSalaryDateItem(m),
         _groupTitle: title
       })
     })
@@ -83,37 +99,37 @@ function refreshProjects() {
   projectStore.fetchByMonth(calcMonth.value)
 }
 
-function getSalaryMonth(row: any): string {
+function getSalaryMonth(row: SalaryRow): string {
   return (
     row.date ||
     row.month ||
-    row.salary_month ||
-    row.salaryMonth ||
-    row.salary_date ||
-    row.salaryDate ||
-    row.time ||
+    (typeof row.salary_month === 'string' ? row.salary_month : '') ||
+    (typeof row.salaryMonth === 'string' ? row.salaryMonth : '') ||
+    (typeof row.salary_date === 'string' ? row.salary_date : '') ||
+    (typeof row.salaryDate === 'string' ? row.salaryDate : '') ||
+    (typeof row.time === 'string' ? row.time : '') ||
     ''
   )
 }
 
-function getSalaryAmount(row: any): number {
+function getSalaryAmount(row: SalaryRow): number {
   const value =
     row.total ??
     row.actual_salary ??
-    row.actualSalary ??
-    row.salary ??
-    row.salary_money ??
-    row.salaryMoney ??
-    row.money ??
-    row.amount ??
-    row.actual_money ??
-    row.actualMoney ??
+    (row as UnknownRecord).actualSalary ??
+    (row as UnknownRecord).salary ??
+    (row as UnknownRecord).salary_money ??
+    (row as UnknownRecord).salaryMoney ??
+    (row as UnknownRecord).money ??
+    (row as UnknownRecord).amount ??
+    (row as UnknownRecord).actual_money ??
+    (row as UnknownRecord).actualMoney ??
     0
   const num = typeof value === 'string' ? parseFloat(value) : Number(value)
   return Number.isFinite(num) ? num : 0
 }
 
-function getSalaryConfirmText(row: any): string {
+function getSalaryConfirmText(row: SalaryRow): string {
   const v = row.salary_structure_is_confirm
   if (v === '1' || v === 1) return '已确认'
   if (v === '2' || v === 2) return '待确认'
