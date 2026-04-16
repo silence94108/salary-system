@@ -104,11 +104,14 @@ const salaryByYear = computed(() => {
 
   // 每年内部按月份倒序排序
   Object.keys(groups).forEach(year => {
-    groups[year].sort((a, b) => {
-      const monthA = getSalaryMonth(a)
-      const monthB = getSalaryMonth(b)
-      return monthB.localeCompare(monthA)
-    })
+    const yearRows = groups[year]
+    if (yearRows) {
+      yearRows.sort((a, b) => {
+        const monthA = getSalaryMonth(a)
+        const monthB = getSalaryMonth(b)
+        return monthB.localeCompare(monthA)
+      })
+    }
   })
 
   // 返回按年份倒序的对象（数字比较）
@@ -120,7 +123,10 @@ const salaryByYear = computed(() => {
       return yearB - yearA // 数字倒序
     })
     .forEach(year => {
-      sortedGroups[year] = groups[year]
+      const yearRows = groups[year]
+      if (yearRows) {
+        sortedGroups[year] = yearRows
+      }
     })
 
   return sortedGroups
@@ -385,10 +391,10 @@ function handleDetailConfirmed() {
                 <ArrowDown />
               </el-icon>
               <span class="year-text">{{ year }}</span>
-              <span class="year-count">{{ salaryByYear[year].length }} 条记录</span>
+              <span class="year-count">{{ salaryByYear[year]?.length || 0 }} 条记录</span>
             </div>
             <div class="year-total">
-              年度总额：{{ salaryByYear[year].reduce((sum, r) => sum + getSalaryAmount(r), 0).toFixed(2) }} 元
+              年度总额：{{ (salaryByYear[year]?.reduce((sum, r) => sum + getSalaryAmount(r), 0) || 0).toFixed(2) }} 元
             </div>
           </div>
 

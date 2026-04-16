@@ -10,8 +10,7 @@ import {
   Wallet,
   Ticket,
   List,
-  ArrowDown,
-  InfoFilled
+  ArrowDown
 } from '@element-plus/icons-vue'
 
 interface Props {
