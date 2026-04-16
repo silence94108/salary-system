@@ -301,15 +301,17 @@ function handleDetailConfirmed() {
       <div class="summary-row">
         <div class="summary-item">
           <div class="label">底薪(含工龄)</div>
-          <div class="value">{{ currentBaseSalary.toFixed(2) }} 元</div>
+          <div class="value">{{ currentBaseSalary.toFixed(2) }} <span class="unit">元</span></div>
         </div>
+        <div class="summary-divider"></div>
         <div class="summary-item">
           <div class="label">佣金合计</div>
-          <div class="value">{{ totalCommission.toFixed(2) }} 元</div>
+          <div class="value">{{ totalCommission.toFixed(2) }} <span class="unit">元</span></div>
         </div>
+        <div class="summary-divider"></div>
         <div class="summary-item main">
           <div class="label">{{ calcMonth }} 应发薪资</div>
-          <div class="value">{{ totalSalary.toFixed(2) }} 元</div>
+          <div class="value highlight">{{ totalSalary.toFixed(2) }} <span class="unit">元</span></div>
         </div>
       </div>
     </el-card>
@@ -482,37 +484,88 @@ function handleDetailConfirmed() {
 }
 
 .summary-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: none;
+  overflow: hidden;
 }
 
 .summary-card :deep(.el-card__body) {
-  padding: 20px;
+  padding: 28px 32px;
 }
 
 .summary-row {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   color: white;
+  gap: 24px;
+}
+
+.summary-divider {
+  width: 1px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .summary-item {
+  flex: 1;
   text-align: center;
 }
 
 .summary-item .label {
-  font-size: 13px;
-  opacity: 0.9;
-  margin-bottom: 8px;
+  font-size: 14px;
+  opacity: 0.75;
+  margin-bottom: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .summary-item .value {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Monaco', 'Consolas', monospace;
+  letter-spacing: 1px;
+}
+
+.summary-item .unit {
+  font-size: 16px;
+  font-weight: 500;
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.summary-item.main .label {
+  font-size: 15px;
+  opacity: 0.9;
 }
 
 .summary-item.main .value {
-  font-size: 32px;
+  font-size: 36px;
+}
+
+.summary-item.main .value.highlight {
+  color: #fbbf24;
+  text-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+@media screen and (max-width: 768px) {
+  .summary-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .summary-divider {
+    width: 80%;
+    height: 1px;
+  }
+
+  .summary-item .value {
+    font-size: 24px;
+  }
+
+  .summary-item.main .value {
+    font-size: 32px;
+  }
 }
 
 .rule-card :deep(.el-card__body) {
