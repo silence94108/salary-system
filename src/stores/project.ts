@@ -217,6 +217,16 @@ export const useProjectStore = defineStore('project', () => {
     const total = getOrderMonthTotal(orderMonth)
     const base = getSalaryByOrderMonth(orderMonth)
 
+    // 2026-04 起使用新规则(2档)
+    if (orderMonth >= '2026-04') {
+      if (total >= base) {
+        return { rule: '规则Ⅰ', ruleNum: 1, rate: 0.5 }
+      } else {
+        return { rule: '规则Ⅱ', ruleNum: 2, rate: 0.3 }
+      }
+    }
+
+    // 2026-04 前使用旧规则(4档)
     if (total >= base * 2) {
       return { rule: '规则Ⅰ', ruleNum: 1, rate: 0.7 }
     } else if (total >= base) {
@@ -232,13 +242,11 @@ export const useProjectStore = defineStore('project', () => {
     const commission = project.commission || 0
     const { rule, ruleNum, rate } = getRuleByOrderMonth(project.orderMonth)
 
-    const actualRate = (ruleNum === 1 && project.isOverdue) ? 0.5 : rate
-
     return {
       rule,
       ruleNum,
-      rate: actualRate,
-      actualCommission: commission * actualRate
+      rate,
+      actualCommission: commission * rate
     }
   }
 

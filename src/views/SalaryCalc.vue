@@ -445,10 +445,29 @@ function handleDetailConfirmed() {
 
     <el-card shadow="never" class="rule-card">
       <template #header>
-        <span>佣金计算规则</span>
+        <span>佣金计算规则 {{ calcMonth >= '2026-04' ? '(新规则 2026-04起)' : '(旧规则 2026-04前)' }}</span>
       </template>
 
-      <el-row :gutter="16">
+      <!-- 新规则 (2026-04起) -->
+      <el-row v-if="calcMonth >= '2026-04'" :gutter="16">
+        <el-col :xs="12" :sm="12">
+          <div class="rule-item rule-2">
+            <div class="rule-title">规则Ⅰ 达标</div>
+            <div class="rule-desc">佣金 ≥ 底薪</div>
+            <div class="rule-rate">提成 50%</div>
+          </div>
+        </el-col>
+        <el-col :xs="12" :sm="12">
+          <div class="rule-item rule-3">
+            <div class="rule-title">规则Ⅱ 基础</div>
+            <div class="rule-desc">佣金 &lt; 底薪</div>
+            <div class="rule-rate">提成 30%</div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 旧规则 (2026-04前) -->
+      <el-row v-else :gutter="16">
         <el-col :xs="12" :sm="6">
           <div class="rule-item rule-1">
             <div class="rule-title">规则Ⅰ 高业绩</div>
