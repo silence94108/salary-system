@@ -30,6 +30,8 @@ const loading = ref(false)
 const detail = ref<SalaryDetail | null>(null)
 const expandedItems = ref<Set<number>>(new Set())
 
+const isMobile = computed(() => window.innerWidth <= 768)
+
 const dialogVisible = computed({
   get: () => props.visible,
   set: (val) => emit('update:visible', val)
@@ -145,7 +147,7 @@ function handleOpen() {
   <el-dialog
     v-model="dialogVisible"
     :title="`${date}月薪资明细`"
-    width="500px"
+    :width="isMobile ? '95%' : '500px'"
     :close-on-click-modal="false"
     @open="handleOpen"
     class="salary-detail-dialog"
@@ -504,6 +506,60 @@ function handleOpen() {
 @media screen and (max-width: 768px) {
   .salary-detail-dialog :deep(.el-dialog) {
     width: 92% !important;
+    margin: 5vh auto !important;
+  }
+
+  .salary-detail-dialog :deep(.el-dialog__header) {
+    padding: 16px 20px;
+  }
+
+  .salary-detail-dialog :deep(.el-dialog__title) {
+    font-size: 16px;
+  }
+
+  .salary-detail-dialog :deep(.el-dialog__body) {
+    padding: 16px 20px;
+    max-height: 60vh;
+  }
+
+  .salary-item {
+    padding: 12px 14px;
+  }
+
+  .item-icon {
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .item-name {
+    font-size: 14px;
+  }
+
+  .item-value {
+    font-size: 16px;
+  }
+
+  .item-value.large {
+    font-size: 20px;
+  }
+
+  .currency {
+    font-size: 11px;
+  }
+
+  .detail-row {
+    font-size: 13px;
+  }
+
+  .dialog-footer {
+    padding: 12px 20px 20px;
+  }
+
+  .dialog-footer :deep(.el-button) {
+    padding: 8px 16px;
+    font-size: 14px;
   }
 }
 </style>
