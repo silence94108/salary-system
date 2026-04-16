@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useProjectStore } from '@/stores/project'
 import type { Project, CommissionResult } from '@/types'
@@ -70,7 +70,7 @@ const salaryRows = computed<SalaryRow[]>(() => {
   if (!Array.isArray(list) || list.length === 0) return []
 
   const first = asSalaryDateItem(list[0])
-  // 如果 API 已经返回了“按月份平铺”的行结构，就直接使用
+  // 如果 API 已经返回了”按月份平铺”的行结构，就直接使用
   if (first && (first.date || first.total || first.salary_structure_id)) {
     return list.map((v) => ({ ...asSalaryDateItem(v) }))
   }
@@ -89,6 +89,52 @@ const salaryRows = computed<SalaryRow[]>(() => {
   })
   return rows
 })
+
+// 按年分组
+const salaryByYear = computed(() => {
+  const groups: Record<string, SalaryRow[]> = {}
+  salaryRows.value.forEach(row => {
+    const month = getSalaryMonth(row)
+    const year = month.substring(0, 4) || '未知年份'
+    if (!groups[year]) {
+      groups[year] = []
+    }
+    groups[year].push(row)
+  })
+
+  // 每年内部按月份倒序排序
+  Object.keys(groups).forEach(year => {
+    groups[year].sort((a, b) => {
+      const monthA = getSalaryMonth(a)
+      const monthB = getSalaryMonth(b)
+      return monthB.localeCompare(monthA)
+    })
+  })
+
+  // 返回按年份倒序的对象（数字比较）
+  const sortedGroups: Record<string, SalaryRow[]> = {}
+  Object.keys(groups)
+    .sort((a, b) => {
+      const yearA = parseInt(a) || 0
+      const yearB = parseInt(b) || 0
+      return yearB - yearA // 数字倒序
+    })
+    .forEach(year => {
+      sortedGroups[year] = groups[year]
+    })
+
+  return sortedGroups
+})
+
+const expandedYears = ref<Set<string>>(new Set())
+
+function toggleYear(year: string) {
+  if (expandedYears.value.has(year)) {
+    expandedYears.value.delete(year)
+  } else {
+    expandedYears.value.add(year)
+  }
+}
 
 function handleBaseSalaryChange(value: number) {
   projectStore.setBaseSalary(value)
@@ -331,47 +377,63 @@ function handleDetailConfirmed() {
         </div>
       </template>
 
-      <el-table
-        :data="salaryRows"
-        v-loading="projectStore.salaryDateLoading"
-        stripe
-      >
-        <el-table-column label="月份" width="120">
-          <template #default="{ row }">
-            {{ getSalaryMonth(row) || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="实际工资" width="140">
-          <template #default="{ row }">
-            {{ getSalaryAmount(row).toFixed(2) }} 元
-          </template>
-        </el-table-column>
-        <el-table-column label="结构确认" width="120">
-          <template #default="{ row }">
-            {{ getSalaryConfirmText(row) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="备注">
-          <template #default="{ row }">
-            {{ row.remark || row.note || row.status || row._groupTitle || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="handleViewDetail(row)"
-            >
-              查看详情
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty description="暂无工资记录" />
-        </template>
-      </el-table>
+      <div v-loading="projectStore.salaryDateLoading" class="salary-year-list">
+        <div v-for="year in Object.keys(salaryByYear).sort((a, b) => parseInt(b) - parseInt(a))" :key="year" class="year-group">
+          <div class="year-header" @click="toggleYear(year)">
+            <div class="year-title">
+              <el-icon class="arrow-icon" :class="{ expanded: expandedYears.has(year) }">
+                <ArrowDown />
+              </el-icon>
+              <span class="year-text">{{ year }}</span>
+              <span class="year-count">{{ salaryByYear[year].length }} 条记录</span>
+            </div>
+            <div class="year-total">
+              年度总额：{{ salaryByYear[year].reduce((sum, r) => sum + getSalaryAmount(r), 0).toFixed(2) }} 元
+            </div>
+          </div>
+
+          <el-collapse-transition>
+            <div v-if="expandedYears.has(year)" class="year-content">
+              <el-table :data="salaryByYear[year]" stripe>
+                <el-table-column label="月份" width="120">
+                  <template #default="{ row }">
+                    {{ getSalaryMonth(row) || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="实际工资" width="140">
+                  <template #default="{ row }">
+                    {{ getSalaryAmount(row).toFixed(2) }} 元
+                  </template>
+                </el-table-column>
+                <el-table-column label="结构确认" width="120">
+                  <template #default="{ row }">
+                    {{ getSalaryConfirmText(row) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="备注">
+                  <template #default="{ row }">
+                    {{ row.remark || row.note || row.status || row._groupTitle || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="120" fixed="right">
+                  <template #default="{ row }">
+                    <el-button
+                      type="primary"
+                      link
+                      size="small"
+                      @click="handleViewDetail(row)"
+                    >
+                      查看详情
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-collapse-transition>
+        </div>
+
+        <el-empty v-if="Object.keys(salaryByYear).length === 0" description="暂无工资记录" />
+      </div>
     </el-card>
 
     <SalaryDetailDialog
@@ -565,6 +627,95 @@ function handleDetailConfirmed() {
 
   .summary-item.main .value {
     font-size: 32px;
+  }
+}
+
+.salary-year-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 200px;
+}
+
+.year-group {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+
+.year-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.year-header:hover {
+  background: #f1f5f9;
+}
+
+.year-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.arrow-icon {
+  font-size: 16px;
+  color: #64748b;
+  transition: transform 0.3s;
+}
+
+.arrow-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.year-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.year-count {
+  font-size: 13px;
+  color: #64748b;
+  background: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.year-total {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.year-content {
+  padding: 0;
+}
+
+.year-content :deep(.el-table) {
+  border-radius: 0;
+}
+
+.year-content :deep(.el-table::before) {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .year-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .year-total {
+    font-size: 14px;
   }
 }
 
