@@ -94,6 +94,46 @@ export interface CommissionResult {
   actualCommission: number  // 实得佣金
 }
 
+// 工资详情 - 字段明细项
+export interface SalaryDetailField {
+  title: string
+  data: string | number
+}
+
+// 工资详情 - 类型分组（基本工资、绩效等）
+export interface SalaryTypeArchive {
+  fname: string                    // 分组名称（如"基本工资"）
+  sum: string | number             // 小计金额
+  zd: SalaryDetailField[]          // 明细字段列表
+}
+
+// 工资详情 - 专项扣除
+export interface SalarySpecial {
+  sum: string | number             // 专项扣除合计
+  zd?: SalaryDetailField[]         // 明细字段列表
+}
+
+// 工资详情完整数据
+export interface SalaryDetail {
+  type_archives: SalaryTypeArchive[]  // 工资类型分组
+  special: SalarySpecial              // 专项扣除
+  daikou: Record<string, string | number>  // 代扣代缴项
+  daikou_total: string | number       // 代扣代缴合计
+  shuiqian_salary: string | number    // 应付工资
+  tax: string | number                // 个人所得税
+  total_salary: string | number       // 实付工资
+  is_confirm: number                  // 确认状态（1=未确认，2=已确认，3=有异议）
+  salary_structure: number            // 工资结构ID
+  remark?: string                     // 备注/异议内容
+}
+
+// 工资确认请求
+export interface SalaryConfirmRequest {
+  is_confirm: number                  // 确认状态（2=已查看，3=提出异议）
+  salary_structure_id: number         // 工资结构ID
+  remarks?: string                    // 异议内容（is_confirm=3时必填）
+}
+
 // API 响应通用格式（API 系统，code=200）
 export interface ApiResponse<T = any> {
   code: number

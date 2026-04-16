@@ -145,6 +145,7 @@ function setupHrInterceptors(instance: AxiosInstance) {
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
       const res = response.data
+      const config = response.config as any
 
       // HR 系统 code 为 1 表示成功
       if (res.code !== undefined && res.code !== 1) {
@@ -152,7 +153,10 @@ function setupHrInterceptors(instance: AxiosInstance) {
         if (res.code === 101 || res.code === 401 || res.code === -1 || res.code === 403) {
           handleLoginExpired()
         } else {
-          showErrorOnce(res.message || res.msg || '请求失败')
+          // 如果配置了 skipErrorToast，则不显示错误提示
+          if (!config.skipErrorToast) {
+            showErrorOnce(res.message || res.msg || '请求失败')
+          }
         }
 
         return Promise.reject(new Error(res.message || res.msg || '请求失败'))
@@ -162,7 +166,11 @@ function setupHrInterceptors(instance: AxiosInstance) {
     },
     (error) => {
       console.error('响应错误:', error)
-      handleHttpError(error)
+      const config = error.config as any
+      // 如果配置了 skipErrorToast，则不显示错误提示
+      if (!config?.skipErrorToast) {
+        handleHttpError(error)
+      }
       return Promise.reject(error)
     }
   )
@@ -214,6 +222,15 @@ const hrLegacyService: AxiosInstance = setupHrInterceptors(
   })
 )
 
+// ============ HR Legacy 系统接口实例（不带 index.php）============
+// https://hr.china9.cn/baseapi
+const hrLegacyNoIndexService: AxiosInstance = setupHrInterceptors(
+  axios.create({
+    baseURL: import.meta.env.VITE_HR_LEGACY_NO_INDEX_BASE_URL || 'https://hr.china9.cn/baseapi',
+    timeout: 0 // 永不超时
+  })
+)
+
 // ============ 业务 API 接口实例 ============
 // https://api.china9.cn/api
 const apiService: AxiosInstance = setupApiInterceptors(
@@ -257,6 +274,22 @@ export const hrLegacyRequest = {
   }
 }
 
+// HR Legacy 系统请求（不带 index.php）(https://hr.china9.cn/baseapi)
+export const hrLegacyNoIndexRequest = {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyNoIndexService.get(url, config)
+  },
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyNoIndexService.post(url, data, config)
+  },
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyNoIndexService.put(url, data, config)
+  },
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return hrLegacyNoIndexService.delete(url, config)
+  }
+}
+
 // 业务 API 请求 (https://api.china9.cn/api)
 export const apiRequest = {
   get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
@@ -276,5 +309,5 @@ export const apiRequest = {
 // 默认导出 API 请求
 export const request = apiRequest
 
-export { hrService, hrLegacyService, apiService }
+export { hrService, hrLegacyService, hrLegacyNoIndexService, apiService }
 export default apiService

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { useProjectStore } from '@/stores/project'
 import type { Project, CommissionResult } from '@/types'
 import type { SalaryDateItem } from '@/api/salary'
+import SalaryDetailDialog from '@/components/SalaryDetailDialog.vue'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -22,6 +24,9 @@ function asSalaryDateItem(value: unknown): SalaryDateItem {
 const projectStore = useProjectStore()
 
 const calcMonth = ref('')
+const detailDialogVisible = ref(false)
+const selectedUserId = ref('')
+const selectedDate = ref('')
 
 onMounted(() => {
   const now = new Date()
@@ -145,6 +150,24 @@ function getRuleType(ruleNum: number): string {
     4: 'danger'
   }
   return types[ruleNum] || 'info'
+}
+
+function handleViewDetail(row: SalaryRow) {
+  const userId = row.user_id?.toString() || ''
+  const date = getSalaryMonth(row)
+
+  if (!userId || !date) {
+    ElMessage.warning('缺少必要参数')
+    return
+  }
+
+  selectedUserId.value = userId
+  selectedDate.value = date
+  detailDialogVisible.value = true
+}
+
+function handleDetailConfirmed() {
+  projectStore.fetchSalaryDateList()
 }
 </script>
 
@@ -331,11 +354,30 @@ function getRuleType(ruleNum: number): string {
             {{ row.remark || row.note || row.status || row._groupTitle || '-' }}
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="handleViewDetail(row)"
+            >
+              查看详情
+            </el-button>
+          </template>
+        </el-table-column>
         <template #empty>
           <el-empty description="暂无工资记录" />
         </template>
       </el-table>
     </el-card>
+
+    <SalaryDetailDialog
+      v-model:visible="detailDialogVisible"
+      :user-id="selectedUserId"
+      :date="selectedDate"
+      @confirmed="handleDetailConfirmed"
+    />
 
     <el-card shadow="never" class="rule-card">
       <template #header>
