@@ -1,30 +1,30 @@
 /**
- * 设计 Token —— 抢单平台 · 活力科技橙
+ * 设计 Token —— 抢单平台 · Stripe Indigo
  *
- * 风格关键词：活力 / 紧迫感 / 现代 / 暖调
- * 主色：#F97316（活力橙）
+ * 风格关键词：克制 / 金融感 / 现代 / 冷调
+ * 主色：#635BFF（Stripe Indigo）
  * 辅色：#1E3A8A（深蓝）
- * 强调：#EC4899（亮粉，高能点缀）
+ * 强调：#EC4899（亮粉，仅用于 HOT 标签）
  *
  * 所有业务页面应只引用本文件定义的 var(--xxx)，禁止硬编码颜色。
- * 设计参考：G02 日出暖光（color-schemes.md）+ Tailwind orange 色阶
+ * 设计参考：Stripe Dashboard
  */
 
 :root {
   /* ============================================================
-   * 1. 品牌色 · Brand Orange
-   * 主品牌橙，按 Tailwind orange 色阶生成（视觉节奏均匀）
+   * 1. 品牌色 · Brand Indigo
+   * 主品牌紫，按 Stripe Indigo 色阶
    * ============================================================ */
-  --brand-50:  #FFF7ED;
-  --brand-100: #FFEDD5;
-  --brand-200: #FED7AA;
-  --brand-300: #FDBA74;
-  --brand-400: #FB923C;
-  --brand-500: #F97316;  /* 主色 · Primary */
-  --brand-600: #EA580C;  /* hover */
-  --brand-700: #C2410C;  /* active */
-  --brand-800: #9A3412;
-  --brand-900: #7C2D12;
+  --brand-50:  #F1F0FE;
+  --brand-100: #E5E3FE;
+  --brand-200: #C7C4FE;
+  --brand-300: #A8A4FE;
+  --brand-400: #8B85FF;
+  --brand-500: #635BFF;  /* 主色 · Primary */
+  --brand-600: #5851EE;  /* hover */
+  --brand-700: #4842D2;  /* active */
+  --brand-800: #3F39B5;
+  --brand-900: #2E2A8A;
 
   /* 主色别名（语义化引用） */
   --color-primary:        var(--brand-500);
@@ -95,10 +95,10 @@
   /* ============================================================
    * 6. 表面 & 背景 · Surface
    * ============================================================ */
-  --bg-page:     #FFFBF5;  /* 页面背景，暖白带橙调 */
+  --bg-page:     #F7F7FA;  /* 页面背景，冷白 */
   --bg-surface:  #FFFFFF;  /* 卡片、Modal 表面 */
-  --bg-soft:     #FFF7ED;  /* 弱橙提示背景 */
-  --bg-muted:    #F9FAFB;  /* 次级表面（Sidebar 浅区） */
+  --bg-soft:     #F1F0FE;  /* 浅紫提示背景 */
+  --bg-muted:    #FAFAFD;  /* 次级表面（侧栏底） */
   --bg-overlay:  rgba(15, 23, 42, 0.5);  /* 遮罩 */
 
   /* ============================================================
@@ -121,24 +121,23 @@
 
   /* ============================================================
    * 9. 渐变 · Gradient
-   * 强动效场景（Hero/CTA/限时倒计时背景）
    * ============================================================ */
-  --gradient-brand:  linear-gradient(135deg, #F97316 0%, #EC4899 100%); /* G02 日出暖光 */
-  --gradient-warm:   linear-gradient(135deg, #FB923C 0%, #F97316 100%); /* 纯橙渐变 */
+  --gradient-brand:  linear-gradient(135deg, #635BFF 0%, #4842D2 100%); /* Indigo 主渐变 */
+  --gradient-warm:   linear-gradient(135deg, #818CF8 0%, #635BFF 100%); /* 紫色渐变（主按钮） */
   --gradient-cool:   linear-gradient(135deg, #6366F1 0%, #1E3A8A 100%); /* 深蓝渐变 */
-  --gradient-hot:    linear-gradient(135deg, #EF4444 0%, #F97316 100%); /* HOT 红橙 */
-  --gradient-page:   linear-gradient(180deg, #FFFBF5 0%, #FFF7ED 100%); /* 页面渐变 */
+  --gradient-hot:    linear-gradient(135deg, #EF4444 0%, #F97316 100%); /* HOT 红橙（仅警示） */
+  --gradient-page:   linear-gradient(180deg, #F7F7FA 0%, #FAFAFD 100%); /* 页面渐变 */
 
   /* ============================================================
-   * 10. 阴影 · Shadow（暖调阴影，带橙色偏移）
+   * 10. 阴影 · Shadow（中性阴影，Stripe 风格克制）
    * ============================================================ */
-  --shadow-xs:    0 1px 2px 0 rgba(249, 115, 22, 0.04);
-  --shadow-sm:    0 2px 4px -1px rgba(249, 115, 22, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-md:    0 4px 12px -2px rgba(249, 115, 22, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg:    0 12px 24px -4px rgba(249, 115, 22, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
-  --shadow-xl:    0 20px 40px -8px rgba(249, 115, 22, 0.16), 0 8px 16px -4px rgba(0, 0, 0, 0.06);
-  --shadow-2xl:   0 32px 64px -12px rgba(249, 115, 22, 0.2);
-  --shadow-glow:  0 0 0 4px rgba(249, 115, 22, 0.15);  /* focus 光晕 */
+  --shadow-xs:    0 1px 2px 0 rgba(16, 24, 40, 0.04);
+  --shadow-sm:    0 1px 3px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md:    0 1px 3px rgba(16, 24, 40, 0.04), 0 4px 8px rgba(16, 24, 40, 0.06);
+  --shadow-lg:    0 2px 6px rgba(16, 24, 40, 0.04), 0 12px 24px rgba(16, 24, 40, 0.08);
+  --shadow-xl:    0 4px 8px rgba(16, 24, 40, 0.04), 0 20px 40px rgba(16, 24, 40, 0.10);
+  --shadow-2xl:   0 32px 64px -12px rgba(16, 24, 40, 0.18);
+  --shadow-glow:  0 0 0 3px rgba(99, 91, 255, 0.18);  /* focus 光晕（紫） */
   --shadow-glow-pink: 0 0 0 4px rgba(236, 72, 153, 0.15);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
@@ -203,6 +202,7 @@
 
   /* 字体族 */
   --font-family-base:
+    'Inter',
     'HarmonyOS Sans SC', 'HarmonyOS Sans',
     -apple-system, BlinkMacSystemFont,
     'PingFang SC', 'Microsoft YaHei',
@@ -254,10 +254,10 @@
 /* 脉冲（限时倒计时、HOT 标签） */
 @keyframes pulse-brand {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5);
+    box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+    box-shadow: 0 0 0 8px rgba(99, 91, 255, 0);
   }
 }
 

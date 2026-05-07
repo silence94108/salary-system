@@ -133,11 +133,11 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* 主按钮——流光效果 */
+/* 主按钮——保留流光 */
 .el-button--primary:not(.is-disabled):not(.is-text):not(.is-link) {
   background: var(--gradient-warm);
   border: none;
-  box-shadow: 0 2px 8px -1px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 1px 1px rgba(0,0,0,.06), 0 2px 5px rgba(99, 91, 255, 0.3);
 }
 
 .el-button--primary:not(.is-disabled):not(.is-text):not(.is-link)::before {
@@ -162,7 +162,7 @@
 }
 
 .el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):hover {
-  box-shadow: 0 6px 16px -2px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 4px 12px -2px rgba(99, 91, 255, 0.4);
 }
 
 /* ============================================================
@@ -211,7 +211,7 @@
 }
 
 /* ============================================================
- * 表格增强
+ * 表格增强（Stripe 风格 · 中性灰表头）
  * ============================================================ */
 .el-table {
   border-radius: var(--radius-md);
@@ -219,22 +219,24 @@
 }
 
 .el-table thead {
-  background: linear-gradient(180deg, #FFF7ED 0%, #FFEDD5 100%);
+  background: var(--bg-muted);
 }
 
 .el-table th.el-table__cell {
-  background: linear-gradient(180deg, #FFF7ED 0%, #FFEDD5 100%) !important;
-  color: var(--text-primary);
-  font-weight: var(--font-weight-semibold);
-  border-bottom: 2px solid var(--brand-200);
+  background: var(--bg-muted) !important;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-xs);
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
-  background: linear-gradient(90deg, #FFFBF5 0%, #FFF7ED 100%) !important;
+  background: var(--bg-muted) !important;
 }
 
 .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
-  background: linear-gradient(90deg, var(--brand-50) 0%, #FFEDD5 100%) !important;
+  background: var(--brand-50) !important;
 }
 
 /* ============================================================
@@ -284,9 +286,9 @@
 }
 
 .el-menu-item.is-active {
-  background: var(--gradient-warm) !important;
-  color: white !important;
-  box-shadow: 0 4px 12px -2px rgba(249, 115, 22, 0.3);
+  background: var(--brand-50) !important;
+  color: var(--brand-700) !important;
+  box-shadow: none;
 }
 
 .el-menu-item.is-active::before {
@@ -295,9 +297,9 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
+  width: 2px;
   height: 60%;
-  background: white;
+  background: var(--brand-500);
   border-radius: 0 2px 2px 0;
 }
 
@@ -311,16 +313,16 @@
 }
 
 .el-pagination.is-background .el-pager li.is-active {
-  background: var(--gradient-warm) !important;
+  background: var(--brand-500) !important;
   color: white !important;
-  box-shadow: 0 4px 8px -2px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 2px 4px -1px rgba(99, 91, 255, 0.3);
 }
 
 /* ============================================================
  * Switch 增强
  * ============================================================ */
 .el-switch.is-checked .el-switch__core {
-  background: var(--gradient-warm) !important;
+  background: var(--brand-500) !important;
   border-color: transparent !important;
 }
 
@@ -328,9 +330,7 @@
  * Progress 增强
  * ============================================================ */
 .el-progress-bar__inner {
-  background: var(--gradient-warm) !important;
-  background-size: 200% 200% !important;
-  animation: gradient-flow 3s ease infinite;
+  background: var(--brand-500) !important;
 }
 
 /* ============================================================
@@ -402,7 +402,7 @@ a:hover {
 }
 
 /* ============================================================
- * 滚动条美化（活力橙调）
+ * 滚动条美化（中性灰）
  * ============================================================ */
 ::-webkit-scrollbar {
   width: 8px;
@@ -414,24 +414,24 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--brand-200);
+  background: var(--gray-300);
   border-radius: var(--radius-full);
   transition: background var(--transition-base);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--brand-400);
+  background: var(--gray-400);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--brand-200) transparent;
+  scrollbar-color: var(--gray-300) transparent;
 }
 
 /* ============================================================
  * 选中文本配色
  * ============================================================ */
 ::selection {
-  background: var(--brand-200);
+  background: var(--brand-100);
   color: var(--brand-900);
 }

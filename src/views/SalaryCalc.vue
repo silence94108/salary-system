@@ -679,6 +679,7 @@ function handleDetailConfirmed() {
   background: linear-gradient(135deg, #F97316 0%, #FB923C 50%, #FDBA74 100%);
   border: none;
   overflow: hidden;
+  overflow: clip;
   box-shadow: 0 20px 40px rgba(249, 115, 22, 0.3);
   margin-bottom: var(--space-6);
 }
@@ -687,11 +688,12 @@ function handleDetailConfirmed() {
   position: absolute;
   top: -50%;
   right: -10%;
-  width: 400px;
-  height: 400px;
+  width: min(400px, 80vw);
+  height: min(400px, 80vw);
   background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
   border-radius: 50%;
   animation: pulse 4s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes pulse {
@@ -725,6 +727,7 @@ function handleDetailConfirmed() {
   justify-content: center;
   gap: var(--space-2);
   margin-bottom: var(--space-6);
+  flex-wrap: wrap;
 }
 
 .hero-currency {

@@ -30,12 +30,12 @@ withDefaults(defineProps<{
   >
     <defs>
       <linearGradient :id="`lm-warm-${uid}`" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#FB923C" />
-        <stop offset="100%" stop-color="#F97316" />
+        <stop offset="0%" stop-color="#818CF8" />
+        <stop offset="100%" stop-color="#635BFF" />
       </linearGradient>
     </defs>
 
-    <!-- 圆角橙色底 -->
+    <!-- 圆角紫色底 -->
     <rect x="2" y="2" width="36" height="36" rx="10" :fill="`url(#lm-warm-${uid})`" />
 
     <!-- 左手 -->
