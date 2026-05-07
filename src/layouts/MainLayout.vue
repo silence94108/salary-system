@@ -25,18 +25,69 @@ function checkMobile() {
 
 // 菜单配置
 type MenuBadge = { text: string; type: 'new' | 'beta' | 'muted' | 'primary' }
+type MenuChild = { index: string; title: string }
 type MenuItem = {
   index: string
   title: string
-  icon: 'grid' | 'list' | 'wallet' | 'chart' | 'gear'
+  icon: 'grid' | 'list' | 'wallet' | 'chart' | 'gear' | 'report' | 'flow' | 'trophy' | 'bell' | 'plug'
   badge?: MenuBadge
+  children?: MenuChild[]
+}
+type MenuGroup = {
+  name: string
+  items: MenuItem[]
 }
 
-const menuItems: MenuItem[] = [
-  { index: '/hall',   title: '任务大厅', icon: 'grid',   badge: { text: 'NEW', type: 'new' } },
-  { index: '/tasks',  title: '我的任务', icon: 'list' },
-  { index: '/salary', title: '薪资计算', icon: 'wallet' }
+const menuGroups: MenuGroup[] = [
+  {
+    name: '工作台',
+    items: [
+      { index: '/hall',   title: '任务大厅', icon: 'grid',   badge: { text: 'NEW', type: 'new' } },
+      { index: '/tasks',  title: '我的任务', icon: 'list' },
+      {
+        index: '/salary',
+        title: '薪资计算',
+        icon: 'wallet',
+        children: [
+          { index: '/salary',         title: '月度计算' },
+          { index: '/salary/history', title: '历史薪资' },
+          { index: '/salary/rules',   title: '规则配置' }
+        ]
+      }
+    ]
+  },
+  {
+    name: '分析',
+    items: [
+      { index: '/reports',      title: '数据报表', icon: 'chart' },
+      { index: '/transactions', title: '结算流水', icon: 'flow' },
+      { index: '/leaderboard',  title: '业绩排行', icon: 'trophy', badge: { text: 'NEW', type: 'new' } }
+    ]
+  },
+  {
+    name: '设置',
+    items: [
+      { index: '/preferences',   title: '偏好设置', icon: 'gear' },
+      { index: '/notifications', title: '通知设置', icon: 'bell' },
+      { index: '/integrations',  title: '集成与 API', icon: 'plug', badge: { text: 'BETA', type: 'beta' } }
+    ]
+  }
 ]
+
+// 判断菜单项是否 active：路径相等，或子菜单中任一相等
+function isItemActive(item: MenuItem): boolean {
+  if (route.path === item.index) return true
+  if (item.children) {
+    return item.children.some(c => c.index === route.path)
+  }
+  return false
+}
+
+// 父项是否需要展开（含 active 子项时自动展开）
+function isItemExpanded(item: MenuItem): boolean {
+  if (!item.children) return false
+  return item.children.some(c => c.index === route.path)
+}
 
 // 当前用户名 / 公司名
 const userName = computed(() => userStore.userInfo?.username || userStore.userInfo?.name || '用户')
@@ -153,51 +204,105 @@ function toggleUserMenu() {
 
       <!-- Nav -->
       <nav class="sb-nav">
-        <div class="sb-section">工作台</div>
+        <template v-for="group in menuGroups" :key="group.name">
+          <div class="sb-section">{{ group.name }}</div>
 
-        <a
-          v-for="item in menuItems"
-          :key="item.index"
-          class="sb-item"
-          :class="{ 'is-active': route.path === item.index }"
-          @click="handleMenuSelect(item.index)"
-        >
-          <!-- icon-grid -->
-          <svg v-if="item.icon === 'grid'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/>
-            <rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
-          </svg>
-          <!-- icon-list -->
-          <svg v-else-if="item.icon === 'list'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <line x1="3" y1="4" x2="13" y2="4"/>
-            <line x1="3" y1="8" x2="13" y2="8"/>
-            <line x1="3" y1="12" x2="13" y2="12"/>
-          </svg>
-          <!-- icon-wallet -->
-          <svg v-else-if="item.icon === 'wallet'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="8" cy="8" r="6"/>
-            <path d="M8 4.5v3.5l2.2 1.3"/>
-          </svg>
-          <!-- icon-chart -->
-          <svg v-else-if="item.icon === 'chart'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polyline points="2,12 6,7 9,10 14,4"/>
-          </svg>
-          <!-- icon-gear -->
-          <svg v-else class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="8" cy="8" r="2.5"/>
-            <path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>
-          </svg>
+          <template v-for="item in group.items" :key="item.index">
+            <a
+              class="sb-item"
+              :class="{
+                'is-active': isItemActive(item),
+                'has-sub': !!item.children,
+                'is-expanded': isItemExpanded(item)
+              }"
+              @click="handleMenuSelect(item.index)"
+            >
+              <!-- icon-grid -->
+              <svg v-if="item.icon === 'grid'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/>
+                <rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+              </svg>
+              <!-- icon-list -->
+              <svg v-else-if="item.icon === 'list'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="3" y1="4" x2="13" y2="4"/>
+                <line x1="3" y1="8" x2="13" y2="8"/>
+                <line x1="3" y1="12" x2="13" y2="12"/>
+              </svg>
+              <!-- icon-wallet -->
+              <svg v-else-if="item.icon === 'wallet'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="6"/>
+                <path d="M8 4.5v3.5l2.2 1.3"/>
+              </svg>
+              <!-- icon-chart -->
+              <svg v-else-if="item.icon === 'chart'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="2,12 6,7 9,10 14,4"/>
+              </svg>
+              <!-- icon-flow（结算流水：双向箭头） -->
+              <svg v-else-if="item.icon === 'flow'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 5h9M10 3l2 2-2 2"/>
+                <path d="M13 11H4M6 13l-2-2 2-2"/>
+              </svg>
+              <!-- icon-trophy（业绩排行：奖杯） -->
+              <svg v-else-if="item.icon === 'trophy'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M5 2h6v4a3 3 0 0 1-6 0V2z"/>
+                <path d="M5 4H3v1a2 2 0 0 0 2 2M11 4h2v1a2 2 0 0 1-2 2"/>
+                <line x1="8" y1="9" x2="8" y2="12"/>
+                <line x1="5.5" y1="14" x2="10.5" y2="14"/>
+              </svg>
+              <!-- icon-bell（通知设置） -->
+              <svg v-else-if="item.icon === 'bell'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4z"/>
+                <path d="M6.5 13a1.5 1.5 0 0 0 3 0"/>
+              </svg>
+              <!-- icon-plug（集成与 API） -->
+              <svg v-else-if="item.icon === 'plug'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 2v3M5 2v3"/>
+                <rect x="3" y="5" width="8" height="4" rx="1"/>
+                <path d="M7 9v2a2 2 0 0 0 2 2h3"/>
+              </svg>
+              <!-- icon-gear -->
+              <svg v-else class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="2.5"/>
+                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/>
+              </svg>
 
-          <span class="sb-item-text">{{ item.title }}</span>
+              <span class="sb-item-text">{{ item.title }}</span>
 
-          <span
-            v-if="item.badge"
-            class="sb-badge"
-            :class="`is-${item.badge.type}`"
-          >
-            {{ item.badge.text }}
-          </span>
-        </a>
+              <!-- 子菜单展开箭头 -->
+              <svg
+                v-if="item.children"
+                class="sb-chev"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+              >
+                <polyline points="4.5,3 8,6 4.5,9"/>
+              </svg>
+
+              <span
+                v-if="item.badge"
+                class="sb-badge"
+                :class="`is-${item.badge.type}`"
+              >
+                {{ item.badge.text }}
+              </span>
+            </a>
+
+            <!-- 子菜单 -->
+            <div v-if="item.children && isItemExpanded(item)" class="sb-sub">
+              <a
+                v-for="child in item.children"
+                :key="child.index"
+                class="sb-sub-item"
+                :class="{ 'is-active': route.path === child.index }"
+                @click="handleMenuSelect(child.index)"
+              >
+                {{ child.title }}
+              </a>
+            </div>
+          </template>
+        </template>
 
         <!-- 进度卡 -->
         <div class="sb-progress">
@@ -539,6 +644,75 @@ export default {
 }
 .sb-item-text {
   flex: 1;
+}
+
+/* 子菜单展开箭头 */
+.sb-chev {
+  width: 12px;
+  height: 12px;
+  color: var(--text-tertiary);
+  transition: transform .15s;
+  flex-shrink: 0;
+}
+.sb-item.is-expanded .sb-chev {
+  transform: rotate(90deg);
+}
+.sb-item.has-sub.is-active {
+  /* 父项 active 时不再显示左侧蓝条（让位给子项） */
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sb-item.has-sub.is-active::before {
+  display: none;
+}
+.sb-item.has-sub.is-active .sb-ic {
+  color: var(--text-secondary);
+}
+
+/* 子菜单 */
+.sb-sub {
+  margin: 2px 0 6px 24px;
+  border-left: 1px solid var(--gray-100);
+  padding-left: 12px;
+}
+.sb-sub-item {
+  display: block;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  text-decoration: none;
+  margin-bottom: 1px;
+  position: relative;
+  transition: background .12s, color .12s;
+  user-select: none;
+}
+.sb-sub-item::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 1px;
+  background: transparent;
+  transition: background .12s;
+}
+.sb-sub-item:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+.sb-sub-item:hover::before {
+  background: var(--text-tertiary);
+}
+.sb-sub-item.is-active {
+  color: var(--brand-700);
+  font-weight: 500;
+}
+.sb-sub-item.is-active::before {
+  background: var(--brand-500);
 }
 
 .sb-badge {
