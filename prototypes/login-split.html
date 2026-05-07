@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>抢单平台 · 登录 · Split Screen 方案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:           #FFFFFF;
+    --bg-soft:      #F7F7FA;
+    --bg-hover:     #F2F2F7;
+
+    --fg:           #1A1F36;
+    --fg-2:         #3C4257;
+    --fg-3:         #54575F;
+    --fg-4:         #8C8F96;
+
+    --border:       #E5E7EB;
+    --border-soft:  #EBEBF1;
+    --border-strong:#D8DAE5;
+
+    --accent:       #635BFF;
+    --accent-hover: #5851EE;
+    --accent-deep:  #4842D2;
+    --accent-bg:    #F1F0FE;
+    --accent-bg-2:  #E5E3FE;
+    --accent-fg:    #4F46E5;
+
+    --success: #00A36F;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+    --r-md: 6px;
+    --r-lg: 8px;
+    --r-xl: 12px;
+
+    --shadow-1: 0 1px 1px rgba(0,0,0,.03), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-2: 0 1px 3px rgba(0,0,0,.04), 0 4px 8px rgba(0,0,0,.04);
+    --shadow-3: 0 4px 12px rgba(0,0,0,.05), 0 16px 40px rgba(0,0,0,.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--fg);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv02','cv03','cv11','ss01';
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============ Split Layout ============ */
+  .auth {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  /* ============ 左侧 · 品牌 hero ============ */
+  .brand-side {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(at 20% 0%, #7C75FF 0%, transparent 50%),
+      radial-gradient(at 80% 100%, #4F46E5 0%, transparent 50%),
+      linear-gradient(135deg, #635BFF 0%, #3F39B5 100%);
+    color: #fff;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* 网格底纹 */
+  .brand-side::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  /* 装饰 blob */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .blob-1 {
+    width: 400px; height: 400px;
+    background: #A8A4FE;
+    top: -120px; right: -100px;
+  }
+  .blob-2 {
+    width: 320px; height: 320px;
+    background: #4F46E5;
+    bottom: -80px; left: -80px;
+    opacity: 0.6;
+  }
+
+  .brand-top {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.25);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-weight: 800; font-size: 14px;
+    letter-spacing: -.02em;
+  }
+  .brand-name {
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -.01em;
+  }
+  .brand-ver {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.2);
+    letter-spacing: .08em;
+  }
+
+  .brand-hero {
+    position: relative;
+    z-index: 2;
+    max-width: 460px;
+  }
+  .brand-tagline {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 16px;
+  }
+  .brand-headline {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.15;
+    margin: 0 0 24px;
+  }
+  .brand-headline .accent {
+    background: linear-gradient(90deg, #fff 0%, #C7C4FE 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand-desc {
+    font-size: 15px;
+    line-height: 1.65;
+    opacity: 0.85;
+    margin-bottom: 36px;
+  }
+
+  .brand-features {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+  }
+  .feature-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-icon svg { width: 14px; height: 14px; }
+  .feature-text { font-weight: 500; }
+  .feature-meta { opacity: 0.6; margin-left: 6px; font-weight: 400; }
+
+  .brand-foot {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    opacity: 0.6;
+  }
+  .brand-foot a:hover { opacity: 0.85; text-decoration: underline; }
+
+  /* ============ 右侧 · 表单 ============ */
+  .form-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: var(--bg);
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 380px;
+  }
+  .form-head {
+    margin-bottom: 32px;
+  }
+  .form-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -.02em;
+    margin: 0 0 6px;
+  }
+  .form-sub {
+    font-size: 13.5px;
+    color: var(--fg-3);
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .form-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--fg-2);
+  }
+  .form-input-wrap {
+    position: relative;
+  }
+  .form-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px 0 40px;
+    font-size: 14px;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-md);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .form-input::placeholder { color: var(--fg-4); }
+  .form-input:hover { border-color: var(--border-strong); }
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .form-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--fg-4);
+    pointer-events: none;
+  }
+  .form-input-icon svg { width: 16px; height: 16px; display: block; }
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .form-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--fg-3);
+    user-select: none;
+  }
+  .form-check input { margin: 0; accent-color: var(--accent); }
+  .form-link { color: var(--accent-fg); font-weight: 500; }
+  .form-link:hover { text-decoration: underline; }
+
+  .btn-submit {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: var(--r-md);
+    background: var(--accent);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    transition: background .15s, box-shadow .15s;
+    box-shadow: 0 2px 6px rgba(99,91,255,.25);
+  }
+  .btn-submit:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 12px rgba(99,91,255,.35);
+  }
+  .btn-submit:active { background: var(--accent-deep); }
+
+  .form-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0 20px;
+    color: var(--fg-4);
+    font-size: 12px;
+  }
+  .form-divider::before,
+  .form-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-soft);
+  }
+
+  .form-help {
+    text-align: center;
+    font-size: 13px;
+    color: var(--fg-3);
+  }
+  .form-help a { color: var(--accent-fg); font-weight: 500; }
+  .form-help a:hover { text-decoration: underline; }
+
+  /* 响应式 */
+  @media (max-width: 900px) {
+    .auth { grid-template-columns: 1fr; }
+    .brand-side {
+      padding: 36px 28px;
+      min-height: 320px;
+    }
+    .brand-headline { font-size: 30px; }
+    .brand-features { display: none; }
+    .form-side { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth">
+
+  <!-- ============ 左 · 品牌 hero ============ -->
+  <aside class="brand-side">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="brand-top">
+      <div class="brand-logo">J</div>
+      <div class="brand-name">抢单平台</div>
+      <div class="brand-ver">PRO</div>
+    </div>
+
+    <div class="brand-hero">
+      <div class="brand-tagline">Order · Reward · Insight</div>
+      <h1 class="brand-headline">
+        高效抢单 · <span class="accent">智能薪资</span>
+      </h1>
+      <p class="brand-desc">
+        从任务大厅到薪资到账，一条链路全自动闭环。两套规则智能切换，逾期扣减自动识别，让每一笔佣金都看得见、算得清。
+      </p>
+
+      <div class="brand-features">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M3 8l3 3 7-7"/>
+            </svg>
+          </div>
+          <div>
+            <span class="feature-text">任务大厅秒级响应</span>
+            <span class="feature-meta">· 平均 1.2s</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M3 8l3 3 7-7"/>
+            </svg>
+          </div>
+          <div>
+            <span class="feature-text">佣金双规则自动计算</span>
+            <span class="feature-meta">· 新旧政策切换</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M3 8l3 3 7-7"/>
+            </svg>
+          </div>
+          <div>
+            <span class="feature-text">26 个月薪资全留存</span>
+            <span class="feature-meta">· 一键导出</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-foot">
+      <span>© 2026 抢单平台 · 所有数据加密存储</span>
+      <span><a href="#">关于我们</a> · <a href="#">联系支持</a></span>
+    </div>
+  </aside>
+
+  <!-- ============ 右 · 表单 ============ -->
+  <main class="form-side">
+    <div class="form-card">
+      <div class="form-head">
+        <h2 class="form-title">欢迎回来</h2>
+        <p class="form-sub">使用工作账号登录，继续您的抢单旅程</p>
+      </div>
+
+      <form onsubmit="event.preventDefault(); alert('演示页 · 不会真的提交');">
+        <div class="form-group">
+          <label class="form-label">手机号 / 用户名</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                <circle cx="8" cy="6" r="3"/>
+                <path d="M3 14a5 5 0 0 1 10 0"/>
+              </svg>
+            </span>
+            <input type="text" class="form-input" placeholder="输入手机号或用户名">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+                <path d="M5 7V5a3 3 0 0 1 6 0v2"/>
+              </svg>
+            </span>
+            <input type="password" class="form-input" placeholder="输入登录密码">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-check">
+            <input type="checkbox" checked>
+            <span>记住登录状态</span>
+          </label>
+          <a href="#" class="form-link">忘记密码？</a>
+        </div>
+
+        <button type="submit" class="btn-submit">立 即 登 录</button>
+
+        <div class="form-divider">还没账号？</div>
+
+        <div class="form-help">
+          请联系管理员开通账户 · <a href="#">查看开通指引</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</div>
+
+</body>
+</html>
