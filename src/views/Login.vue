@@ -20,7 +20,7 @@ const loginForm = reactive({
 
 const rules: FormRules = {
   user_name: [
-    { required: true, message: '请输入手机号/用户名', trigger: 'blur' }
+    { required: true, message: '请输入账号', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' }
@@ -115,9 +115,10 @@ async function handleLogin() {
           :model="loginForm"
           :rules="rules"
           class="login-form"
+          label-position="top"
           @keyup.enter="handleLogin"
         >
-          <el-form-item prop="user_name" label="手机号 / 用户名">
+          <el-form-item prop="user_name" label="账号">
             <el-input
               v-model="loginForm.user_name"
               placeholder="输入手机号或用户名"
