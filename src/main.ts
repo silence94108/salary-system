@@ -7,6 +7,8 @@ import 'element-plus/dist/index.css'
 import router from './router'
 import App from './App.vue'
 import './style.css'
+// 设计系统：token + Element Plus 主题覆盖（活力科技橙）
+import './styles/theme.css'
 
 const app = createApp(App)
 
