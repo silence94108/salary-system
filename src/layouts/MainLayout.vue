@@ -158,53 +158,108 @@ export default {
 }
 
 .layout-aside {
-  background: linear-gradient(180deg, #1E3A8A 0%, #1E293B 100%);
-  transition: width 0.3s;
+  background: var(--bg-surface);
+  transition: width var(--transition-base);
   overflow: hidden;
-  border-right: 1px solid rgba(249, 115, 22, 0.1);
+  border-right: 1px solid var(--border-default);
+  box-shadow: var(--shadow-sm);
 }
 
 .logo {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.15);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: var(--space-3);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  position: relative;
+}
+
+.logo::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: var(--gradient-warm);
+  border-radius: var(--radius-full);
 }
 
 .logo-text {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--letter-spacing-tight);
+  background: var(--gradient-warm);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .sidebar-menu {
   border-right: none;
   background: transparent;
+  padding: var(--space-4) var(--space-3);
 }
 
 .sidebar-menu .el-menu-item {
-  color: rgba(255, 255, 255, 0.75);
-  transition: all var(--transition-base);
-  border-left: 3px solid transparent;
-  margin: 4px 8px;
-  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all var(--transition-bounce);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.sidebar-menu .el-menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: var(--gradient-warm);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  transition: height var(--transition-bounce);
 }
 
 .sidebar-menu .el-menu-item:hover {
-  background: rgba(249, 115, 22, 0.12);
-  color: var(--brand-200);
-  border-left-color: var(--brand-400);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border-color: var(--brand-200);
+  transform: translateX(4px);
+}
+
+.sidebar-menu .el-menu-item:hover::before {
+  height: 60%;
 }
 
 .sidebar-menu .el-menu-item.is-active {
-  background: rgba(249, 115, 22, 0.18);
-  color: var(--brand-100);
-  border-left-color: var(--brand-500);
+  background: linear-gradient(135deg, var(--brand-50) 0%, #FFF7ED 100%);
+  color: var(--brand-700);
+  border-color: var(--brand-300);
   font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-menu .el-menu-item.is-active::before {
+  height: 80%;
+}
+
+.sidebar-menu .el-menu-item .el-icon {
+  font-size: 20px;
+  transition: all var(--transition-bounce);
+}
+
+.sidebar-menu .el-menu-item:hover .el-icon,
+.sidebar-menu .el-menu-item.is-active .el-icon {
+  transform: scale(1.1);
+  color: var(--brand-600);
 }
 
 .layout-header {
