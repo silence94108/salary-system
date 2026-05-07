@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>抢单平台 · Stripe Dashboard 风原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ Tokens · Stripe 风 ============ */
+  :root {
+    /* Surface */
+    --bg:           #FFFFFF;
+    --bg-side:      #FAFAFD;       /* Stripe 侧栏极浅紫底 */
+    --bg-soft:      #F7F7FA;
+    --bg-hover:     #F2F2F7;
+    --bg-page:      #F7F7FA;
+
+    /* Text · Stripe ink palette */
+    --fg:           #1A1F36;
+    --fg-2:         #3C4257;
+    --fg-3:         #54575F;
+    --fg-4:         #8C8F96;
+    --fg-5:         #A3A8B4;
+
+    /* Border */
+    --border:       #E5E7EB;
+    --border-soft:  #EBEBF1;
+    --border-strong:#D8DAE5;
+
+    /* Accent · Stripe Indigo */
+    --accent:       #635BFF;
+    --accent-hover: #5851EE;
+    --accent-deep:  #4842D2;
+    --accent-bg:    #F1F0FE;
+    --accent-bg-2:  #E5E3FE;
+    --accent-fg:    #4F46E5;
+
+    /* Semantic */
+    --success:    #00A36F;
+    --success-bg: #E6F6F1;
+    --success-fg: #006D49;
+    --warning:    #BC6E00;
+    --warning-bg: #FFF4E0;
+    --warning-fg: #8B5300;
+    --danger:     #D44C47;
+    --danger-bg:  #FCEDED;
+    --danger-fg:  #A4302C;
+
+    /* Type */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 6px;
+    --r-lg: 8px;
+    --r-xl: 12px;
+
+    /* Shadow · 极克制 */
+    --shadow-1: 0 1px 1px rgba(0,0,0,.03), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-2: 0 1px 3px rgba(0,0,0,.04), 0 4px 8px rgba(0,0,0,.04);
+    --shadow-3: 0 2px 6px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+
+    /* Spacing */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px;
+  }
+
+  /* ============ Base ============ */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--fg);
+    background: var(--bg-page);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02','cv03','cv11','ss01';
+  }
+  button { font-family: inherit; cursor: pointer; }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+  /* ============ Layout ============ */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ============ Sidebar · 浅紫白底（精细版）============ */
+  .sidebar {
+    width: 248px;
+    flex-shrink: 0;
+    background: var(--bg-side);
+    border-right: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+
+  /* Brand */
+  .brand {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .brand-mark {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-weight: 700; font-size: 13px;
+    letter-spacing: -.02em;
+    box-shadow: 0 2px 5px rgba(99,91,255,.35);
+  }
+  .brand-name {
+    font-weight: 600; font-size: 14.5px; color: var(--fg);
+    letter-spacing: -.01em;
+  }
+  .brand-ver {
+    margin-left: auto;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--accent-fg);
+    background: var(--accent-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: .03em;
+  }
+
+  /* Workspace switcher */
+  .workspace {
+    margin: 10px 12px 8px;
+    padding: 8px 10px;
+    border-radius: var(--r-md);
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-1);
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .workspace:hover { border-color: var(--border-strong); box-shadow: var(--shadow-2); }
+  .ws-avatar {
+    position: relative;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #818CF8, #635BFF);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .ws-status {
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--bg);
+  }
+  .ws-text { flex: 1; min-width: 0; }
+  .ws-name {
+    font-size: 13px; font-weight: 600; color: var(--fg);
+    line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ws-role { font-size: 11.5px; color: var(--fg-4); line-height: 1.3; }
+  .ws-arr {
+    color: var(--fg-4);
+    flex-shrink: 0;
+  }
+
+  /* Quick create */
+  .quick-create {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 12px 4px;
+    padding: 7px 10px;
+    border-radius: var(--r-md);
+    color: var(--accent-fg);
+    background: transparent;
+    border: 1px dashed var(--accent-bg-2);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .12s;
+    text-decoration: none;
+  }
+  .quick-create:hover {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    border-style: solid;
+  }
+  .quick-create svg { width: 14px; height: 14px; }
+  .quick-kbd {
+    margin-left: auto;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-4);
+    padding: 1px 5px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg);
+  }
+
+  /* Nav */
+  .nav { padding: 6px 12px; flex: 1; overflow-y: auto; }
+  .nav::-webkit-scrollbar { width: 6px; }
+  .nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .nav-section {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--fg-4);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 14px 10px 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .nav-section:hover .nav-section-chev { opacity: 1; }
+  .nav-section-chev {
+    width: 12px; height: 12px;
+    opacity: 0;
+    transition: opacity .12s, transform .15s;
+  }
+  .nav-section.collapsed .nav-section-chev { transform: rotate(-90deg); }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px;
+    border-radius: var(--r-md);
+    font-size: 13.5px;
+    color: var(--fg-2);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 1px;
+    position: relative;
+    transition: background .12s, color .12s;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--fg); }
+  .nav-item.active {
+    background: var(--accent-bg);
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+  .nav-item.active .nav-ic { color: var(--accent); }
+  .nav-ic {
+    width: 16px; height: 16px;
+    color: var(--fg-3);
+    flex-shrink: 0;
+  }
+  .nav-item-text { flex: 1; }
+  .nav-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 1px 6px;
+    min-width: 18px;
+    text-align: center;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+  }
+  .nav-badge.muted { background: var(--bg-hover); color: var(--fg-3); }
+  .nav-badge.tag-new {
+    background: linear-gradient(135deg, #00C896, #00A36F);
+    color: #fff;
+    letter-spacing: .04em;
+  }
+  .nav-badge.tag-beta {
+    background: var(--warning-bg);
+    color: var(--warning-fg);
+    letter-spacing: .04em;
+  }
+  .nav-chev {
+    width: 12px; height: 12px;
+    color: var(--fg-4);
+    transition: transform .15s;
+  }
+  .nav-item.expanded .nav-chev { transform: rotate(90deg); }
+
+  /* Sub menu */
+  .nav-sub {
+    margin: 2px 0 4px 22px;
+    padding-left: 10px;
+    border-left: 1px solid var(--border-soft);
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .nav-sub-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 10px;
+    border-radius: var(--r-md);
+    font-size: 13px;
+    color: var(--fg-3);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .12s;
+  }
+  .nav-sub-item::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--fg-5);
+    flex-shrink: 0;
+    transition: background .12s;
+  }
+  .nav-sub-item:hover {
+    color: var(--fg);
+    background: var(--bg-hover);
+  }
+  .nav-sub-item:hover::before { background: var(--fg-3); }
+  .nav-sub-item.active {
+    color: var(--accent-fg);
+    background: var(--accent-bg);
+    font-weight: 600;
+  }
+  .nav-sub-item.active::before { background: var(--accent); }
+
+  /* Status card · 本月进度 */
+  .nav-status-card {
+    margin: 16px 4px 8px;
+    padding: 12px 12px 14px;
+    background: linear-gradient(135deg, #F1F0FE 0%, #FAFAFD 100%);
+    border: 1px solid var(--accent-bg-2);
+    border-radius: var(--r-lg);
+  }
+  .nsc-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .nsc-title {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--fg-2);
+    letter-spacing: .02em;
+  }
+  .nsc-percent {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .nsc-bar {
+    height: 6px;
+    background: rgba(99,91,255,.12);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .nsc-bar-fill {
+    height: 100%;
+    width: 80%;
+    background: linear-gradient(90deg, var(--accent), #818CF8);
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+  .nsc-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px;
+    color: var(--fg-3);
+  }
+  .nsc-foot b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Sidebar foot */
+  .sidebar-foot {
+    border-top: 1px solid var(--border-soft);
+    padding: 8px;
+  }
+  .foot-tools {
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 4px 0 8px;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 8px;
+  }
+  .tool-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: var(--r-md);
+    color: var(--fg-3);
+    transition: all .12s;
+    position: relative;
+  }
+  .tool-btn:hover { background: var(--bg-hover); color: var(--accent-fg); }
+  .tool-btn svg { width: 15px; height: 15px; }
+  .tool-btn .tool-tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--fg);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s;
+  }
+  .tool-btn:hover .tool-tip { opacity: 1; }
+
+  .user-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .user-pill:hover { background: var(--bg-hover); }
+  .avatar {
+    position: relative;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FBA94C, #F77B6A);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .avatar-status {
+    position: absolute;
+    bottom: -1px; right: -1px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--bg-side);
+  }
+  .u-info { min-width: 0; flex: 1; }
+  .u-name {
+    font-size: 13px; font-weight: 600; color: var(--fg);
+    line-height: 1.2;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .u-pro {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--warning-fg);
+    background: var(--warning-bg);
+    padding: 1px 4px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+  }
+  .u-org { font-size: 11px; color: var(--fg-4); line-height: 1.4; }
+  .u-menu {
+    color: var(--fg-4);
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    transition: color .12s;
+  }
+  .user-pill:hover .u-menu { color: var(--fg); }
+
+  /* ============ Main ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-page); }
+
+  /* Top bar */
+  .topbar {
+    height: 56px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .crumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13.5px;
+  }
+  .crumb a { color: var(--fg-3); text-decoration: none; }
+  .crumb a:hover { color: var(--fg); }
+  .crumb-sep { color: var(--fg-4); }
+  .crumb-current { color: var(--fg); font-weight: 500; }
+
+  .top-actions { display: flex; align-items: center; gap: 4px; }
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    border-radius: var(--r-md);
+    font-size: 13px;
+    color: var(--fg-4);
+    width: 240px;
+    transition: all .15s;
+    cursor: text;
+    margin-right: 8px;
+  }
+  .search-bar:hover { border-color: var(--border); background: var(--bg); }
+  .search-bar svg { width: 14px; height: 14px; }
+  .search-kbd {
+    margin-left: auto;
+    font-size: 11px;
+    padding: 1px 5px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--fg-4);
+  }
+  .ic-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: var(--r-md);
+    color: var(--fg-3);
+    transition: all .12s;
+  }
+  .ic-btn:hover { background: var(--bg-hover); color: var(--fg); }
+
+  /* ============ Content ============ */
+  .content {
+    padding: 24px 28px 64px;
+    max-width: 1280px;
+    width: 100%;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .page-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .page-title {
+    font-size: 24px; font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -.02em;
+    color: var(--fg);
+  }
+  .page-sub { font-size: 13.5px; color: var(--fg-3); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 13px; font-weight: 500;
+    color: var(--fg-2);
+    box-shadow: var(--shadow-1);
+    transition: all .12s;
+  }
+  .btn:hover { border-color: var(--border-strong); color: var(--fg); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 1px 1px rgba(0,0,0,.06), 0 2px 5px rgba(99,91,255,.3);
+  }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+  .btn .ic { width: 14px; height: 14px; }
+
+  /* Card */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--fg); letter-spacing: -.005em; }
+  .card-meta { font-size: 12.5px; color: var(--fg-4); }
+  .card-body { padding: 20px; }
+
+  /* Settings form */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 12.5px; font-weight: 500; color: var(--fg-2);
+  }
+  .input {
+    height: 34px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 13.5px;
+    font-family: inherit;
+    box-shadow: var(--shadow-1);
+    transition: border-color .12s, box-shadow .12s;
+    outline: none;
+  }
+  .input:hover { border-color: var(--border-strong); }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,91,255,.18);
+  }
+
+  /* ============ Hero · 白底大数字 + sparkline ============ */
+  .hero {
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+  .hero-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    padding: 24px 28px 20px;
+    align-items: end;
+  }
+  .hero-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--fg-3);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-pill {
+    font-size: 11px; font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--accent-bg);
+    color: var(--accent-fg);
+  }
+  .hero-amount {
+    font-size: 38px; font-weight: 700;
+    letter-spacing: -.025em;
+    color: var(--fg);
+    line-height: 1.1;
+    display: flex; align-items: baseline;
+  }
+  .hero-currency {
+    font-size: 22px; font-weight: 500;
+    color: var(--fg-3);
+    margin-right: 4px;
+  }
+  .hero-decimal {
+    font-size: 22px; font-weight: 500;
+    color: var(--fg-4);
+    margin-left: 2px;
+  }
+  .hero-trend {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12.5px;
+    color: var(--success-fg);
+    font-weight: 500;
+  }
+  .hero-trend .arrow { font-size: 12px; }
+  .hero-trend .vs { color: var(--fg-4); font-weight: 400; margin-left: 4px; }
+
+  /* Sparkline */
+  .sparkline-wrap {
+    width: 280px;
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+  .sparkline-meta { font-size: 11.5px; color: var(--fg-4); margin-bottom: 6px; }
+  .sparkline {
+    width: 100%;
+    height: 72px;
+    display: block;
+  }
+
+  .hero-bottom {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--border-soft);
+    background: var(--bg-soft);
+  }
+  .hero-cell {
+    padding: 14px 20px;
+    border-right: 1px solid var(--border-soft);
+  }
+  .hero-cell:last-child { border-right: none; }
+  .hero-cell-label { font-size: 11.5px; color: var(--fg-4); margin-bottom: 4px; }
+  .hero-cell-value { font-size: 16px; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .hero-cell-value.accent { color: var(--accent-fg); }
+
+  /* ============ Stats · 白底无图标盒 ============ */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-1);
+    padding: 18px 20px;
+    transition: box-shadow .15s;
+  }
+  .stat:hover { box-shadow: var(--shadow-2); }
+  .stat-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .stat-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--fg-3);
+  }
+  .stat-pill {
+    font-size: 11px; font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--success-bg);
+    color: var(--success-fg);
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .stat-value {
+    font-size: 26px; font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    display: flex; align-items: baseline;
+  }
+  .stat-value .cur { font-size: 14px; font-weight: 500; color: var(--fg-3); margin-right: 2px; }
+  .stat-value .dec { font-size: 14px; font-weight: 500; color: var(--fg-4); margin-left: 2px; }
+  .stat-foot {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--fg-4);
+  }
+
+  /* ============ Table ============ */
+  .table-wrap { overflow-x: auto; }
+  table.t {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+  .t thead th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11.5px;
+    letter-spacing: .03em;
+    color: var(--fg-3);
+    padding: 10px 16px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border-soft);
+    white-space: nowrap;
+  }
+  .t tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  .t tbody tr:last-child td { border-bottom: none; }
+  .t tbody tr:hover td { background: var(--bg-hover); }
+  .t .col-name { color: var(--fg); font-weight: 500; }
+  .t .col-num { font-variant-numeric: tabular-nums; color: var(--fg); }
+  .t .col-strong {
+    color: var(--fg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============ Stripe-style status pills ============ */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 20px;
+    padding: 0 8px;
+    font-size: 11.5px;
+    font-weight: 500;
+    border-radius: 10px;
+    line-height: 1;
+  }
+  .pill::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .pill-success { background: var(--success-bg); color: var(--success-fg); }
+  .pill-warning { background: var(--warning-bg); color: var(--warning-fg); }
+  .pill-danger  { background: var(--danger-bg);  color: var(--danger-fg); }
+  .pill-info    { background: var(--accent-bg);  color: var(--accent-fg); }
+  .pill-muted   { background: var(--bg-hover);   color: var(--fg-3); }
+  .pill-muted::before { background: var(--fg-4); }
+
+  /* ============ Year groups ============ */
+  .year-list { display: flex; flex-direction: column; }
+  .year-row { border-top: 1px solid var(--border-soft); }
+  .year-row:first-child { border-top: none; }
+  .year-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background .12s;
+    user-select: none;
+  }
+  .year-head:hover { background: var(--bg-hover); }
+  .year-left { display: flex; align-items: center; gap: 12px; }
+  .chev {
+    width: 14px; height: 14px;
+    color: var(--fg-3);
+    transition: transform .15s;
+  }
+  .year-row.open .chev { transform: rotate(90deg); }
+  .year-name {
+    font-size: 14px; font-weight: 600;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .year-count {
+    font-size: 11.5px;
+    color: var(--fg-3);
+    background: var(--bg-soft);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .year-total {
+    font-size: 13px; color: var(--fg-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .year-total b { color: var(--fg); font-weight: 600; }
+  .year-body {
+    display: none;
+    border-top: 1px solid var(--border-soft);
+    background: var(--bg-soft);
+  }
+  .year-row.open .year-body { display: block; }
+  .year-body table.t thead th { background: transparent; }
+  .year-body table.t tbody td { background: var(--bg); }
+
+  /* ============ Rules ============ */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .rule {
+    border: 1px solid var(--border-soft);
+    background: var(--bg);
+    border-radius: var(--r-md);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-1);
+  }
+  .rule-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .rule-no {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    background: var(--accent-bg);
+    color: var(--accent-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .rule-title { font-size: 13.5px; font-weight: 600; color: var(--fg); }
+  .rule-cond { font-size: 12.5px; color: var(--fg-3); margin-bottom: 8px; }
+  .rule-rate {
+    font-size: 14px; font-weight: 600;
+    color: var(--accent-fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  a.link { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a.link:hover { color: var(--accent-deep); text-decoration: underline; }
+
+  @media (max-width: 900px) {
+    .form-grid, .stats, .rules { grid-template-columns: 1fr; }
+    .hero-top { grid-template-columns: 1fr; }
+    .hero-bottom { grid-template-columns: 1fr; }
+    .hero-cell { border-right: none; border-bottom: 1px solid var(--border-soft); }
+    .hero-cell:last-child { border-bottom: none; }
+    .sparkline-wrap { width: 100%; }
+    .sidebar { display: none; }
+    .search-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">J</div>
+      <div class="brand-name">抢单平台</div>
+      <span class="brand-ver">PRO</span>
+    </div>
+
+    <div class="workspace">
+      <div class="ws-avatar">
+        智
+        <span class="ws-status"></span>
+      </div>
+      <div class="ws-text">
+        <div class="ws-name">智驰科技</div>
+        <div class="ws-role">销售部 · 高级</div>
+      </div>
+      <svg class="ws-arr" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polyline points="5,6 8,3 11,6"/>
+        <polyline points="5,10 8,13 11,10"/>
+      </svg>
+    </div>
+
+    <a class="quick-create">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 8h10M8 3v10"/>
+      </svg>
+      快速创建
+      <span class="quick-kbd">⌘N</span>
+    </a>
+
+    <nav class="nav">
+      <!-- 工作台 -->
+      <div class="nav-section">
+        <span>工作台</span>
+        <svg class="nav-section-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="3,4 6,7 9,4"/>
+        </svg>
+      </div>
+
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/>
+          <rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+        </svg>
+        <span class="nav-item-text">任务大厅</span>
+        <span class="nav-badge tag-new">NEW</span>
+      </a>
+
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="3" y1="4" x2="13" y2="4"/>
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <line x1="3" y1="12" x2="13" y2="12"/>
+        </svg>
+        <span class="nav-item-text">我的任务</span>
+        <span class="nav-badge muted">5</span>
+      </a>
+
+      <a class="nav-item active expanded">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M8 4.5v3.5l2.2 1.3"/>
+        </svg>
+        <span class="nav-item-text">薪资计算</span>
+        <svg class="nav-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7">
+          <polyline points="4,3 8,6 4,9"/>
+        </svg>
+      </a>
+      <div class="nav-sub">
+        <a class="nav-sub-item active">月度计算</a>
+        <a class="nav-sub-item">历史薪资</a>
+        <a class="nav-sub-item">规则配置</a>
+      </div>
+
+      <!-- 分析 -->
+      <div class="nav-section">
+        <span>分析</span>
+        <svg class="nav-section-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="3,4 6,7 9,4"/>
+        </svg>
+      </div>
+
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="2,12 6,7 9,10 14,4"/>
+        </svg>
+        <span class="nav-item-text">数据报表</span>
+      </a>
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="12" height="10" rx="1"/>
+          <line x1="2" y1="6" x2="14" y2="6"/>
+        </svg>
+        <span class="nav-item-text">结算流水</span>
+      </a>
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 13h2V8H3zM7 13h2V4H7zM11 13h2v-7h-2z"/>
+        </svg>
+        <span class="nav-item-text">业绩排行</span>
+        <span class="nav-badge tag-new">NEW</span>
+      </a>
+
+      <!-- 设置 -->
+      <div class="nav-section">
+        <span>设置</span>
+        <svg class="nav-section-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="3,4 6,7 9,4"/>
+        </svg>
+      </div>
+
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>
+        </svg>
+        <span class="nav-item-text">偏好设置</span>
+      </a>
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4z"/>
+          <path d="M6.5 13a1.5 1.5 0 0 0 3 0"/>
+        </svg>
+        <span class="nav-item-text">通知设置</span>
+      </a>
+      <a class="nav-item">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M11 3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+          <path d="M2 13a4 4 0 0 1 7-2.5"/>
+          <circle cx="11" cy="11.5" r="2.5"/>
+          <path d="M11 9.5v4M9 11.5h4"/>
+        </svg>
+        <span class="nav-item-text">集成与 API</span>
+        <span class="nav-badge tag-beta">BETA</span>
+      </a>
+
+      <!-- 状态卡 · 本月薪资进度 -->
+      <div class="nav-status-card">
+        <div class="nsc-head">
+          <div class="nsc-title">本月接单进度</div>
+          <div class="nsc-percent">80%</div>
+        </div>
+        <div class="nsc-bar">
+          <div class="nsc-bar-fill"></div>
+        </div>
+        <div class="nsc-foot">
+          <span>已完结 <b>12</b> / 15</span>
+          <span>剩 3 个</span>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="foot-tools">
+        <button class="tool-btn" title="帮助">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="6"/>
+            <path d="M6.3 6.3a1.7 1.7 0 0 1 3.4 0c0 1-1.7 1.4-1.7 2.4M8 11h.01"/>
+          </svg>
+          <span class="tool-tip">帮助文档</span>
+        </button>
+        <button class="tool-btn" title="反馈">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 3h10v8H6l-3 3z"/>
+          </svg>
+          <span class="tool-tip">反馈建议</span>
+        </button>
+        <button class="tool-btn" title="主题">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M8 2a6 6 0 1 0 5.5 8.5A5 5 0 0 1 8 2z"/>
+          </svg>
+          <span class="tool-tip">切换主题</span>
+        </button>
+        <button class="tool-btn" title="快捷键">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="4" width="12" height="8" rx="1.5"/>
+            <line x1="5" y1="7" x2="5.01" y2="7"/>
+            <line x1="8" y1="7" x2="8.01" y2="7"/>
+            <line x1="11" y1="7" x2="11.01" y2="7"/>
+            <line x1="5" y1="9.5" x2="11" y2="9.5"/>
+          </svg>
+          <span class="tool-tip">快捷键 ⌘/</span>
+        </button>
+      </div>
+
+      <div class="user-pill">
+        <div class="avatar">
+          团
+          <span class="avatar-status"></span>
+        </div>
+        <div class="u-info">
+          <div class="u-name">团团 <span class="u-pro">PRO</span></div>
+          <div class="u-org">销售部 · 高级</div>
+        </div>
+        <svg class="u-menu" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="3" cy="8" r="1.2"/>
+          <circle cx="8" cy="8" r="1.2"/>
+          <circle cx="13" cy="8" r="1.2"/>
+        </svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb">
+        <a>工作台</a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-current">薪资计算</span>
+      </div>
+      <div class="top-actions">
+        <div class="search-bar">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="13.5" y2="13.5"/>
+          </svg>
+          搜索任务、月份、规则...
+          <span class="search-kbd">⌘K</span>
+        </div>
+        <button class="ic-btn" title="通知">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4z"/>
+            <path d="M6.5 13a1.5 1.5 0 0 0 3 0"/>
+          </svg>
+        </button>
+        <button class="ic-btn" title="帮助">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="6"/>
+            <path d="M6.3 6.3a1.7 1.7 0 0 1 3.4 0c0 1-1.7 1.4-1.7 2.4M8 11h.01"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- 页头 -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">薪资计算</h1>
+          <div class="page-sub">基于接单月份的总佣金计算实得提成 · 当前月份 2026-05</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6"/><path d="M13 3v3h-3"/>
+              <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10"/><path d="M3 13v-3h3"/>
+            </svg>
+            刷新
+          </button>
+          <button class="btn">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 11v2h10v-2M5 7l3 3 3-3M8 1v9"/>
+            </svg>
+            导出
+          </button>
+          <button class="btn btn-primary">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M3 8h10M8 3v10"/>
+            </svg>
+            生成薪资单
+          </button>
+        </div>
+      </div>
+
+      <!-- ============ Hero · 白底大数字 + sparkline ============ -->
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <div class="hero-label">
+              应发薪资
+              <span class="hero-pill">2026-05</span>
+            </div>
+            <div class="hero-amount">
+              <span class="hero-currency">¥</span>
+              <span class="num">7,520</span>
+              <span class="hero-decimal">.00</span>
+            </div>
+            <div class="hero-trend">
+              <span class="arrow">↑</span>
+              <span class="num">9.9%</span>
+              <span class="vs">较 2026-04（¥6,840.00）</span>
+            </div>
+          </div>
+
+          <div class="sparkline-wrap">
+            <div class="sparkline-meta">近 6 个月薪资走势</div>
+            <svg class="sparkline" viewBox="0 0 280 72" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#635BFF" stop-opacity="0.18"/>
+                  <stop offset="100%" stop-color="#635BFF" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- baseline grid -->
+              <line x1="0" y1="36" x2="280" y2="36" stroke="#EBEBF1" stroke-dasharray="2,4"/>
+              <!-- area fill -->
+              <path d="M 0,52 L 56,40 L 112,46 L 168,18 L 224,30 L 280,12 L 280,72 L 0,72 Z" fill="url(#spark-fill)"/>
+              <!-- line -->
+              <path d="M 0,52 L 56,40 L 112,46 L 168,18 L 224,30 L 280,12"
+                    fill="none" stroke="#635BFF" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+              <!-- points -->
+              <circle cx="0"   cy="52" r="2.2" fill="#635BFF"/>
+              <circle cx="56"  cy="40" r="2.2" fill="#635BFF"/>
+              <circle cx="112" cy="46" r="2.2" fill="#635BFF"/>
+              <circle cx="168" cy="18" r="2.2" fill="#635BFF"/>
+              <circle cx="224" cy="30" r="2.2" fill="#635BFF"/>
+              <circle cx="280" cy="12" r="3"   fill="#635BFF" stroke="#fff" stroke-width="2"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="hero-bottom">
+          <div class="hero-cell">
+            <div class="hero-cell-label">底薪（含工龄）</div>
+            <div class="hero-cell-value">¥3,200.00</div>
+          </div>
+          <div class="hero-cell">
+            <div class="hero-cell-label">佣金合计</div>
+            <div class="hero-cell-value">¥4,320.00</div>
+          </div>
+          <div class="hero-cell">
+            <div class="hero-cell-label">实得比例</div>
+            <div class="hero-cell-value accent">规则Ⅰ · 50%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Stats ============ -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-head">
+            <div class="stat-label">当月完结项目</div>
+            <span class="stat-pill">↑ 3</span>
+          </div>
+          <div class="stat-value"><span class="num">12</span></div>
+          <div class="stat-foot">较上月 +33%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-head">
+            <div class="stat-label">完结佣金总额</div>
+            <span class="stat-pill">↑ 12.5%</span>
+          </div>
+          <div class="stat-value"><span class="cur">¥</span><span class="num">8,640</span><span class="dec">.00</span></div>
+          <div class="stat-foot">基于接单月份汇总</div>
+        </div>
+        <div class="stat">
+          <div class="stat-head">
+            <div class="stat-label">实得佣金</div>
+            <span class="stat-pill" style="background:var(--accent-bg);color:var(--accent-fg);">规则Ⅰ</span>
+          </div>
+          <div class="stat-value"><span class="cur">¥</span><span class="num">4,320</span><span class="dec">.00</span></div>
+          <div class="stat-foot">提成比例 <span style="color:var(--accent-fg);font-weight:600;">50%</span></div>
+        </div>
+      </div>
+
+      <!-- ============ Settings ============ -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">计算设置</div>
+          <div class="card-meta">当月完结 12 个项目</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">入职日期</div>
+              <input class="input" value="2024-03-15" />
+            </div>
+            <div class="field">
+              <div class="field-label">起始底薪 ¥</div>
+              <input class="input num" value="3000" />
+            </div>
+            <div class="field">
+              <div class="field-label">计算月份</div>
+              <input class="input" value="2026-05" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Detail Table ============ -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">完结项目明细 · 2026-05</div>
+          <div class="card-meta">12 条记录</div>
+        </div>
+        <div class="table-wrap">
+          <table class="t">
+            <thead>
+              <tr>
+                <th>项目名称</th>
+                <th>接单月份</th>
+                <th>本月接单总额</th>
+                <th>状态</th>
+                <th>接单佣金</th>
+                <th>逾期</th>
+                <th>规则</th>
+                <th>比例</th>
+                <th style="text-align:right;">实得佣金</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-name">华清招聘网站改版</td>
+                <td class="num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="pill pill-success">已完结</span></td>
+                <td class="col-num">¥1,800.00</td>
+                <td><span class="pill pill-muted">正常</span></td>
+                <td><span class="pill pill-info">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-strong" style="text-align:right;">¥900.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">悦享电商小程序运营</td>
+                <td class="num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="pill pill-success">已完结</span></td>
+                <td class="col-num">¥2,400.00</td>
+                <td><span class="pill pill-danger">逾期 3 天</span></td>
+                <td><span class="pill pill-info">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-strong" style="text-align:right;">¥1,200.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">星橙文创内容制作</td>
+                <td class="num">2026-05</td>
+                <td class="col-num">¥2,440.00</td>
+                <td><span class="pill pill-success">已完结</span></td>
+                <td class="col-num">¥1,200.00</td>
+                <td><span class="pill pill-muted">正常</span></td>
+                <td><span class="pill pill-warning">规则Ⅱ</span></td>
+                <td class="num">30%</td>
+                <td class="col-strong" style="text-align:right;">¥360.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">青藤教育招生页</td>
+                <td class="num">2026-05</td>
+                <td class="col-num">¥2,440.00</td>
+                <td><span class="pill pill-success">已完结</span></td>
+                <td class="col-num">¥640.00</td>
+                <td><span class="pill pill-muted">正常</span></td>
+                <td><span class="pill pill-warning">规则Ⅱ</span></td>
+                <td class="num">30%</td>
+                <td class="col-strong" style="text-align:right;">¥192.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">蓝海餐饮品牌包装</td>
+                <td class="num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="pill pill-success">已完结</span></td>
+                <td class="col-num">¥2,000.00</td>
+                <td><span class="pill pill-muted">正常</span></td>
+                <td><span class="pill pill-info">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-strong" style="text-align:right;">¥1,000.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ Year groups ============ -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">每月实际工资</div>
+          <div class="card-meta">26 条历史记录</div>
+        </div>
+        <div class="year-list">
+          <div class="year-row open">
+            <div class="year-head" data-toggle>
+              <div class="year-left">
+                <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="6,4 10,8 6,12"/>
+                </svg>
+                <div class="year-name">2026</div>
+                <div class="year-count">5 条记录</div>
+              </div>
+              <div class="year-total">年度总额 <b class="num">¥38,460.00</b></div>
+            </div>
+            <div class="year-body">
+              <table class="t">
+                <thead><tr>
+                  <th>月份</th><th>实际工资</th><th>结构确认</th><th>备注</th><th style="text-align:right;">操作</th>
+                </tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="num col-name">2026-04</td>
+                    <td class="col-strong">¥7,520.00</td>
+                    <td><span class="pill pill-success">已确认</span></td>
+                    <td style="color:var(--fg-4);">—</td>
+                    <td style="text-align:right;"><a class="link">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num col-name">2026-03</td>
+                    <td class="col-strong">¥6,840.00</td>
+                    <td><span class="pill pill-success">已确认</span></td>
+                    <td style="color:var(--fg-4);">—</td>
+                    <td style="text-align:right;"><a class="link">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num col-name">2026-02</td>
+                    <td class="col-strong">¥9,200.00</td>
+                    <td><span class="pill pill-warning">待确认</span></td>
+                    <td>含春节奖金</td>
+                    <td style="text-align:right;"><a class="link">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num col-name">2026-01</td>
+                    <td class="col-strong">¥7,100.00</td>
+                    <td><span class="pill pill-success">已确认</span></td>
+                    <td style="color:var(--fg-4);">—</td>
+                    <td style="text-align:right;"><a class="link">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num col-name">2025-12</td>
+                    <td class="col-strong">¥7,800.00</td>
+                    <td><span class="pill pill-success">已确认</span></td>
+                    <td style="color:var(--fg-4);">—</td>
+                    <td style="text-align:right;"><a class="link">查看详情</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="year-row">
+            <div class="year-head" data-toggle>
+              <div class="year-left">
+                <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="6,4 10,8 6,12"/>
+                </svg>
+                <div class="year-name">2025</div>
+                <div class="year-count">12 条记录</div>
+              </div>
+              <div class="year-total">年度总额 <b class="num">¥84,260.00</b></div>
+            </div>
+            <div class="year-body"></div>
+          </div>
+
+          <div class="year-row">
+            <div class="year-head" data-toggle>
+              <div class="year-left">
+                <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="6,4 10,8 6,12"/>
+                </svg>
+                <div class="year-name">2024</div>
+                <div class="year-count">9 条记录</div>
+              </div>
+              <div class="year-total">年度总额 <b class="num">¥58,920.00</b></div>
+            </div>
+            <div class="year-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Rules ============ -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">佣金计算规则</div>
+          <div class="card-meta">新规则 · 2026-04 起</div>
+        </div>
+        <div class="card-body">
+          <div class="rules">
+            <div class="rule">
+              <div class="rule-head">
+                <div class="rule-no">Ⅰ</div>
+                <div class="rule-title">达标</div>
+              </div>
+              <div class="rule-cond">总佣金 ≥ 当月底薪</div>
+              <div class="rule-rate">提成 50%</div>
+            </div>
+            <div class="rule">
+              <div class="rule-head">
+                <div class="rule-no">Ⅱ</div>
+                <div class="rule-title">基础</div>
+              </div>
+              <div class="rule-cond">总佣金 &lt; 当月底薪</div>
+              <div class="rule-rate">提成 30%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  document.querySelectorAll('[data-toggle]').forEach(h => {
+    h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>

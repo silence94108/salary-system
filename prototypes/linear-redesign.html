@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>抢单平台 · Linear 风重设计原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens ---------- */
+  :root {
+    /* 中性 */
+    --bg:           #FFFFFF;
+    --bg-soft:      #FAFAFA;
+    --bg-hover:     #F4F4F5;
+    --bg-elev:      #FFFFFF;
+    --border:       #E5E7EB;
+    --border-soft:  #F1F1F4;
+    --border-strong:#D4D4D8;
+
+    /* 文字 */
+    --fg:           #18181B;
+    --fg-2:         #3F3F46;
+    --fg-3:         #71717A;
+    --fg-4:         #A1A1AA;
+
+    /* 主色（用户指定 #2563EB 藏青） */
+    --accent:       #2563EB;
+    --accent-hover: #1D4ED8;
+    --accent-bg:    #EFF6FF;
+    --accent-bg-2:  #DBEAFE;
+    --accent-fg:    #1E40AF;
+
+    /* 语义 */
+    --success:      #16A34A;
+    --success-bg:   #F0FDF4;
+    --warning:      #D97706;
+    --warning-bg:   #FFFBEB;
+    --danger:       #DC2626;
+    --danger-bg:    #FEF2F2;
+
+    /* 排版 */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* 间距 */
+    --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+
+    /* 圆角 */
+    --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px;
+
+    /* 阴影（极克制） */
+    --shadow-1: 0 1px 2px rgba(16,24,40,.04);
+    --shadow-2: 0 4px 12px rgba(16,24,40,.06);
+  }
+
+  /* ---------- Base ---------- */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--fg);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02','cv03','cv04','cv11';
+  }
+  button { font-family: inherit; cursor: pointer; }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+  /* ---------- Layout ---------- */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 232px;
+    flex-shrink: 0;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+  .brand {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 13px;
+    letter-spacing: -.02em;
+  }
+  .brand-name {
+    font-weight: 600; font-size: 14px; color: var(--fg);
+    letter-spacing: -.01em;
+  }
+  .nav { padding: 12px 8px; flex: 1; }
+  .nav-section-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fg-4);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 8px 8px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px;
+    border-radius: var(--r-md);
+    font-size: 13.5px;
+    color: var(--fg-2);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+    text-decoration: none;
+    margin-bottom: 1px;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--fg); }
+  .nav-item.active {
+    background: var(--accent-bg);
+    color: var(--accent-fg);
+  }
+  .nav-item.active .nav-icon { color: var(--accent); }
+  .nav-icon {
+    width: 16px; height: 16px;
+    color: var(--fg-3);
+    flex-shrink: 0;
+  }
+  .nav-item:hover .nav-icon { color: var(--fg-2); }
+  .nav-kbd {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-4);
+    padding: 1px 5px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+  }
+  .sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .user-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: background .12s ease;
+  }
+  .user-pill:hover { background: var(--bg-hover); }
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .user-name {
+    font-size: 13px; font-weight: 500; color: var(--fg-2);
+    line-height: 1.2;
+  }
+  .user-org { font-size: 11.5px; color: var(--fg-4); line-height: 1.3; }
+
+  /* ---------- Main ---------- */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* Top bar */
+  .topbar {
+    height: 56px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13.5px;
+  }
+  .crumb { color: var(--fg-3); }
+  .crumb-sep { color: var(--fg-4); }
+  .crumb.current { color: var(--fg); font-weight: 500; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: var(--r-md);
+    color: var(--fg-3);
+    transition: background .12s ease, color .12s ease;
+  }
+  .icon-btn:hover { background: var(--bg-hover); color: var(--fg); }
+
+  /* Content */
+  .content {
+    padding: 24px 28px 64px;
+    max-width: 1280px;
+    width: 100%;
+  }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .page-title {
+    font-size: 22px; font-weight: 600; letter-spacing: -.015em;
+    color: var(--fg);
+    margin: 0 0 4px;
+  }
+  .page-sub { font-size: 13.5px; color: var(--fg-3); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 13px; font-weight: 500;
+    color: var(--fg-2);
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .btn:hover { background: var(--bg-hover); color: var(--fg); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: var(--shadow-1);
+  }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+  .btn-ghost { border-color: transparent; }
+  .btn-ghost:hover { background: var(--bg-hover); border-color: var(--border-soft); }
+  .btn .ic { width: 14px; height: 14px; }
+
+  /* Card */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+  .card + .card { margin-top: 16px; }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .card-title { font-size: 13.5px; font-weight: 600; color: var(--fg); letter-spacing: -.005em; }
+  .card-meta { font-size: 12.5px; color: var(--fg-4); }
+  .card-body { padding: 18px; }
+
+  /* Form (settings card) */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 12px; font-weight: 500; color: var(--fg-3);
+    letter-spacing: .005em;
+  }
+  .input {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 13.5px;
+    font-family: inherit;
+    transition: border-color .12s ease, box-shadow .12s ease;
+    outline: none;
+  }
+  .input:hover { border-color: var(--border-strong); }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+
+  /* Stats grid */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 16px 18px;
+  }
+  .stat-label {
+    font-size: 12px; font-weight: 500;
+    color: var(--fg-3);
+    letter-spacing: .01em;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-label .ic { width: 13px; height: 13px; color: var(--fg-4); }
+  .stat-value {
+    font-size: 26px; font-weight: 600; letter-spacing: -.02em;
+    color: var(--fg);
+    line-height: 1.15;
+  }
+  .stat-currency { font-size: 14px; font-weight: 500; color: var(--fg-3); margin-right: 2px; }
+  .stat-foot {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--fg-4);
+  }
+  .stat-delta { color: var(--success); font-weight: 500; }
+
+  /* Hero salary（去掉橙色，改成数据型 hero） */
+  .hero {
+    margin-top: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 22px 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+  }
+  .hero-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--fg-3);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .hero-amount {
+    font-size: 40px; font-weight: 600;
+    letter-spacing: -.025em;
+    color: var(--fg);
+    line-height: 1.1;
+  }
+  .hero-currency {
+    font-size: 22px; font-weight: 500;
+    color: var(--fg-3);
+    margin-right: 4px;
+  }
+  .hero-breakdown {
+    display: flex; gap: 28px;
+    padding-left: 28px;
+    border-left: 1px solid var(--border);
+  }
+  .hb-item { min-width: 0; }
+  .hb-label { font-size: 11.5px; color: var(--fg-4); margin-bottom: 4px; }
+  .hb-value { font-size: 18px; font-weight: 600; color: var(--fg); letter-spacing: -.01em; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table.t {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+  .t thead th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--fg-4);
+    padding: 10px 16px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .t tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  .t tbody tr:last-child td { border-bottom: none; }
+  .t tbody tr:hover td { background: var(--bg-soft); }
+  .t .col-name { color: var(--fg); font-weight: 500; }
+  .t .col-num { font-variant-numeric: tabular-nums; color: var(--fg); }
+  .t .col-strong { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Tag */
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 20px;
+    padding: 0 7px;
+    font-size: 11.5px; font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    line-height: 1;
+  }
+  .tag-success { background: var(--success-bg); color: var(--success); border-color: rgba(22,163,74,.15); }
+  .tag-warning { background: var(--warning-bg); color: var(--warning); border-color: rgba(217,119,6,.15); }
+  .tag-danger  { background: var(--danger-bg); color: var(--danger); border-color: rgba(220,38,38,.15); }
+  .tag-info    { background: var(--accent-bg); color: var(--accent-fg); border-color: rgba(37,99,235,.15); }
+  .tag-muted   { background: var(--bg-soft); color: var(--fg-3); border-color: var(--border); }
+  .tag-dot::before {
+    content:''; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; opacity: .85;
+  }
+
+  /* Year groups */
+  .year-list { display: flex; flex-direction: column; gap: 0; }
+  .year-row {
+    border-top: 1px solid var(--border-soft);
+  }
+  .year-row:first-child { border-top: none; }
+  .year-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: background .12s ease;
+    user-select: none;
+  }
+  .year-head:hover { background: var(--bg-soft); }
+  .year-left { display: flex; align-items: center; gap: 10px; }
+  .chev {
+    width: 14px; height: 14px;
+    color: var(--fg-3);
+    transition: transform .15s ease;
+  }
+  .year-row.open .chev { transform: rotate(90deg); }
+  .year-name { font-size: 13.5px; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .year-count { font-size: 12px; color: var(--fg-4); }
+  .year-total { font-size: 13px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .year-total .num { color: var(--fg); font-weight: 600; }
+  .year-body {
+    display: none;
+    border-top: 1px solid var(--border-soft);
+    background: var(--bg-soft);
+  }
+  .year-row.open .year-body { display: block; }
+  .year-body table.t thead th { background: transparent; }
+  .year-body table.t tbody td { background: var(--bg); }
+
+  /* Rules */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .rule {
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+  .rule-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .rule-no {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    color: var(--fg-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .rule-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+  .rule-cond { font-size: 12.5px; color: var(--fg-3); margin-bottom: 6px; }
+  .rule-rate {
+    font-size: 13px; font-weight: 500; color: var(--accent-fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Section spacing */
+  .section + .section { margin-top: 28px; }
+  .section-title {
+    font-size: 12px; font-weight: 600;
+    color: var(--fg-3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 0 0 10px;
+  }
+
+  /* Helpers */
+  .row-between { display: flex; align-items: center; justify-content: space-between; }
+  .muted { color: var(--fg-3); }
+
+  /* Responsive (粗略) */
+  @media (max-width: 900px) {
+    .form-grid, .stats, .rules { grid-template-columns: 1fr; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-breakdown { padding-left: 0; border-left: none; border-top: 1px solid var(--border); padding-top: 14px; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">J</div>
+      <div class="brand-name">抢单平台</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section-title">工作台</div>
+      <a class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/>
+          <rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+        </svg>
+        任务大厅
+        <span class="nav-kbd">G H</span>
+      </a>
+      <a class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="3" y1="4" x2="13" y2="4"/>
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <line x1="3" y1="12" x2="13" y2="12"/>
+        </svg>
+        我的任务
+        <span class="nav-kbd">G T</span>
+      </a>
+      <a class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M8 4.5v3.5l2.2 1.3"/>
+        </svg>
+        薪资计算
+        <span class="nav-kbd">G S</span>
+      </a>
+
+      <div class="nav-section-title" style="margin-top:12px;">设置</div>
+      <a class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/>
+        </svg>
+        偏好设置
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="avatar">团</div>
+        <div style="min-width:0;">
+          <div class="user-name">团团</div>
+          <div class="user-org">智驰科技 · 销售部</div>
+        </div>
+        <svg style="margin-left:auto;color:var(--fg-4);" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M5 6l3 3 3-3"/>
+        </svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <main class="main">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span class="crumb">工作台</span>
+        <span class="crumb-sep">/</span>
+        <span class="crumb current">薪资计算</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" title="搜索">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="13.5" y2="13.5"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="通知">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4z"/>
+            <path d="M6.5 13a1.5 1.5 0 0 0 3 0"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">薪资计算</h1>
+          <div class="page-sub">基于接单月份的总佣金计算实得提成 · 当前月份 2026-05</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6"/><path d="M13 3v3h-3"/>
+              <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10"/><path d="M3 13v-3h3"/>
+            </svg>
+            刷新
+          </button>
+          <button class="btn btn-primary">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 8h10M8 3v10"/>
+            </svg>
+            导出薪资单
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">计算设置</div>
+          <div class="card-meta">当月完结 <span class="num" style="color:var(--fg);font-weight:600;">12</span> 个项目</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">入职日期</div>
+              <input class="input" value="2024-03-15" />
+            </div>
+            <div class="field">
+              <div class="field-label">起始底薪 ¥</div>
+              <input class="input num" value="3000" />
+            </div>
+            <div class="field">
+              <div class="field-label">计算月份</div>
+              <input class="input" value="2026-05" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="2" width="10" height="12" rx="1"/>
+              <line x1="5.5" y1="5.5" x2="10.5" y2="5.5"/>
+              <line x1="5.5" y1="8" x2="10.5" y2="8"/>
+              <line x1="5.5" y1="10.5" x2="9" y2="10.5"/>
+            </svg>
+            当月完结项目
+          </div>
+          <div class="stat-value num">12</div>
+          <div class="stat-foot">较上月 <span class="stat-delta num">+3</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="4" width="12" height="9" rx="1"/>
+              <circle cx="11" cy="8.5" r="1"/>
+            </svg>
+            完结佣金总额
+          </div>
+          <div class="stat-value"><span class="stat-currency">¥</span><span class="num">8,640.00</span></div>
+          <div class="stat-foot">基于接单月份汇总</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="2,12 6,7 9,10 14,4"/>
+              <polyline points="10,4 14,4 14,8"/>
+            </svg>
+            实得佣金
+          </div>
+          <div class="stat-value"><span class="stat-currency">¥</span><span class="num">4,320.00</span></div>
+          <div class="stat-foot">提成比例 <span class="num" style="color:var(--accent-fg);font-weight:600;">50%</span></div>
+        </div>
+      </div>
+
+      <!-- Hero salary -->
+      <div class="hero">
+        <div>
+          <div class="hero-label">2026-05 应发薪资</div>
+          <div class="hero-amount"><span class="hero-currency">¥</span><span class="num">7,520.00</span></div>
+        </div>
+        <div class="hero-breakdown">
+          <div class="hb-item">
+            <div class="hb-label">底薪（含工龄）</div>
+            <div class="hb-value num">¥3,200.00</div>
+          </div>
+          <div class="hb-item">
+            <div class="hb-label">佣金合计</div>
+            <div class="hb-value num">¥4,320.00</div>
+          </div>
+          <div class="hb-item">
+            <div class="hb-label">适用规则</div>
+            <div class="hb-value" style="font-size:13px;color:var(--accent-fg);">规则Ⅰ 达标 · 50%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail table -->
+      <section class="card" style="margin-top:24px;">
+        <div class="card-head">
+          <div class="card-title">2026-05 完结项目明细</div>
+          <div class="card-meta">12 条记录</div>
+        </div>
+        <div class="table-wrap">
+          <table class="t">
+            <thead>
+              <tr>
+                <th>项目名称</th>
+                <th>接单月份</th>
+                <th>本月接单总额</th>
+                <th>执行状态</th>
+                <th>接单佣金</th>
+                <th>逾期</th>
+                <th>规则</th>
+                <th>佣金比例</th>
+                <th style="text-align:right;">实得佣金</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-name">华清招聘网站改版</td>
+                <td class="num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="tag tag-success tag-dot">已完结</span></td>
+                <td class="col-num">¥1,800.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-info">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-strong" style="text-align:right;">¥900.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">悦享电商小程序运营</td>
+                <td class="num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="tag tag-success tag-dot">已完结</span></td>
+                <td class="col-num">¥2,400.00</td>
+                <td><span class="tag tag-danger">逾期 3 天</span></td>
+                <td><span class="tag tag-info">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-strong" style="text-align:right;">¥1,200.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">星橙文创内容制作</td>
+                <td class="num">2026-05</td>
+                <td class="col-num">¥2,440.00</td>
+                <td><span class="tag tag-success tag-dot">已完结</span></td>
+                <td class="col-num">¥1,200.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-warning">规则Ⅱ</span></td>
+                <td class="num">30%</td>
+                <td class="col-strong" style="text-align:right;">¥360.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">青藤教育招生页</td>
+                <td class="num">2026-05</td>
+                <td class="col-num">¥2,440.00</td>
+                <td><span class="tag tag-success tag-dot">已完结</span></td>
+                <td class="col-num">¥640.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-warning">规则Ⅱ</span></td>
+                <td class="num">30%</td>
+                <td class="col-strong" style="text-align:right;">¥192.00</td>
+              </tr>
+              <tr>
+                <td class="col-name">蓝海餐饮品牌包装</td>
+                <td class="num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="tag tag-success tag-dot">已完结</span></td>
+                <td class="col-num">¥2,000.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-info">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-strong" style="text-align:right;">¥1,000.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Yearly archive -->
+      <section class="card" style="margin-top:24px;">
+        <div class="card-head">
+          <div class="card-title">每月实际工资</div>
+          <button class="btn btn-ghost" style="height:26px;font-size:12px;">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6"/><path d="M13 3v3h-3"/>
+              <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10"/><path d="M3 13v-3h3"/>
+            </svg>
+            刷新
+          </button>
+        </div>
+
+        <div class="year-list">
+          <div class="year-row open">
+            <div class="year-head" data-toggle>
+              <div class="year-left">
+                <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="6,4 10,8 6,12"/>
+                </svg>
+                <div class="year-name">2026</div>
+                <div class="year-count">5 条记录</div>
+              </div>
+              <div class="year-total">年度总额 <span class="num">¥38,460.00</span></div>
+            </div>
+            <div class="year-body">
+              <table class="t">
+                <thead><tr>
+                  <th>月份</th><th>实际工资</th><th>结构确认</th><th>备注</th><th style="text-align:right;">操作</th>
+                </tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="col-name num">2026-04</td>
+                    <td class="col-strong">¥7,520.00</td>
+                    <td><span class="tag tag-success">已确认</span></td>
+                    <td class="muted">—</td>
+                    <td style="text-align:right;"><a style="color:var(--accent);text-decoration:none;font-weight:500;">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="col-name num">2026-03</td>
+                    <td class="col-strong">¥6,840.00</td>
+                    <td><span class="tag tag-success">已确认</span></td>
+                    <td class="muted">—</td>
+                    <td style="text-align:right;"><a style="color:var(--accent);text-decoration:none;font-weight:500;">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="col-name num">2026-02</td>
+                    <td class="col-strong">¥9,200.00</td>
+                    <td><span class="tag tag-warning">待确认</span></td>
+                    <td class="muted">含春节奖金</td>
+                    <td style="text-align:right;"><a style="color:var(--accent);text-decoration:none;font-weight:500;">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="col-name num">2026-01</td>
+                    <td class="col-strong">¥7,100.00</td>
+                    <td><span class="tag tag-success">已确认</span></td>
+                    <td class="muted">—</td>
+                    <td style="text-align:right;"><a style="color:var(--accent);text-decoration:none;font-weight:500;">查看详情</a></td>
+                  </tr>
+                  <tr>
+                    <td class="col-name num">2025-12</td>
+                    <td class="col-strong">¥7,800.00</td>
+                    <td><span class="tag tag-success">已确认</span></td>
+                    <td class="muted">—</td>
+                    <td style="text-align:right;"><a style="color:var(--accent);text-decoration:none;font-weight:500;">查看详情</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="year-row">
+            <div class="year-head" data-toggle>
+              <div class="year-left">
+                <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="6,4 10,8 6,12"/>
+                </svg>
+                <div class="year-name">2025</div>
+                <div class="year-count">12 条记录</div>
+              </div>
+              <div class="year-total">年度总额 <span class="num">¥84,260.00</span></div>
+            </div>
+            <div class="year-body"></div>
+          </div>
+
+          <div class="year-row">
+            <div class="year-head" data-toggle>
+              <div class="year-left">
+                <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="6,4 10,8 6,12"/>
+                </svg>
+                <div class="year-name">2024</div>
+                <div class="year-count">9 条记录</div>
+              </div>
+              <div class="year-total">年度总额 <span class="num">¥58,920.00</span></div>
+            </div>
+            <div class="year-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Rules -->
+      <section class="card" style="margin-top:24px;">
+        <div class="card-head">
+          <div class="card-title">佣金计算规则</div>
+          <div class="card-meta">新规则 · 2026-04 起</div>
+        </div>
+        <div class="card-body">
+          <div class="rules">
+            <div class="rule">
+              <div class="rule-head">
+                <div class="rule-no">Ⅰ</div>
+                <div class="rule-title">达标</div>
+              </div>
+              <div class="rule-cond">总佣金 ≥ 当月底薪</div>
+              <div class="rule-rate">提成 50%</div>
+            </div>
+            <div class="rule">
+              <div class="rule-head">
+                <div class="rule-no">Ⅱ</div>
+                <div class="rule-title">基础</div>
+              </div>
+              <div class="rule-cond">总佣金 &lt; 当月底薪</div>
+              <div class="rule-rate">提成 30%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  document.querySelectorAll('[data-toggle]').forEach(h => {
+    h.addEventListener('click', () => {
+      h.parentElement.classList.toggle('open');
+    });
+  });
+</script>
+</body>
+</html>

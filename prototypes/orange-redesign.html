@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>抢单平台 · 活力科技橙原型（DesignSystem 风）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============ Tokens · 沿用 DesignSystem.vue ============ */
+  :root {
+    /* Brand · 活力橙 */
+    --brand-50:  #FFF7ED;
+    --brand-100: #FFEDD5;
+    --brand-200: #FED7AA;
+    --brand-300: #FDBA74;
+    --brand-400: #FB923C;
+    --brand-500: #F97316;
+    --brand-600: #EA580C;
+    --brand-700: #C2410C;
+    --brand-800: #9A3412;
+    --brand-900: #7C2D12;
+
+    /* Indigo · 深蓝点缀 */
+    --indigo-100: #E0E7FF;
+    --indigo-300: #A5B4FC;
+    --indigo-500: #6366F1;
+    --indigo-700: #4338CA;
+    --indigo-900: #1E3A8A;
+
+    /* Pink · HOT 强调 */
+    --pink-500: #EC4899;
+
+    /* Semantic */
+    --success:    #10B981;
+    --success-bg: #ECFDF5;
+    --warning:    #F59E0B;
+    --warning-bg: #FFFBEB;
+    --danger:     #EF4444;
+    --danger-bg:  #FEF2F2;
+
+    /* Gray */
+    --gray-50:  #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+
+    /* Surface */
+    --bg-page:    #FFFBF7;
+    --bg-surface: #FFFFFF;
+    --bg-soft:    #FFF7ED;
+    --text-primary:   #111827;
+    --text-secondary: #4B5563;
+    --text-tertiary:  #9CA3AF;
+    --border-default: #FED7AA;
+    --border-soft:    #FFEDD5;
+    --border-brand:   #FDBA74;
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, #F97316 0%, #EC4899 100%);
+    --gradient-warm:  linear-gradient(135deg, #FB923C 0%, #F97316 100%);
+    --gradient-hot:   linear-gradient(135deg, #EF4444 0%, #F97316 100%);
+    --gradient-cool:  linear-gradient(135deg, #6366F1 0%, #1E3A8A 100%);
+    --gradient-sun:   linear-gradient(135deg, #FED7AA 0%, #F97316 100%);
+
+    /* Radius */
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+
+    /* Shadow */
+    --shadow-xs:   0 1px 2px rgba(16,24,40,.04);
+    --shadow-sm:   0 2px 8px rgba(16,24,40,.06);
+    --shadow-md:   0 8px 16px rgba(16,24,40,.08);
+    --shadow-lg:   0 16px 32px -8px rgba(16,24,40,.12);
+    --shadow-xl:   0 24px 48px -12px rgba(16,24,40,.18);
+    --shadow-glow: 0 8px 32px -4px rgba(249,115,22,.4);
+
+    /* Type */
+    --font-base: 'Noto Sans SC', 'HarmonyOS Sans', -apple-system, BlinkMacSystemFont,
+                 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* Easing */
+    --easing-bounce:   cubic-bezier(0.34, 1.56, 0.64, 1);
+    --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --t-base: .25s var(--easing-standard);
+    --t-bounce: .35s var(--easing-bounce);
+
+    /* Spacing */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+  }
+
+  /* ============ Base ============ */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font-base);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+  /* ============ 页面布局 ============ */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ============ Sidebar · 深色 + 橙色高亮（沿用 MainLayout.vue 调性）============ */
+  .sidebar {
+    width: 232px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #1A1F2E 0%, #0F1419 100%);
+    border-right: 1px solid rgba(249, 115, 22, 0.15);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow: hidden;
+  }
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(249,115,22,.3) 50%, transparent);
+  }
+  .brand {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    position: relative;
+  }
+  .brand::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60px; height: 2px;
+    background: var(--gradient-warm);
+    border-radius: var(--radius-full);
+    box-shadow: 0 0 12px rgba(249,115,22,.6);
+  }
+  .brand-mark {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--gradient-warm);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 16px;
+    box-shadow: 0 4px 12px -2px rgba(249,115,22,.5);
+  }
+  .brand-name {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FED7AA 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 8px rgba(249,115,22,.3);
+  }
+
+  .nav { padding: 24px 16px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,.7);
+    cursor: pointer;
+    margin-bottom: 12px;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--t-bounce);
+  }
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 0;
+    background: var(--gradient-warm);
+    border-radius: 0 var(--radius-full) var(--radius-full) 0;
+    transition: height var(--t-bounce);
+    box-shadow: 0 0 12px rgba(249,115,22,.6);
+  }
+  .nav-item:hover {
+    background: rgba(249,115,22,.12);
+    color: #FED7AA;
+    border-color: rgba(249,115,22,.3);
+    transform: translateX(6px);
+    box-shadow: 0 4px 12px rgba(249,115,22,.2);
+  }
+  .nav-item:hover::before { height: 70%; }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(249,115,22,.25) 0%, rgba(251,146,60,.15) 100%);
+    color: #fff;
+    border-color: rgba(249,115,22,.5);
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(249,115,22,.3), inset 0 1px 0 rgba(255,255,255,.1);
+  }
+  .nav-item.active::before { height: 85%; }
+  .nav-item.active .nav-icon { color: #FB923C; transform: scale(1.1); }
+  .nav-icon {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+    color: rgba(255,255,255,.6);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+    transition: all var(--t-bounce);
+  }
+
+  /* ============ Top bar · 玻璃模糊 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    height: 60px;
+    border-bottom: 1px solid var(--border-soft);
+    background: rgba(255,255,255,.85);
+    backdrop-filter: saturate(180%) blur(12px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+    position: sticky; top: 0; z-index: 10;
+    box-shadow: var(--shadow-xs);
+  }
+  .page-title-bar {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .toggle-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: all var(--t-base);
+  }
+  .toggle-btn:hover { background: var(--brand-50); color: var(--brand-700); transform: scale(1.1); }
+  .top-page-title {
+    font-size: 16px; font-weight: 600;
+    color: var(--text-primary);
+  }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .company-pill {
+    padding: 4px 12px;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-200);
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--brand-700);
+  }
+  .user-info {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--t-base);
+  }
+  .user-info:hover { background: var(--brand-50); }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--gradient-warm);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    box-shadow: 0 2px 8px -1px rgba(249,115,22,.4);
+  }
+  .user-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+
+  /* ============ Content ============ */
+  .content {
+    padding: 24px 28px 64px;
+    max-width: 1320px;
+    width: 100%;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* Page hero badge */
+  .page-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 4px;
+  }
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-200);
+    border-radius: var(--radius-full);
+    font-size: 12px; font-weight: 600;
+    color: var(--brand-700);
+    margin-bottom: 12px;
+  }
+  .pulse-dot {
+    width: 8px; height: 8px;
+    background: var(--brand-500);
+    border-radius: 50%;
+    animation: pulse-brand 2s ease-in-out infinite;
+  }
+  @keyframes pulse-brand {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,.6); }
+    50%      { box-shadow: 0 0 0 8px rgba(249,115,22,0); }
+  }
+  .page-title-big {
+    font-size: 32px; font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+  }
+  .gradient-text {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .page-sub { color: var(--text-secondary); font-size: 14px; }
+
+  /* ============ Buttons ============ */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 36px;
+    padding: 0 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-300);
+    background: #fff;
+    font-size: 13px; font-weight: 500;
+    color: var(--gray-700);
+    transition: all var(--t-base);
+    font-family: inherit;
+  }
+  .btn:hover { border-color: var(--brand-400); color: var(--brand-700); background: var(--brand-50); }
+  .btn-primary {
+    background: var(--gradient-warm);
+    border: none;
+    color: #fff;
+    box-shadow: 0 4px 12px -2px rgba(249,115,22,.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+    transition: left .6s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px -2px rgba(249,115,22,.5);
+    color: #fff;
+    background: var(--gradient-warm);
+  }
+  .btn-primary:hover::before { left: 100%; }
+  .btn .ic { width: 14px; height: 14px; }
+
+  /* ============ Card 通用 ============ */
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--t-base);
+  }
+  .card-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-title {
+    font-size: 15px; font-weight: 600;
+    padding-left: 12px;
+    border-left: 3px solid var(--brand-500);
+    color: var(--text-primary);
+  }
+  .card-meta { font-size: 13px; color: var(--text-secondary); }
+  .card-body { padding: 20px; }
+
+  /* ============ Setting form ============ */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 13px; font-weight: 500;
+    color: var(--text-primary);
+  }
+  .field-label .req { color: var(--danger); margin-left: 2px; }
+  .input {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    transition: all var(--t-base);
+    outline: none;
+  }
+  .input:hover { border-color: var(--brand-400); }
+  .input:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+  }
+
+  /* ============ 统计卡 · 渐变图标盒 ============ */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .stat-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--t-bounce);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--gradient-warm);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--t-bounce);
+  }
+  .stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-brand);
+    box-shadow: var(--shadow-lg);
+  }
+  .stat-card:hover::before { transform: scaleX(1); }
+  .stat-card:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
+  .stat-icon {
+    width: 56px; height: 56px;
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-md);
+    color: #fff;
+    transition: all var(--t-bounce);
+  }
+  .stat-icon.warm   { background: var(--gradient-warm); }
+  .stat-icon.cool   { background: var(--gradient-cool); }
+  .stat-icon.success{ background: linear-gradient(135deg, #10B981, #059669); }
+  .stat-icon svg { width: 26px; height: 26px; }
+  .stat-info { flex: 1; min-width: 0; }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    letter-spacing: .04em;
+  }
+  .stat-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    letter-spacing: -.01em;
+  }
+  .stat-decimal { font-size: 16px; color: var(--text-tertiary); }
+  .stat-trend {
+    margin-top: 6px;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+  .stat-trend.up { color: var(--success); font-weight: 500; }
+
+  /* ============ Hero 应发薪资 · 深蓝渐变 + 玻璃态分项 ============ */
+  .hero-salary {
+    position: relative;
+    background: var(--gradient-cool);
+    border-radius: var(--radius-xl);
+    padding: 36px 40px;
+    color: white;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+  }
+  .hero-salary::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, rgba(249,115,22,.45) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse-bg 4s ease-in-out infinite;
+  }
+  @keyframes pulse-bg {
+    0%, 100% { transform: scale(1); opacity: .8; }
+    50%      { transform: scale(1.1); opacity: 1; }
+  }
+  .hero-salary-title {
+    position: relative;
+    font-size: 13px; font-weight: 500;
+    opacity: .85;
+    letter-spacing: .05em;
+    margin-bottom: 16px;
+  }
+  .hero-salary-main { position: relative; margin-bottom: 28px; }
+  .hero-salary-amount { display: flex; align-items: baseline; }
+  .hero-currency {
+    font-size: 26px; font-weight: 600;
+    opacity: .85;
+    margin-right: 6px;
+  }
+  .hero-num {
+    font-size: 60px; font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FED7AA 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-decimal {
+    font-size: 26px; font-weight: 600;
+    opacity: .7;
+    margin-left: 4px;
+  }
+  .hero-trend {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, .25);
+    border: 1px solid rgba(16, 185, 129, .4);
+    border-radius: var(--radius-xs);
+    font-size: 12px;
+    color: #fff;
+  }
+  .hero-breakdown {
+    position: relative;
+    display: flex; align-items: center;
+    background: rgba(255,255,255,.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: var(--radius-md);
+    padding: 18px 26px;
+  }
+  .hero-bd-item { flex: 1; }
+  .hero-bd-label {
+    font-size: 11.5px;
+    opacity: .75;
+    letter-spacing: .05em;
+    margin-bottom: 6px;
+  }
+  .hero-bd-value {
+    font-size: 20px; font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .hero-bd-value.rate {
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-bd-divider {
+    width: 1px; height: 36px;
+    background: rgba(255,255,255,.2);
+    margin: 0 20px;
+  }
+
+  /* ============ Detail Table ============ */
+  .table-wrap { overflow-x: auto; }
+  table.t {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+  }
+  .t thead th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--brand-800);
+    padding: 12px 16px;
+    background: var(--brand-50);
+    border-bottom: 2px solid var(--brand-200);
+    white-space: nowrap;
+  }
+  .t tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .t tbody tr { transition: all var(--t-base); }
+  .t tbody tr:hover td { background: var(--brand-50); }
+  .t tbody tr:nth-child(odd) td { background: rgba(255, 247, 237, .35); }
+  .t tbody tr:nth-child(odd):hover td { background: var(--brand-50); }
+  .t tbody tr:last-child td { border-bottom: none; }
+  .t .col-name { font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+  .t .col-num { font-variant-numeric: tabular-nums; }
+  .t .col-amount {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--brand-700);
+  }
+  .urgent-dot {
+    width: 6px; height: 6px;
+    background: var(--danger);
+    border-radius: 50%;
+    animation: pulse-brand 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  /* ============ Tags · 圆角填充 ============ */
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 22px;
+    padding: 0 10px;
+    font-size: 12px; font-weight: 500;
+    border-radius: var(--radius-full);
+    line-height: 1;
+  }
+  .tag-success { background: var(--success-bg); color: #047857; border: 1px solid #6EE7B7; }
+  .tag-warning { background: var(--warning-bg); color: #B45309; border: 1px solid #FCD34D; }
+  .tag-danger  { background: var(--danger-bg); color: #B91C1C; border: 1px solid #FCA5A5; }
+  .tag-info    { background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-200); }
+  .tag-primary { background: var(--gradient-warm); color: #fff; border: none; box-shadow: 0 2px 6px -1px rgba(249,115,22,.4); }
+  .tag-muted   { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+
+  /* ============ 年度折叠 ============ */
+  .year-list { display: flex; flex-direction: column; gap: 12px; }
+  .year-row {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    transition: all var(--t-base);
+    overflow: hidden;
+  }
+  .year-row:hover { border-color: var(--border-brand); box-shadow: var(--shadow-sm); }
+  .year-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: all var(--t-base);
+    user-select: none;
+  }
+  .year-head:hover { background: var(--brand-50); }
+  .year-row.open .year-head { border-bottom-color: var(--border-default); }
+  .year-left { display: flex; align-items: center; gap: 12px; }
+  .chev {
+    width: 18px; height: 18px;
+    color: var(--text-secondary);
+    transition: transform .2s ease;
+  }
+  .year-row.open .chev { transform: rotate(180deg); color: var(--brand-600); }
+  .year-name {
+    font-size: 16px; font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .year-count {
+    font-size: 12px; color: var(--text-secondary);
+    background: #fff;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--gray-200);
+  }
+  .year-total { font-size: 14px; font-weight: 600; color: var(--brand-700); font-variant-numeric: tabular-nums; }
+  .year-body { display: none; }
+  .year-row.open .year-body { display: block; }
+
+  /* ============ 规则卡（4 色） ============ */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .rule {
+    padding: 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid;
+    transition: all var(--t-base);
+    text-align: center;
+  }
+  .rule:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+  .rule.r1 { background: var(--brand-50); border-color: var(--brand-200); }
+  .rule.r1 .rule-title { color: var(--brand-700); }
+  .rule.r2 { background: var(--warning-bg); border-color: #FDE68A; }
+  .rule.r2 .rule-title { color: #B45309; }
+
+  .rule-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .rule-cond { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+  .rule-rate {
+    font-size: 18px; font-weight: 700;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .form-grid, .stats, .rules { grid-template-columns: 1fr; }
+    .hero-breakdown { flex-direction: column; gap: 16px; align-items: flex-start; }
+    .hero-bd-divider { width: 100%; height: 1px; margin: 0; }
+    .sidebar { display: none; }
+    .hero-num { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">J</div>
+      <div class="brand-name">抢单平台</div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+        任务大厅
+      </a>
+      <a class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+        我的任务
+      </a>
+      <a class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 7v5l3.2 2"/>
+        </svg>
+        薪资计算
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <main class="main">
+    <header class="topbar">
+      <div class="page-title-bar">
+        <button class="toggle-btn" title="折叠侧边栏">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="7" x2="20" y2="7"/>
+            <line x1="4" y1="12" x2="20" y2="12"/>
+            <line x1="4" y1="17" x2="20" y2="17"/>
+          </svg>
+        </button>
+        <span class="top-page-title">薪资计算</span>
+      </div>
+      <div class="topbar-right">
+        <span class="company-pill">智驰科技</span>
+        <div class="user-info">
+          <div class="avatar">团</div>
+          <span class="user-name">团团</span>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-tertiary);">
+            <polyline points="4,6 8,10 12,6"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- 页头 -->
+      <div class="page-head">
+        <div>
+          <div class="page-badge">
+            <span class="pulse-dot"></span>
+            v2.0 · 活力科技橙
+          </div>
+          <h1 class="page-title-big">为<span class="gradient-text">抢单</span>而生的薪资计算</h1>
+          <div class="page-sub">基于接单月份的总佣金计算实得提成 · 当前月份 2026-05</div>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <button class="btn">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6"/><path d="M13 3v3h-3"/>
+              <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10"/><path d="M3 13v-3h3"/>
+            </svg>
+            刷新
+          </button>
+          <button class="btn btn-primary">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 8h10M8 3v10"/>
+            </svg>
+            导出薪资单
+          </button>
+        </div>
+      </div>
+
+      <!-- 设置卡 -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">计算设置</div>
+          <div class="card-meta">当月完结 <span class="num" style="color:var(--brand-700);font-weight:700;">12</span> 个项目</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">入职日期<span class="req">*</span></div>
+              <input class="input" value="2024-03-15" />
+            </div>
+            <div class="field">
+              <div class="field-label">起始底薪 ¥</div>
+              <input class="input num" value="3000" />
+            </div>
+            <div class="field">
+              <div class="field-label">计算月份</div>
+              <input class="input" value="2026-05" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 统计卡 -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon warm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="3" width="16" height="18" rx="1.5"/>
+              <line x1="8" y1="8" x2="16" y2="8"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+              <line x1="8" y1="16" x2="13" y2="16"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">当月完结项目</div>
+            <div class="stat-value num">12</div>
+            <div class="stat-trend up">↑ 3 较上月</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon cool">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="6" width="18" height="13" rx="1.5"/>
+              <circle cx="17" cy="12.5" r="1.5"/>
+              <path d="M3 9h18"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">完结佣金总额（元）</div>
+            <div class="stat-value">¥<span class="num">8,640</span><span class="stat-decimal">.00</span></div>
+            <div class="stat-trend up">↑ 12.5% 较上月</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3,17 9,11 13,15 21,7"/>
+              <polyline points="14,7 21,7 21,14"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">实得佣金（元）</div>
+            <div class="stat-value">¥<span class="num">4,320</span><span class="stat-decimal">.00</span></div>
+            <div class="stat-trend">提成比例 50%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 应发薪资 hero -->
+      <section class="hero-salary">
+        <div class="hero-salary-title">2026 年 5 月 · 应发薪资</div>
+        <div class="hero-salary-main">
+          <div class="hero-salary-amount">
+            <span class="hero-currency">¥</span>
+            <span class="hero-num num">7,520</span>
+            <span class="hero-decimal">.00</span>
+          </div>
+          <div class="hero-trend">↑ 9.9% 较上月（¥6,840）</div>
+        </div>
+        <div class="hero-breakdown">
+          <div class="hero-bd-item">
+            <div class="hero-bd-label">底薪（含工龄）</div>
+            <div class="hero-bd-value num">¥3,200.00</div>
+          </div>
+          <div class="hero-bd-divider"></div>
+          <div class="hero-bd-item">
+            <div class="hero-bd-label">佣金合计</div>
+            <div class="hero-bd-value num">¥4,320.00</div>
+          </div>
+          <div class="hero-bd-divider"></div>
+          <div class="hero-bd-item">
+            <div class="hero-bd-label">实得比例</div>
+            <div class="hero-bd-value rate">50%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 明细表 -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">2026-05 完结项目明细</div>
+          <div class="card-meta">12 条记录</div>
+        </div>
+        <div class="table-wrap">
+          <table class="t">
+            <thead>
+              <tr>
+                <th>项目名称</th>
+                <th>接单月份</th>
+                <th>本月接单总额</th>
+                <th>执行状态</th>
+                <th>接单佣金</th>
+                <th>逾期</th>
+                <th>规则</th>
+                <th>佣金比例</th>
+                <th style="text-align:right;">实得佣金</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="col-name">华清招聘网站改版</span></td>
+                <td class="col-num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="tag tag-success">已完结</span></td>
+                <td class="col-num">¥1,800.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-primary">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-amount" style="text-align:right;">¥900.00</td>
+              </tr>
+              <tr>
+                <td><span class="col-name"><span class="urgent-dot"></span>悦享电商小程序运营</span></td>
+                <td class="col-num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="tag tag-success">已完结</span></td>
+                <td class="col-num">¥2,400.00</td>
+                <td><span class="tag tag-danger">逾期 3 天</span></td>
+                <td><span class="tag tag-primary">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-amount" style="text-align:right;">¥1,200.00</td>
+              </tr>
+              <tr>
+                <td><span class="col-name">星橙文创内容制作</span></td>
+                <td class="col-num">2026-05</td>
+                <td class="col-num">¥2,440.00</td>
+                <td><span class="tag tag-success">已完结</span></td>
+                <td class="col-num">¥1,200.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-warning">规则Ⅱ</span></td>
+                <td class="num">30%</td>
+                <td class="col-amount" style="text-align:right;">¥360.00</td>
+              </tr>
+              <tr>
+                <td><span class="col-name">青藤教育招生页</span></td>
+                <td class="col-num">2026-05</td>
+                <td class="col-num">¥2,440.00</td>
+                <td><span class="tag tag-success">已完结</span></td>
+                <td class="col-num">¥640.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-warning">规则Ⅱ</span></td>
+                <td class="num">30%</td>
+                <td class="col-amount" style="text-align:right;">¥192.00</td>
+              </tr>
+              <tr>
+                <td><span class="col-name">蓝海餐饮品牌包装</span></td>
+                <td class="col-num">2026-04</td>
+                <td class="col-num">¥6,200.00</td>
+                <td><span class="tag tag-success">已完结</span></td>
+                <td class="col-num">¥2,000.00</td>
+                <td><span class="tag tag-muted">正常</span></td>
+                <td><span class="tag tag-primary">规则Ⅰ</span></td>
+                <td class="num">50%</td>
+                <td class="col-amount" style="text-align:right;">¥1,000.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 年度折叠 -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">每月实际工资</div>
+          <button class="btn" style="height:30px;font-size:12px;padding:0 12px;">
+            <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6"/><path d="M13 3v3h-3"/>
+              <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10"/><path d="M3 13v-3h3"/>
+            </svg>
+            刷新
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="year-list">
+            <div class="year-row open">
+              <div class="year-head" data-toggle>
+                <div class="year-left">
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4,6 8,10 12,6"/>
+                  </svg>
+                  <div class="year-name">2026</div>
+                  <div class="year-count">5 条记录</div>
+                </div>
+                <div class="year-total">年度总额 ¥38,460.00</div>
+              </div>
+              <div class="year-body">
+                <table class="t">
+                  <thead><tr>
+                    <th>月份</th><th>实际工资</th><th>结构确认</th><th>备注</th><th style="text-align:right;">操作</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr>
+                      <td class="col-num">2026-04</td>
+                      <td class="col-amount">¥7,520.00</td>
+                      <td><span class="tag tag-success">已确认</span></td>
+                      <td style="color:var(--text-tertiary);">—</td>
+                      <td style="text-align:right;"><a style="color:var(--brand-600);text-decoration:none;font-weight:600;">查看详情</a></td>
+                    </tr>
+                    <tr>
+                      <td class="col-num">2026-03</td>
+                      <td class="col-amount">¥6,840.00</td>
+                      <td><span class="tag tag-success">已确认</span></td>
+                      <td style="color:var(--text-tertiary);">—</td>
+                      <td style="text-align:right;"><a style="color:var(--brand-600);text-decoration:none;font-weight:600;">查看详情</a></td>
+                    </tr>
+                    <tr>
+                      <td class="col-num">2026-02</td>
+                      <td class="col-amount">¥9,200.00</td>
+                      <td><span class="tag tag-warning">待确认</span></td>
+                      <td>含春节奖金</td>
+                      <td style="text-align:right;"><a style="color:var(--brand-600);text-decoration:none;font-weight:600;">查看详情</a></td>
+                    </tr>
+                    <tr>
+                      <td class="col-num">2026-01</td>
+                      <td class="col-amount">¥7,100.00</td>
+                      <td><span class="tag tag-success">已确认</span></td>
+                      <td style="color:var(--text-tertiary);">—</td>
+                      <td style="text-align:right;"><a style="color:var(--brand-600);text-decoration:none;font-weight:600;">查看详情</a></td>
+                    </tr>
+                    <tr>
+                      <td class="col-num">2025-12</td>
+                      <td class="col-amount">¥7,800.00</td>
+                      <td><span class="tag tag-success">已确认</span></td>
+                      <td style="color:var(--text-tertiary);">—</td>
+                      <td style="text-align:right;"><a style="color:var(--brand-600);text-decoration:none;font-weight:600;">查看详情</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="year-row">
+              <div class="year-head" data-toggle>
+                <div class="year-left">
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4,6 8,10 12,6"/>
+                  </svg>
+                  <div class="year-name">2025</div>
+                  <div class="year-count">12 条记录</div>
+                </div>
+                <div class="year-total">年度总额 ¥84,260.00</div>
+              </div>
+              <div class="year-body"></div>
+            </div>
+
+            <div class="year-row">
+              <div class="year-head" data-toggle>
+                <div class="year-left">
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4,6 8,10 12,6"/>
+                  </svg>
+                  <div class="year-name">2024</div>
+                  <div class="year-count">9 条记录</div>
+                </div>
+                <div class="year-total">年度总额 ¥58,920.00</div>
+              </div>
+              <div class="year-body"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 规则卡 -->
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">佣金计算规则</div>
+          <div class="card-meta">新规则 · 2026-04 起</div>
+        </div>
+        <div class="card-body">
+          <div class="rules">
+            <div class="rule r1">
+              <div class="rule-title">规则Ⅰ 达标</div>
+              <div class="rule-cond">总佣金 ≥ 当月底薪</div>
+              <div class="rule-rate">提成 50%</div>
+            </div>
+            <div class="rule r2">
+              <div class="rule-title">规则Ⅱ 基础</div>
+              <div class="rule-cond">总佣金 &lt; 当月底薪</div>
+              <div class="rule-rate">提成 30%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  document.querySelectorAll('[data-toggle]').forEach(h => {
+    h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>
