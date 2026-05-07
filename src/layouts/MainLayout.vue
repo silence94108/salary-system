@@ -76,7 +76,7 @@ function toggleSidebar() {
 
     <!-- 侧边栏 -->
     <el-aside
-      :width="isMobile ? '220px' : (isCollapse ? '64px' : '220px')"
+      :width="isMobile ? '200px' : (isCollapse ? '64px' : '200px')"
       :class="['layout-aside', { 'mobile-aside': isMobile, 'mobile-show': sidebarVisible }]"
     >
       <div class="logo">
@@ -407,7 +407,7 @@ export default {
 .mobile-aside {
   position: fixed;
   top: 0;
-  left: -220px;
+  left: -200px;
   height: 100%;
   z-index: 999;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
