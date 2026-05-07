@@ -3,15 +3,6 @@ import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getSalaryDetail, confirmSalary } from '@/api/salary'
 import type { SalaryDetail } from '@/types'
-import {
-  Money,
-  TrendCharts,
-  CreditCard,
-  Wallet,
-  Ticket,
-  List,
-  ArrowDown
-} from '@element-plus/icons-vue'
 
 interface Props {
   visible: boolean
@@ -27,10 +18,6 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const detail = ref<SalaryDetail | null>(null)
-const expandedItems = ref<Set<number>>(new Set())
-const uiStyle = ref('card') // card, list, flow
-
-const isMobile = computed(() => window.innerWidth <= 768)
 
 const dialogVisible = computed({
   get: () => props.visible,
@@ -38,6 +25,25 @@ const dialogVisible = computed({
 })
 
 const isConfirmed = computed(() => detail.value?.is_confirm === 2)
+const isObjected = computed(() => detail.value?.is_confirm === 3)
+
+const confirmPill = computed(() => {
+  if (isConfirmed.value) return { cls: 'pill-success', text: '已确认' }
+  if (isObjected.value) return { cls: 'pill-warning', text: '有异议' }
+  return { cls: 'pill-muted', text: '待确认' }
+})
+
+const deductionTotal = computed(() => {
+  if (!detail.value) return 0
+  return (Number(detail.value.daikou_total) || 0) + (Number(detail.value.tax) || 0)
+})
+
+const totalSalaryParts = computed(() => {
+  const v = detail.value ? Number(detail.value.total_salary) || 0 : 0
+  const fixed = v.toFixed(2)
+  const [intPart, decPart] = fixed.split('.')
+  return { int: intPart || '0', dec: '.' + (decPart || '00') }
+})
 
 async function loadDetail() {
   if (!props.userId || !props.date) return
@@ -48,19 +54,10 @@ async function loadDetail() {
       user_id: props.userId,
       date: props.date
     })
-    expandedItems.value.clear()
   } catch (error) {
     ElMessage.error('获取工资详情失败')
   } finally {
     loading.value = false
-  }
-}
-
-function toggleExpand(index: number) {
-  if (expandedItems.value.has(index)) {
-    expandedItems.value.delete(index)
-  } else {
-    expandedItems.value.add(index)
   }
 }
 
@@ -146,772 +143,545 @@ function handleOpen() {
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="`${date}月薪资明细`"
-    :width="isMobile ? '95%' : '500px'"
-    :close-on-click-modal="false"
-    @open="handleOpen"
-    class="salary-detail-dialog"
+    :width="560"
+    class="receipt-dialog"
+    :show-close="true"
     destroy-on-close
+    align-center
+    @open="handleOpen"
   >
-    <div class="style-switcher">
-      <el-radio-group v-model="uiStyle" size="small">
-        <el-radio-button label="card">商务卡片</el-radio-button>
-        <el-radio-button label="list">极简列表</el-radio-button>
-        <el-radio-button label="flow">薪资流向</el-radio-button>
-      </el-radio-group>
-    </div>
-
-    <div v-loading="loading" class="detail-content" :class="`style-${uiStyle}`">
-      <div v-if="detail" class="salary-container">
-
-        <!-- ==================== 1. 商务卡片 (原方案优化) ==================== -->
-        <div v-if="uiStyle === 'card'" class="salary-list-card">
-          <!-- 分组：基本与浮动 -->
-          <div
-            v-for="(item, index) in detail.type_archives"
-            :key="index"
-            class="salary-item"
-            :class="{ 'has-details': item.zd && item.zd.length > 0 }"
-            @click="item.zd && item.zd.length > 0 && toggleExpand(index)"
-          >
-            <div class="item-header">
-              <div class="item-left">
-                <el-icon class="item-icon"><Money /></el-icon>
-                <span class="item-name">{{ item.fname }}</span>
-                <el-icon
-                  v-if="item.zd && item.zd.length > 0"
-                  class="arrow-icon"
-                  :class="{ expanded: expandedItems.has(index) }"
-                ><ArrowDown /></el-icon>
-              </div>
-              <div class="item-right">
-                <span class="currency">¥</span>
-                <span class="item-value">{{ formatMoney(item.sum) }}</span>
-              </div>
-            </div>
-            <el-collapse-transition>
-              <div v-if="item.zd && item.zd.length > 0 && expandedItems.has(index)" class="item-details">
-                <div v-for="(field, fIndex) in item.zd" :key="fIndex" class="detail-row">
-                  <span class="detail-label">{{ field.title }}</span>
-                  <span class="detail-value">{{ formatMoney(field.data) }}</span>
-                </div>
-              </div>
-            </el-collapse-transition>
-          </div>
-
-          <!-- 应付工资 -->
-          <div class="salary-item highlight-soft">
-            <div class="item-header">
-              <div class="item-left">
-                <el-icon class="item-icon"><TrendCharts /></el-icon>
-                <span class="item-name">应付工资总额</span>
-              </div>
-              <div class="item-right">
-                <span class="currency">¥</span>
-                <span class="item-value">{{ formatMoney(detail.shuiqian_salary) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 代扣代缴 -->
-          <div class="salary-item" @click="toggleExpand(-1)">
-            <div class="item-header">
-              <div class="item-left">
-                <el-icon class="item-icon"><CreditCard /></el-icon>
-                <span class="item-name">代扣代缴</span>
-                <el-icon
-                  v-if="detail.daikou && Object.keys(detail.daikou).length > 0"
-                  class="arrow-icon"
-                  :class="{ expanded: expandedItems.has(-1) }"
-                ><ArrowDown /></el-icon>
-              </div>
-              <div class="item-right">
-                <span class="currency">¥</span>
-                <span class="item-value">{{ formatMoney(detail.daikou_total) }}</span>
-              </div>
-            </div>
-            <el-collapse-transition>
-              <div v-if="detail.daikou && expandedItems.has(-1)" class="item-details">
-                <div v-for="(value, key) in detail.daikou" :key="key" class="detail-row">
-                  <span class="detail-label">{{ key }}</span>
-                  <span class="detail-value">{{ formatMoney(value) }}</span>
-                </div>
-              </div>
-            </el-collapse-transition>
-          </div>
-
-          <!-- 专项扣除 -->
-          <div class="salary-item" @click="toggleExpand(-2)">
-            <div class="item-header">
-              <div class="item-left">
-                <el-icon class="item-icon"><Ticket /></el-icon>
-                <span class="item-name">专项附加扣除</span>
-                <el-icon
-                  v-if="detail.special.zd && detail.special.zd.length > 0"
-                  class="arrow-icon"
-                  :class="{ expanded: expandedItems.has(-2) }"
-                ><ArrowDown /></el-icon>
-              </div>
-              <div class="item-right">
-                <span class="currency">¥</span>
-                <span class="item-value">{{ formatMoney(detail.special.sum) }}</span>
-              </div>
-            </div>
-            <el-collapse-transition>
-              <div v-if="detail.special.zd && expandedItems.has(-2)" class="item-details">
-                <div v-for="(field, fIndex) in detail.special.zd" :key="fIndex" class="detail-row">
-                  <span class="detail-label">{{ field.title }}</span>
-                  <span class="detail-value">{{ formatMoney(field.data) }}</span>
-                </div>
-              </div>
-            </el-collapse-transition>
-          </div>
-
-          <!-- 个人所得税 -->
-          <div class="salary-item">
-            <div class="item-header">
-              <div class="item-left">
-                <el-icon class="item-icon"><List /></el-icon>
-                <span class="item-name">个人所得税</span>
-              </div>
-              <div class="item-right">
-                <span class="currency">¥</span>
-                <span class="item-value text-error">{{ formatMoney(detail.tax) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 实付工资 -->
-          <div class="salary-item final-item">
-            <div class="item-header">
-              <div class="item-left">
-                <el-icon class="item-icon"><Wallet /></el-icon>
-                <span class="item-name">实付工资金额</span>
-              </div>
-              <div class="item-right">
-                <span class="currency">¥</span>
-                <span class="item-value large">{{ formatMoney(detail.total_salary) }}</span>
-              </div>
-            </div>
-          </div>
+    <!-- 自定义 header -->
+    <template #header>
+      <div class="receipt-head">
+        <div class="receipt-head-left">
+          <div class="receipt-eyebrow">SALARY · 工资单</div>
+          <div class="receipt-title">{{ date || '—' }} 月薪资明细</div>
         </div>
-
-        <!-- ==================== 2. 极简列表 (Flat List) ==================== -->
-        <div v-else-if="uiStyle === 'list'" class="salary-list-flat">
-          <div class="flat-group">
-            <div class="flat-title">收入项</div>
-            <div v-for="(item, index) in detail.type_archives" :key="index" class="flat-row">
-              <span class="flat-label">{{ item.fname }}</span>
-              <span class="flat-value" :class="{ negative: Number(item.sum) < 0 }">
-                {{ Number(item.sum) >= 0 ? '+' : '' }}{{ formatMoney(item.sum) }}
-              </span>
-            </div>
-            <div class="flat-row total">
-              <span class="flat-label">应发总额</span>
-              <span class="flat-value">{{ formatMoney(detail.shuiqian_salary) }}</span>
-            </div>
-          </div>
-
-          <div class="flat-group">
-            <div class="flat-title">扣款项</div>
-            <div class="flat-row" v-if="Number(detail.daikou_total) > 0">
-              <span class="flat-label">代扣代缴 (社保公积金)</span>
-              <span class="flat-value negative">{{ formatMoney(detail.daikou_total) }}</span>
-            </div>
-            <div class="flat-row" v-if="Number(detail.tax) > 0">
-              <span class="flat-label">个人所得税</span>
-              <span class="flat-value negative">{{ formatMoney(detail.tax) }}</span>
-            </div>
-            <div class="flat-row bonus" v-if="Number(detail.special.sum) > 0">
-              <span class="flat-label">专项附加扣除 (免税额)</span>
-              <span class="flat-value info">({{ formatMoney(detail.special.sum) }})</span>
-            </div>
-          </div>
-
-          <div class="flat-result">
-            <div class="result-label">实发工资</div>
-            <div class="result-value">¥ {{ formatMoney(detail.total_salary) }}</div>
-          </div>
-        </div>
-
-        <!-- ==================== 3. 薪资流向 (Flow) ==================== -->
-        <div v-else-if="uiStyle === 'flow'" class="salary-list-flow">
-          <!-- 1. 收入流 -->
-          <div class="flow-step positive">
-            <div class="step-icon"><el-icon><Money /></el-icon></div>
-            <div class="step-content">
-              <div class="step-title">税前应发明细</div>
-              <div class="step-details-inline">
-                <div v-for="(item, index) in detail.type_archives" :key="index" class="inline-item">
-                  <span class="label">{{ item.fname }}</span>
-                  <span class="value">{{ formatMoney(item.sum) }}</span>
-                </div>
-              </div>
-              <div class="step-money-total">应发总额：¥ {{ formatMoney(detail.shuiqian_salary) }}</div>
-            </div>
-          </div>
-
-          <div class="flow-line"></div>
-
-          <!-- 2. 扣除流 -->
-          <div class="flow-step negative" v-if="Number(detail.shuiqian_salary) - Number(detail.total_salary) > 0">
-            <div class="step-icon"><el-icon><Ticket /></el-icon></div>
-            <div class="step-content">
-              <div class="step-title">各项扣款明细</div>
-              <div class="step-details-inline">
-                <div class="inline-item" v-if="Number(detail.daikou_total) > 0">
-                  <span class="label">社保公积金等</span>
-                  <span class="value">{{ formatMoney(detail.daikou_total) }}</span>
-                </div>
-                <div class="inline-item" v-if="Number(detail.tax) > 0">
-                  <span class="label">个人所得税</span>
-                  <span class="value">{{ formatMoney(detail.tax) }}</span>
-                </div>
-              </div>
-              <div class="step-money-total">扣除总额：- ¥ {{ formatMoney(Number(detail.shuiqian_salary) - Number(detail.total_salary)) }}</div>
-              <div class="step-tip" v-if="Number(detail.special.sum) > 0">
-                💡 已为您节省个税抵扣额度：¥ {{ formatMoney(detail.special.sum) }}
-              </div>
-            </div>
-          </div>
-
-          <div class="flow-line" v-if="Number(detail.shuiqian_salary) - Number(detail.total_salary) > 0"></div>
-
-          <!-- 3. 到手流 -->
-          <div class="flow-step final">
-            <div class="step-icon"><el-icon><Wallet /></el-icon></div>
-            <div class="step-content">
-              <div class="step-title">实际到手薪资</div>
-              <div class="step-money">¥ {{ formatMoney(detail.total_salary) }}</div>
-              <div class="step-desc">已成功计算并准备发放</div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="detail.remark" class="objection-remark">
-          <el-alert
-            :title="`异议回复：${detail.remark}`"
-            type="warning"
-            :closable="false"
-            show-icon
-          />
-        </div>
+        <span class="pill" :class="confirmPill.cls">{{ confirmPill.text }}</span>
       </div>
+    </template>
+
+    <div v-loading="loading" class="receipt-body">
+      <template v-if="detail">
+
+        <!-- ============ Hero · 实发大数字 ============ -->
+        <section class="receipt-hero">
+          <div class="hero-label">实发工资</div>
+          <div class="hero-amount">
+            <span class="hero-cur">¥</span>
+            <span class="hero-int num">{{ totalSalaryParts.int }}</span>
+            <span class="hero-dec">{{ totalSalaryParts.dec }}</span>
+          </div>
+          <div class="hero-meta">
+            应发
+            <b class="num">¥{{ formatMoney(detail.shuiqian_salary) }}</b>
+            <span class="dot-sep">·</span>
+            扣除
+            <b class="num">¥{{ formatMoney(deductionTotal) }}</b>
+          </div>
+        </section>
+
+        <!-- ============ 收入项 ============ -->
+        <section class="rcp-section">
+          <div class="rcp-section-head">
+            <div class="rcp-section-title">收入项</div>
+            <div class="rcp-section-meta">{{ detail.type_archives?.length || 0 }} 项</div>
+          </div>
+          <div class="rcp-lines">
+            <template v-for="(item, index) in detail.type_archives" :key="index">
+              <div class="rcp-line">
+                <span class="rcp-label">{{ item.fname }}</span>
+                <span class="rcp-value positive num">+ ¥{{ formatMoney(item.sum) }}</span>
+              </div>
+              <div v-if="item.zd && item.zd.length" class="rcp-sub">
+                <div v-for="(z, zi) in item.zd" :key="zi" class="rcp-sub-line">
+                  <span class="rcp-sub-label">└ {{ z.title }}</span>
+                  <span class="rcp-sub-value num">¥{{ formatMoney(z.data) }}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="rcp-line rcp-line-subtotal">
+            <span class="rcp-label">收入小计</span>
+            <span class="rcp-value num">¥{{ formatMoney(detail.shuiqian_salary) }}</span>
+          </div>
+        </section>
+
+        <!-- ============ 扣除项 ============ -->
+        <section
+          v-if="Number(detail.daikou_total) > 0 || Number(detail.tax) > 0"
+          class="rcp-section"
+        >
+          <div class="rcp-section-head">
+            <div class="rcp-section-title">扣除项</div>
+            <div class="rcp-section-meta">合计 ¥{{ formatMoney(deductionTotal) }}</div>
+          </div>
+          <div class="rcp-lines">
+            <template v-if="Number(detail.daikou_total) > 0">
+              <div class="rcp-line">
+                <span class="rcp-label">代扣代缴（社保公积金）</span>
+                <span class="rcp-value negative num">− ¥{{ formatMoney(detail.daikou_total) }}</span>
+              </div>
+              <div v-if="detail.daikou" class="rcp-sub">
+                <div v-for="(value, key) in detail.daikou" :key="key" class="rcp-sub-line">
+                  <span class="rcp-sub-label">└ {{ key }}</span>
+                  <span class="rcp-sub-value num">¥{{ formatMoney(value) }}</span>
+                </div>
+              </div>
+            </template>
+            <div v-if="Number(detail.tax) > 0" class="rcp-line">
+              <span class="rcp-label">个人所得税</span>
+              <span class="rcp-value negative num">− ¥{{ formatMoney(detail.tax) }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 免税额（专项附加） ============ -->
+        <section v-if="Number(detail.special?.sum) > 0" class="rcp-section rcp-section-info">
+          <div class="rcp-section-head">
+            <div class="rcp-section-title">
+              专项附加扣除
+              <span class="rcp-tip">已节省个税</span>
+            </div>
+            <div class="rcp-section-meta accent">
+              抵扣 ¥{{ formatMoney(detail.special.sum) }}
+            </div>
+          </div>
+          <div v-if="detail.special.zd && detail.special.zd.length" class="rcp-lines">
+            <div v-for="(z, zi) in detail.special.zd" :key="zi" class="rcp-line subtle">
+              <span class="rcp-label">{{ z.title }}</span>
+              <span class="rcp-value info num">¥{{ formatMoney(z.data) }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 实发结果 ============ -->
+        <section class="rcp-final">
+          <div class="rcp-final-divider"></div>
+          <div class="rcp-final-row">
+            <span class="rcp-final-label">实发合计</span>
+            <span class="rcp-final-value">
+              <span class="cur">¥</span>
+              <span class="num">{{ formatMoney(detail.total_salary) }}</span>
+            </span>
+          </div>
+        </section>
+
+        <!-- ============ 异议备注 ============ -->
+        <section v-if="detail.remark" class="rcp-objection">
+          <div class="obj-icon">!</div>
+          <div class="obj-content">
+            <div class="obj-title">异议回复</div>
+            <div class="obj-text">{{ detail.remark }}</div>
+          </div>
+        </section>
+
+      </template>
 
       <el-empty v-else description="未查询到薪资数据" :image-size="80" />
     </div>
 
     <template #footer>
-      <div class="dialog-footer">
+      <div class="rcp-footer">
         <template v-if="detail && !isConfirmed">
-          <el-button @click="handleObjection">提出异议</el-button>
-          <el-button type="primary" @click="handleConfirm">确认无误</el-button>
+          <button class="btn" @click="handleObjection">提出异议</button>
+          <button class="btn btn-primary" @click="handleConfirm">确认无误</button>
         </template>
         <template v-else-if="detail && isConfirmed">
-          <el-button disabled type="success">已确认无误</el-button>
+          <button class="btn" disabled>已确认无误</button>
         </template>
-        <el-button v-else @click="dialogVisible = false">关闭</el-button>
+        <button v-else class="btn" @click="dialogVisible = false">关闭</button>
       </div>
     </template>
   </el-dialog>
 </template>
 
 <style scoped>
-.salary-detail-dialog :deep(.el-dialog) {
-  border-radius: var(--radius-xl);
+/* ============ Dialog 容器深度样式 ============ */
+:deep(.el-dialog) {
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
+  border: 1px solid var(--border-soft);
 }
 
-.salary-detail-dialog :deep(.el-dialog__header) {
-  margin-right: 0;
-  padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-default);
+:deep(.el-dialog__header) {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg);
+  margin: 0;
 }
 
-.salary-detail-dialog :deep(.el-dialog__title) {
-  font-size: var(--font-lg);
+:deep(.el-dialog__body) {
+  padding: 0;
+  background: var(--bg);
+}
+
+:deep(.el-dialog__footer) {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--bg-soft);
+}
+
+:deep(.el-dialog__close) {
+  font-size: 18px;
+  color: var(--fg-4);
+}
+:deep(.el-dialog__close:hover) {
+  color: var(--fg);
+}
+
+:deep(.el-dialog__headerbtn) {
+  top: 18px;
+  right: 20px;
+}
+
+/* ============ Header ============ */
+.receipt-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.receipt-eyebrow {
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-primary);
+  letter-spacing: .12em;
+  color: var(--fg-4);
+  margin-bottom: 4px;
+}
+.receipt-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -.015em;
+  line-height: 1.2;
 }
 
-.salary-detail-dialog :deep(.el-dialog__body) {
-  padding: 0 var(--space-6) var(--space-5);
-  background-color: var(--bg-soft);
+/* ============ Body ============ */
+.receipt-body {
+  padding: 24px;
   max-height: 70vh;
   overflow-y: auto;
 }
 
-.style-switcher {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-3) 0 var(--space-5);
-  background: var(--bg-surface);
-  margin: 0 calc(var(--space-6) * -1);
-  border-bottom: 1px solid var(--border-default);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-}
-
-.detail-content {
-  padding-top: var(--space-5);
-}
-
-/* ==================== 极简列表样式 (List) ==================== */
-.salary-list-flat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.flat-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.flat-title {
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.flat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-1) 0;
-}
-
-.flat-label {
-  font-size: var(--font-md);
-  color: var(--text-primary);
-}
-
-.flat-value {
-  font-family: var(--font-family-base);
-  font-weight: 600;
-  color: var(--color-success);
-}
-
-.flat-value.negative {
-  color: var(--color-danger);
-}
-
-.flat-value.info {
-  color: var(--text-secondary);
-  font-style: italic;
-  font-weight: 400;
-}
-
-.flat-row.bonus {
-  opacity: 0.8;
-}
-
-.flat-row.total {
-  margin-top: var(--space-1);
-  padding-top: var(--space-3);
-  border-top: 1px dashed var(--border-default);
-}
-
-.flat-row.total .flat-label {
-  font-weight: 600;
-}
-
-.flat-result {
-  margin-top: var(--space-3);
-  background: var(--gradient-cool);
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  text-align: center;
-  color: white;
-  box-shadow: var(--shadow-lg);
-}
-
-.result-label {
-  font-size: var(--font-base);
-  opacity: 0.8;
-  margin-bottom: var(--space-2);
-}
-
-.result-value {
-  font-size: 32px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.3));
-}
-
-/* ==================== 薪资流向样式 (Flow) ==================== */
-.salary-list-flow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.flow-step {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-5);
-  width: 100%;
-  padding: var(--space-5);
-  border-radius: var(--radius-xl);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  transition: all var(--transition-base);
-}
-
-.flow-step:hover {
-  border-color: var(--border-brand);
-  box-shadow: var(--shadow-md);
-}
-
-.step-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.positive .step-icon { background: var(--brand-50); color: var(--brand-600); }
-.negative .step-icon { background: var(--color-danger-bg); color: var(--color-danger); }
-.final .step-icon { background: var(--gray-800); color: #FBBF24; }
-
-.step-content {
-  flex: 1;
-}
-
-.step-title {
-  font-size: var(--font-base);
-  color: var(--text-secondary);
-  margin-bottom: var(--space-1);
-}
-
-.step-money {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-family: var(--font-family-base);
-}
-
-.step-money-total {
-  font-size: var(--font-md);
-  font-weight: 700;
-  margin-top: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px dashed var(--border-default);
-}
-
-.positive .step-money-total { color: var(--brand-600); }
-.negative .step-money-total { color: var(--color-danger); }
-
-.step-details-inline {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.inline-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-sm);
-}
-
-.inline-item .label {
-  color: var(--text-secondary);
-}
-
-.inline-item .value {
-  font-weight: 600;
-}
-
-.step-tip {
-  font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--bg-soft);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-xs);
-  margin-top: var(--space-2);
-  display: inline-block;
+/* ============ Hero · 实发大数字 ============ */
+.receipt-hero {
+  position: relative;
+  padding: 24px 24px 22px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+  background:
+    radial-gradient(at 100% 0%, var(--accent-bg-2) 0%, transparent 60%),
+    linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-soft) 100%);
   border: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+.receipt-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, #EC4899 100%);
 }
 
-.step-tags {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.step-tags span {
-  font-size: 11px;
-  padding: 2px var(--space-2);
-  background: var(--bg-soft);
-  color: var(--text-secondary);
-  border-radius: var(--radius-xs);
-}
-
-.flow-line {
-  width: 2px;
-  height: 30px;
-  background: linear-gradient(to bottom, var(--border-default), transparent);
-  margin: var(--space-1) 0;
-}
-
-.step-desc {
-  font-size: var(--font-xs);
-  color: var(--color-success);
-  margin-top: var(--space-1);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.step-desc::before {
-  content: '✓';
-  font-weight: bold;
-}
-
-@media screen and (max-width: 768px) {
-  .style-switcher {
-    margin: 0 -20px;
-  }
-}
-
-.salary-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.salary-item {
-  background: var(--bg-surface);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid transparent;
-  transition: all var(--transition-base);
-  box-shadow: var(--shadow-xs);
-}
-
-.salary-item.has-details {
-  cursor: pointer;
-}
-
-.salary-item.has-details:hover {
-  border-color: var(--border-brand);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.item-icon {
-  font-size: 20px;
-  color: var(--brand-600);
-  background: var(--brand-50);
-  padding: var(--space-2);
-  border-radius: var(--radius-sm);
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.item-name {
-  font-size: var(--font-md);
+.hero-label {
+  font-size: 12px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--fg-3);
+  letter-spacing: .04em;
+  margin-bottom: 6px;
 }
-
-.arrow-icon {
-  font-size: var(--font-base);
-  color: var(--text-secondary);
-  transition: transform var(--transition-base);
-}
-
-.arrow-icon.expanded {
-  transform: rotate(180deg);
-  color: var(--brand-600);
-}
-
-.item-right {
+.hero-amount {
   display: flex;
   align-items: baseline;
-  gap: 2px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  color: var(--fg);
 }
-
-.currency {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--text-secondary);
+.hero-cur {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--fg-3);
+  margin-right: 3px;
 }
-
-.item-value {
-  font-size: 17px;
+.hero-int {
+  font-size: 36px;
   font-weight: 700;
-  font-family: var(--font-family-base);
-  color: var(--text-primary);
+  letter-spacing: -.025em;
+  line-height: 1;
+}
+.hero-dec {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--fg-4);
+  margin-left: 1px;
 }
 
-.text-error {
-  color: var(--color-danger);
+.hero-meta {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+.hero-meta b {
+  color: var(--fg);
+  font-weight: 600;
+}
+.dot-sep {
+  margin: 0 8px;
+  color: var(--fg-4);
 }
 
-/* 强调样式 */
-.highlight-soft {
-  background: var(--brand-50);
-  border-color: var(--brand-200);
+/* ============ Section ============ */
+.rcp-section {
+  margin-bottom: 18px;
+}
+.rcp-section:last-child { margin-bottom: 0; }
+
+.rcp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 8px;
+  border-bottom: 1px dashed var(--border-soft);
+  margin-bottom: 4px;
+}
+.rcp-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -.005em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rcp-tip {
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+  letter-spacing: .04em;
+}
+.rcp-section-meta {
+  font-size: 12px;
+  color: var(--fg-4);
+  font-variant-numeric: tabular-nums;
+}
+.rcp-section-meta.accent {
+  color: var(--accent-fg);
+  font-weight: 600;
 }
 
-.final-item {
-  background: var(--gradient-cool);
-  color: white;
-  box-shadow: var(--shadow-lg);
-}
-
-.final-item .item-name,
-.final-item .currency,
-.final-item .item-value {
-  color: white;
-}
-
-.final-item .item-icon {
-  background: rgba(255, 255, 255, 0.15);
-  color: #FBBF24;
-  font-size: 22px;
-}
-
-.item-value.large {
-  font-size: 22px;
-  background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-/* 详情展开 */
-.item-details {
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--bg-soft);
-  border-radius: var(--radius-sm);
+/* ============ Lines ============ */
+.rcp-lines {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  border: 1px solid var(--border-soft);
 }
 
-.detail-row {
+.rcp-line {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: var(--font-sm);
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--border-soft);
+  font-size: 13.5px;
 }
+.rcp-line:last-child { border-bottom: none; }
+.rcp-line.subtle .rcp-label,
+.rcp-line.subtle .rcp-value { color: var(--fg-3); }
 
-.detail-label {
-  color: var(--text-secondary);
-}
-
-.detail-value {
-  color: var(--text-primary);
+.rcp-label {
+  color: var(--fg-2);
   font-weight: 500;
-  font-family: var(--font-family-base);
+}
+.rcp-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--fg);
+}
+.rcp-value.positive { color: var(--success-fg); }
+.rcp-value.negative { color: var(--danger-fg); }
+.rcp-value.info     { color: var(--accent-fg); }
+
+/* 子明细 */
+.rcp-sub {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 8px 16px;
+  background: var(--bg-soft);
+  margin: -1px -8px 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px dashed var(--border-soft);
+}
+.rcp-sub-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+.rcp-sub-label {
+  color: var(--fg-3);
+  font-family: 'Inter', monospace;
+}
+.rcp-sub-value {
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
 }
 
-.objection-remark {
-  margin-top: var(--space-2);
+/* 小计行 */
+.rcp-line-subtotal {
+  margin-top: 4px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: none;
+  font-size: 13.5px;
+}
+.rcp-line-subtotal .rcp-label {
+  font-weight: 600;
+  color: var(--fg);
 }
 
-.dialog-footer {
-  padding: var(--space-4) var(--space-6) var(--space-6);
+/* 信息块（专项附加） */
+.rcp-section-info {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bg-2);
+  border-radius: 10px;
+  padding: 4px 16px 12px;
+}
+.rcp-section-info .rcp-section-head {
+  border-bottom-color: var(--accent-bg-2);
+}
+.rcp-section-info .rcp-line {
+  border-bottom-color: var(--accent-bg-2);
+}
+
+/* ============ Final · 实发合计 ============ */
+.rcp-final {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+.rcp-final-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--border-strong) 50%, transparent 100%);
+  margin-bottom: 16px;
+}
+.rcp-final-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.rcp-final-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -.005em;
+}
+.rcp-final-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  color: var(--accent-fg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.rcp-final-value .cur { font-size: 15px; opacity: 0.85; }
+.rcp-final-value .num {
+  font-size: 28px;
+  letter-spacing: -.022em;
+  line-height: 1;
+}
+
+/* ============ 异议备注 ============ */
+.rcp-objection {
+  margin-top: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #FFF4E0;
+  border: 1px solid #FCD34D;
+  border-radius: 10px;
+}
+.obj-icon {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #BC6E00;
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.obj-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8B5300;
+  margin-bottom: 4px;
+}
+.obj-text {
+  font-size: 13px;
+  color: var(--fg-2);
+  line-height: 1.5;
+}
+
+/* ============ Footer ============ */
+.rcp-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-3);
+  gap: 8px;
 }
-
-.dialog-footer :deep(.el-button) {
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-md);
+.rcp-footer .btn {
+  height: 34px;
+  padding: 0 16px;
+  font-size: 13px;
   font-weight: 500;
+  color: var(--fg-2);
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all .12s;
+  font-family: inherit;
+}
+.rcp-footer .btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--fg);
+}
+.rcp-footer .btn:disabled {
+  cursor: default;
+  color: var(--fg-4);
+  background: var(--bg-soft);
+}
+.rcp-footer .btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(99, 91, 255, .25);
+}
+.rcp-footer .btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(99, 91, 255, .35);
 }
 
-@media screen and (max-width: 768px) {
-  .salary-detail-dialog :deep(.el-dialog) {
-    width: 92% !important;
+/* ============ 响应式 ============ */
+@media (max-width: 600px) {
+  :deep(.el-dialog) {
+    width: 92vw !important;
     margin: 5vh auto !important;
   }
-
-  .salary-detail-dialog :deep(.el-dialog__header) {
-    padding: 16px 20px;
-  }
-
-  .salary-detail-dialog :deep(.el-dialog__title) {
-    font-size: 16px;
-  }
-
-  .salary-detail-dialog :deep(.el-dialog__body) {
-    padding: 16px 20px;
-    max-height: 60vh;
-  }
-
-  .salary-item {
-    padding: 12px 14px;
-  }
-
-  .item-icon {
-    font-size: 18px;
-    width: 32px;
-    height: 32px;
-    padding: 6px;
-  }
-
-  .item-name {
-    font-size: 14px;
-  }
-
-  .item-value {
-    font-size: 16px;
-  }
-
-  .item-value.large {
-    font-size: 20px;
-  }
-
-  .currency {
-    font-size: 11px;
-  }
-
-  .detail-row {
-    font-size: 13px;
-  }
-
-  .dialog-footer {
-    padding: 12px 20px 20px;
-  }
-
-  .dialog-footer :deep(.el-button) {
-    padding: 8px 16px;
-    font-size: 14px;
-  }
+  .receipt-body { padding: 16px; max-height: 75vh; }
+  .receipt-hero { padding: 18px 18px 16px; }
+  .hero-int { font-size: 30px; }
+  .rcp-final-value .num { font-size: 24px; }
+  :deep(.el-dialog__header) { padding: 16px 20px 12px; }
+  :deep(.el-dialog__footer) { padding: 12px 20px; }
 }
 </style>
