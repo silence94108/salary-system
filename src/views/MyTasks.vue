@@ -2,6 +2,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { getMyTaskList } from '@/api/project'
 import type { TaskOrder } from '@/types'
+import EmptyState from '@/components/EmptyState.vue'
 
 // 任务列表
 const tasks = ref<TaskOrder[]>([])
@@ -348,7 +349,11 @@ fetchTasks()
           </template>
         </el-table-column>
         <template #empty>
-          <el-empty description="暂无任务数据" />
+          <EmptyState
+            type="search"
+            title="暂无任务数据"
+            description="调整筛选条件或等待新任务分配"
+          />
         </template>
       </el-table>
       </div>

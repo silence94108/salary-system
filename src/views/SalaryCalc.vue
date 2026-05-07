@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { Refresh, ArrowDown } from '@element-plus/icons-vue'
+import { Refresh, ArrowDown, Document, Wallet, TrendCharts } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useProjectStore } from '@/stores/project'
 import type { Project, CommissionResult } from '@/types'
 import type { SalaryDateItem } from '@/api/salary'
 import SalaryDetailDialog from '@/components/SalaryDetailDialog.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -269,23 +270,44 @@ function handleDetailConfirmed() {
       </el-form>
     </el-card>
 
-    <el-row :gutter="16" class="stat-row">
+    <el-row :gutter="24" class="stat-row">
       <el-col :xs="24" :sm="8">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-num primary">{{ projectStore.projects.length }}</div>
-          <div class="stat-label">当月完结项目</div>
+        <el-card shadow="never" class="stat-card stat-card-hover">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrapper primary">
+              <el-icon :size="24"><Document /></el-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-num primary">{{ projectStore.projects.length }}</div>
+              <div class="stat-label">当月完结项目</div>
+            </div>
+          </div>
         </el-card>
       </el-col>
       <el-col :xs="24" :sm="8">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-num">{{ monthFinishedTotal.toFixed(2) }}</div>
-          <div class="stat-label">完结佣金总额(元)</div>
+        <el-card shadow="never" class="stat-card stat-card-hover">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrapper warning">
+              <el-icon :size="24"><Wallet /></el-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-num warning">{{ monthFinishedTotal.toFixed(2) }}</div>
+              <div class="stat-label">完结佣金总额(元)</div>
+            </div>
+          </div>
         </el-card>
       </el-col>
       <el-col :xs="24" :sm="8">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-num success">{{ totalCommission.toFixed(2) }}</div>
-          <div class="stat-label">实得佣金(元)</div>
+        <el-card shadow="never" class="stat-card stat-card-hover">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrapper success">
+              <el-icon :size="24"><TrendCharts /></el-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-num success">{{ totalCommission.toFixed(2) }}</div>
+              <div class="stat-label">实得佣金(元)</div>
+            </div>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -344,26 +366,33 @@ function handleDetailConfirmed() {
           </template>
         </el-table-column>
         <template #empty>
-          <el-empty description="当月暂无完结项目" />
+          <EmptyState
+            type="data"
+            title="当月暂无完结项目"
+            description="完成项目后，数据会自动显示在这里"
+          />
         </template>
       </el-table>
     </el-card>
 
-    <el-card shadow="never" class="summary-card" v-if="projectStore.projects.length > 0">
-      <div class="summary-row">
-        <div class="summary-item">
-          <div class="label">底薪(含工龄)</div>
-          <div class="value">{{ currentBaseSalary.toFixed(2) }} <span class="unit">元</span></div>
+    <el-card shadow="never" class="hero-salary-card" v-if="projectStore.projects.length > 0">
+      <div class="hero-card-bg"></div>
+      <div class="hero-card-content">
+        <div class="hero-label">{{ calcMonth }} 应发薪资</div>
+        <div class="hero-amount">
+          <span class="hero-currency">¥</span>
+          <span class="hero-value">{{ totalSalary.toFixed(2) }}</span>
         </div>
-        <div class="summary-divider"></div>
-        <div class="summary-item">
-          <div class="label">佣金合计</div>
-          <div class="value">{{ totalCommission.toFixed(2) }} <span class="unit">元</span></div>
-        </div>
-        <div class="summary-divider"></div>
-        <div class="summary-item main">
-          <div class="label">{{ calcMonth }} 应发薪资</div>
-          <div class="value highlight">{{ totalSalary.toFixed(2) }} <span class="unit">元</span></div>
+        <div class="hero-breakdown">
+          <div class="breakdown-item">
+            <span class="breakdown-label">底薪(含工龄)</span>
+            <span class="breakdown-value">{{ currentBaseSalary.toFixed(2) }}</span>
+          </div>
+          <div class="breakdown-divider">+</div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">佣金合计</span>
+            <span class="breakdown-value">{{ totalCommission.toFixed(2) }}</span>
+          </div>
         </div>
       </div>
     </el-card>
@@ -438,7 +467,12 @@ function handleDetailConfirmed() {
           </el-collapse-transition>
         </div>
 
-        <el-empty v-if="Object.keys(salaryByYear).length === 0" description="暂无工资记录" />
+        <EmptyState
+          v-if="Object.keys(salaryByYear).length === 0"
+          type="data"
+          title="暂无工资记录"
+          description="工资数据会在每月结算后显示"
+        />
       </div>
     </el-card>
 
@@ -536,16 +570,75 @@ function handleDetailConfirmed() {
 }
 
 .stat-card {
-  text-align: center;
-  padding: var(--space-3) 0;
   border: 1px solid var(--border-default);
-  transition: all var(--transition-base);
+  transition: all var(--transition-bounce);
+  overflow: hidden;
+  position: relative;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-warm);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-bounce);
+}
+
+.stat-card-hover:hover {
+  transform: translateY(-4px);
   border-color: var(--border-brand);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card-hover:hover::before {
+  transform: scaleX(1);
+}
+
+.stat-card-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.stat-icon-wrapper {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-bounce);
+}
+
+.stat-icon-wrapper.primary {
+  background: linear-gradient(135deg, var(--brand-100) 0%, var(--brand-200) 100%);
+  color: var(--brand-600);
+}
+
+.stat-icon-wrapper.warning {
+  background: linear-gradient(135deg, var(--color-warning-bg) 0%, #FEF3C7 100%);
+  color: var(--color-warning);
+}
+
+.stat-icon-wrapper.success {
+  background: linear-gradient(135deg, var(--color-success-bg) 0%, #D1FAE5 100%);
+  color: var(--color-success);
+}
+
+.stat-card-hover:hover .stat-icon-wrapper {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.stat-content {
+  flex: 1;
+  text-align: left;
 }
 
 .stat-num {
@@ -553,6 +646,7 @@ function handleDetailConfirmed() {
   font-weight: 700;
   color: var(--text-primary);
   font-family: var(--font-family-base);
+  line-height: 1.2;
 }
 
 .stat-num.primary { color: var(--brand-600); }
@@ -562,7 +656,8 @@ function handleDetailConfirmed() {
 .stat-label {
   font-size: var(--font-sm);
   color: var(--text-secondary);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
+  font-weight: 500;
 }
 
 .table-card {
@@ -579,93 +674,132 @@ function handleDetailConfirmed() {
   font-size: var(--font-xs);
 }
 
-.summary-card {
-  background: var(--gradient-cool);
-  border: 1px solid rgba(249, 115, 22, 0.15);
+.hero-salary-card {
+  position: relative;
+  background: linear-gradient(135deg, #F97316 0%, #FB923C 50%, #FDBA74 100%);
+  border: none;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.3);
+  margin-bottom: var(--space-6);
 }
 
-.summary-card :deep(.el-card__body) {
-  padding: var(--space-8) var(--space-8);
+.hero-card-bg {
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: pulse 4s ease-in-out infinite;
 }
 
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: white;
-  gap: var(--space-6);
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
 }
 
-.summary-divider {
-  width: 1px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.15);
+.hero-salary-card :deep(.el-card__body) {
+  padding: var(--space-10) var(--space-8);
+  position: relative;
+  z-index: 1;
 }
 
-.summary-item {
-  flex: 1;
+.hero-card-content {
   text-align: center;
+  color: white;
 }
 
-.summary-item .label {
+.hero-label {
   font-size: var(--font-base);
-  opacity: 0.75;
-  margin-bottom: var(--space-3);
+  opacity: 0.9;
+  margin-bottom: var(--space-4);
   font-weight: 500;
   letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
 }
 
-.summary-item .value {
-  font-size: 28px;
-  font-weight: 700;
-  font-family: var(--font-family-base);
-  letter-spacing: -0.02em;
+.hero-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
 }
 
-.summary-item .unit {
-  font-size: var(--font-md);
-  font-weight: 500;
-  margin-left: var(--space-1);
-  opacity: 0.8;
-}
-
-.summary-item.main .label {
-  font-size: var(--font-md);
+.hero-currency {
+  font-size: 32px;
+  font-weight: 600;
   opacity: 0.9;
 }
 
-.summary-item.main .value {
-  font-size: 36px;
+.hero-value {
+  font-size: 56px;
+  font-weight: 800;
+  font-family: var(--font-family-base);
+  letter-spacing: -0.03em;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: countUp 0.8s ease-out;
 }
 
-.summary-item.main .value.highlight {
-  background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: none;
-  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.3));
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-breakdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.breakdown-label {
+  font-size: var(--font-xs);
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.breakdown-value {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  font-family: var(--font-family-base);
+}
+
+.breakdown-divider {
+  font-size: var(--font-xl);
+  font-weight: 300;
+  opacity: 0.6;
 }
 
 @media screen and (max-width: 768px) {
-  .summary-row {
-    flex-direction: column;
-    gap: 20px;
+  .hero-salary-card :deep(.el-card__body) {
+    padding: var(--space-6) var(--space-4);
   }
 
-  .summary-divider {
-    width: 80%;
-    height: 1px;
+  .hero-value {
+    font-size: 40px;
   }
 
-  .summary-item .value {
+  .hero-currency {
     font-size: 24px;
   }
 
-  .summary-item.main .value {
-    font-size: 32px;
+  .hero-breakdown {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .breakdown-divider {
+    transform: rotate(90deg);
   }
 }
 
@@ -857,8 +991,17 @@ function handleDetailConfirmed() {
   }
 
   .stat-card {
-    padding: var(--space-2) 0;
     margin-bottom: var(--space-2);
+  }
+
+  .stat-card-inner {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
   }
 
   .stat-num {
