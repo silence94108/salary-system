@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
+import LogoMark from '@/components/LogoMark.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -75,21 +76,19 @@ function toggleSidebar() {
 
     <!-- 侧边栏 -->
     <el-aside
-      :width="isMobile ? '200px' : (isCollapse ? '64px' : '200px')"
+      :width="isMobile ? '220px' : (isCollapse ? '64px' : '220px')"
       :class="['layout-aside', { 'mobile-aside': isMobile, 'mobile-show': sidebarVisible }]"
     >
       <div class="logo">
-        <img src="/logo.svg" alt="logo" class="logo-img" />
-        <span v-if="!isCollapse || isMobile">抢单平台</span>
+        <LogoMark :size="isCollapse && !isMobile ? 32 : 40" uid="sidebar" />
+        <span v-if="!isCollapse || isMobile" class="logo-text">抢单平台</span>
       </div>
 
       <el-menu
         :default-active="route.path"
         :collapse="isMobile ? false : isCollapse"
         :collapse-transition="false"
-        background-color="#304156"
-        text-color="#bfcbd9"
-        active-text-color="#409EFF"
+        class="sidebar-menu"
         @select="handleMenuSelect"
       >
         <el-menu-item
@@ -159,40 +158,63 @@ export default {
 }
 
 .layout-aside {
-  background-color: #304156;
+  background: linear-gradient(180deg, #1E3A8A 0%, #1E293B 100%);
   transition: width 0.3s;
   overflow: hidden;
+  border-right: 1px solid rgba(249, 115, 22, 0.1);
 }
 
 .logo {
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 20px;
-  gap: 8px;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo-text {
   color: #fff;
   font-size: 18px;
-  font-weight: bold;
-  background: rgba(0, 0, 0, 0.1);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-.logo-img {
-  width: 28px;
-  height: 28px;
-}
-
-.el-menu {
+.sidebar-menu {
   border-right: none;
+  background: transparent;
+}
+
+.sidebar-menu .el-menu-item {
+  color: rgba(255, 255, 255, 0.75);
+  transition: all var(--transition-base);
+  border-left: 3px solid transparent;
+  margin: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-menu .el-menu-item:hover {
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--brand-200);
+  border-left-color: var(--brand-400);
+}
+
+.sidebar-menu .el-menu-item.is-active {
+  background: rgba(249, 115, 22, 0.18);
+  color: var(--brand-100);
+  border-left-color: var(--brand-500);
+  font-weight: 600;
 }
 
 .layout-header {
-  background: #fff;
+  background: var(--bg-surface);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 0 24px;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .header-left {
@@ -204,17 +226,20 @@ export default {
 .collapse-btn {
   font-size: 20px;
   cursor: pointer;
-  color: #666;
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
 }
 
 .collapse-btn:hover {
-  color: #409EFF;
+  color: var(--brand-600);
+  transform: scale(1.1);
 }
 
 .page-title {
   font-size: 16px;
-  font-weight: 500;
-  color: #333;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .header-right {
@@ -227,23 +252,32 @@ export default {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  color: #666;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.user-info:hover {
+  background: var(--brand-50);
+  color: var(--brand-700);
 }
 
 .username {
   font-size: 14px;
+  font-weight: 500;
 }
 
 .company-name {
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  color: var(--text-secondary);
   margin-right: 16px;
   padding-right: 16px;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--border-default);
 }
 
 .layout-main {
-  background: #f0f2f5;
+  background: var(--bg-page);
   padding: 20px;
   overflow-y: auto;
 }
@@ -262,10 +296,11 @@ export default {
 .mobile-aside {
   position: fixed;
   top: 0;
-  left: -200px;
+  left: -220px;
   height: 100%;
   z-index: 999;
   transition: left 0.3s;
+  box-shadow: var(--shadow-xl);
 }
 
 .mobile-aside.mobile-show {

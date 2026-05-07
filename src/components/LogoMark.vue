@@ -2,22 +2,18 @@
 /**
  * LogoMark - 抢单平台品牌符号
  *
- * 设计原则（参考 inkbotdesign / 99designs / Mastercard / Vercel）：
- * - Simplicity: 双三角 + 中央点，5 秒可凭记忆画出
- * - 2 色: 深橙 + 亮橙渐变，同色系不杂乱
- * - 16x16 测试: 形状辨识度高，缩成 favicon 仍可识别
- * - 业务意义: 双三角 = 发布方/承接方，中央点 = 撮合点
+ * 候选 J：双手交接
+ * - 撮合 · 信任
+ * - 两只简化手交接文件，传达"发布方→承接方"的撮合过程
+ * - 有温度、有信任感
  */
 withDefaults(defineProps<{
   size?: number | string
   /** 唯一 ID 后缀，多实例同页时避免 gradient ID 冲突 */
   uid?: string
-  /** 是否显示中央撮合点（默认显示，favicon 缩到 16px 时可关掉） */
-  showDot?: boolean
 }>(), {
   size: 40,
-  uid: 'a',
-  showDot: true
+  uid: 'a'
 })
 </script>
 
@@ -34,30 +30,43 @@ withDefaults(defineProps<{
   >
     <defs>
       <linearGradient :id="`lm-warm-${uid}`" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#FDBA74" />
+        <stop offset="0%" stop-color="#FB923C" />
         <stop offset="100%" stop-color="#F97316" />
       </linearGradient>
     </defs>
 
-    <!-- 左上三角：深橙实色，代表"发布方" -->
+    <!-- 圆角橙色底 -->
+    <rect x="2" y="2" width="36" height="36" rx="10" :fill="`url(#lm-warm-${uid})`" />
+
+    <!-- 左手 -->
     <path
-      d="M 4 8 L 22 8 L 4 26 Z"
-      fill="#C2410C"
+      d="M 6 22 L 14 22 Q 16 22 16 20 L 16 18 Q 16 16 18 16 L 20 16"
+      fill="none"
+      stroke="white"
+      stroke-width="2"
+      stroke-linecap="round"
     />
 
-    <!-- 右下三角：亮橙渐变，代表"承接方"（抢单方）-->
+    <!-- 右手 -->
     <path
-      d="M 36 32 L 18 32 L 36 14 Z"
-      :fill="`url(#lm-warm-${uid})`"
+      d="M 34 22 L 26 22 Q 24 22 24 20 L 24 18 Q 24 16 22 16 L 20 16"
+      fill="none"
+      stroke="white"
+      stroke-width="2"
+      stroke-linecap="round"
     />
 
-    <!-- 中央撮合点：粉色，品牌强调色 -->
-    <circle
-      v-if="showDot"
-      cx="20"
-      cy="20"
-      r="2.5"
-      fill="#EC4899"
+    <!-- 中央文件/订单 -->
+    <rect x="17" y="12" width="6" height="8" rx="1" fill="white" />
+
+    <!-- 底部微笑弧线（可选装饰） -->
+    <path
+      d="M 14 26 Q 20 30 26 26"
+      fill="none"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      opacity="0.7"
     />
   </svg>
 </template>

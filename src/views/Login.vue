@@ -52,12 +52,17 @@ async function handleLogin() {
 }
 </script>
 
+<script setup lang="ts">
+import LogoMark from '@/components/LogoMark.vue'
+</script>
+
 <template>
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <h1>薪资计算系统</h1>
-        <p>Salary Calculation System</p>
+        <LogoMark :size="64" uid="login" class="login-logo" />
+        <h1>抢单平台</h1>
+        <p>薪资计算系统</p>
       </div>
 
       <el-form
@@ -109,17 +114,36 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-page);
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: var(--gradient-brand);
+  opacity: 0.12;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: gradient-flow 8s ease infinite alternate;
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
-  background: white;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 420px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-2xl);
+  padding: 48px 40px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-soft);
+  position: relative;
+  z-index: 1;
 }
 
 .login-header {
@@ -127,16 +151,24 @@ async function handleLogin() {
   margin-bottom: 40px;
 }
 
+.login-logo {
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.25));
+}
+
 .login-header h1 {
   font-size: 28px;
-  color: #333;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .login-header p {
-  font-size: 14px;
-  color: #999;
+  font-size: 13px;
+  color: var(--text-secondary);
   margin: 0;
+  letter-spacing: 0.05em;
 }
 
 .login-form {
@@ -145,15 +177,52 @@ async function handleLogin() {
 
 .login-btn {
   width: 100%;
-  height: 44px;
+  height: 48px;
   font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-bounce);
+}
+
+.login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-btn:active {
+  transform: translateY(0);
 }
 
 :deep(.el-input__wrapper) {
   padding: 4px 15px;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+:deep(.el-input__wrapper:hover) {
+  border-color: var(--border-brand);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: var(--shadow-glow);
 }
 
 :deep(.el-form-item) {
   margin-bottom: 24px;
+}
+
+@keyframes gradient-flow {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, 10%) scale(1.1); }
+}
+
+@media screen and (max-width: 768px) {
+  .login-card {
+    padding: 36px 28px;
+  }
+
+  .login-header h1 {
+    font-size: 24px;
+  }
 }
 </style>

@@ -381,13 +381,20 @@ export default {
 .my-tasks {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   height: calc(100vh - 100px);
   overflow: hidden;
 }
 
 .filter-card {
   flex-shrink: 0;
+  border: 1px solid var(--border-default);
+  transition: all var(--transition-base);
+}
+
+.filter-card:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-sm);
 }
 
 .table-card {
@@ -395,6 +402,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid var(--border-default);
 }
 
 .table-card :deep(.el-card__body) {
@@ -402,7 +410,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-bottom: 12px;
+  padding-bottom: var(--space-3);
 }
 
 .table-wrapper {
@@ -423,15 +431,15 @@ export default {
 }
 
 .total-text {
-  font-size: 13px;
-  color: #999;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
   font-weight: normal;
 }
 
 .pagination-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 12px;
+  margin-top: var(--space-3);
   flex-shrink: 0;
 }
 
@@ -442,7 +450,7 @@ export default {
 /* 手机端适配 */
 @media screen and (max-width: 768px) {
   .my-tasks {
-    gap: 10px;
+    gap: var(--space-2);
     height: auto;
     overflow: visible;
   }
@@ -469,7 +477,7 @@ export default {
   .filter-card :deep(.el-form--inline .el-form-item) {
     display: flex;
     margin-right: 0;
-    margin-bottom: 10px;
+    margin-bottom: var(--space-2);
     width: 100%;
   }
 
