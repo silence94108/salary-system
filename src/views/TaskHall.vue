@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { Search, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getTaskHallList, checkTaskStatus, takeTask, getProjectDetail } from '@/api/project'
 import type { TaskOrder } from '@/types'
@@ -98,16 +99,16 @@ function handlePageChange(page: number) {
   fetchTasks()
 }
 
-// 获取逾期标签类型
-function getOverdueType(task: any): string {
-  if (task.syday < 0) return 'danger'
-  return 'warning'
+// 获取逾期 pill class
+function getOverduePill(task: any): string {
+  if (task.syday < 0) return 'pill-danger'
+  return 'pill-warning'
 }
 
 // 获取逾期文本
 function getOverdueText(task: any): string {
-  if (task.syday < 0) return `逾期${Math.abs(task.syday)}天`
-  return `剩余${task.syday}天`
+  if (task.syday < 0) return `逾期 ${Math.abs(task.syday)} 天`
+  return `剩余 ${task.syday} 天`
 }
 
 // 接取任务
@@ -296,24 +297,36 @@ fetchTasks()
 </script>
 
 <template>
-  <div class="task-hall">
-    <!-- 筛选区域 -->
-    <el-card shadow="never" class="filter-card">
-      <el-form :inline="true" class="filter-form" @submit.prevent="handleSearch">
-        <el-form-item label="项目名称">
-          <el-input v-model="filters.name" placeholder="搜索项目名称" clearable style="width: 200px" />
-        </el-form-item>
+  <div class="page-wrap">
+    <!-- 页头 -->
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">任务大厅</h1>
+        <div class="page-sub">浏览待接任务，点击「接取」开启新工单</div>
+      </div>
+    </div>
 
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">
-            <el-icon><Search /></el-icon> 查询
-          </el-button>
-          <el-button @click="handleReset">
-            <el-icon><Refresh /></el-icon> 重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <!-- 筛选区 -->
+    <section class="card">
+      <div class="card-body">
+        <el-form :inline="true" class="filter-form" @submit.prevent="handleSearch">
+          <el-form-item label="项目名称">
+            <el-input v-model="filters.name" placeholder="搜索项目名称" clearable style="width: 220px" />
+          </el-form-item>
+
+          <el-form-item>
+            <el-button class="btn btn-primary" @click="handleSearch">
+              <el-icon><Search /></el-icon>
+              <span>查询</span>
+            </el-button>
+            <el-button class="btn" @click="handleReset">
+              <el-icon><Refresh /></el-icon>
+              <span>重置</span>
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </section>
 
     <!-- 任务卡片列表 -->
     <div class="task-list" v-loading="loading">
@@ -324,15 +337,13 @@ fetchTasks()
       <div v-else class="task-grid">
         <el-card v-for="task in tasks" :key="task.id" class="task-card" shadow="hover">
           <!-- 卡片头部 -->
-          <div class="card-header">
+          <div class="tc-head">
             <div class="header-left">
               <span v-if="task.timeout" class="timeout-tag">{{ task.timeout }}</span>
             </div>
             <div class="header-right">
-              <el-tag v-if="task.syday" :type="getOverdueType(task)" size="small">
-                {{ getOverdueText(task) }}
-              </el-tag>
-              <el-tag type="danger" size="small" effect="plain">{{ task.statusInfo }}</el-tag>
+              <span v-if="task.syday" class="pill" :class="getOverduePill(task)">{{ getOverdueText(task) }}</span>
+              <span class="pill pill-info">{{ task.statusInfo }}</span>
             </div>
           </div>
 
@@ -367,9 +378,9 @@ fetchTasks()
           <!-- 金额信息 -->
           <div class="money-info">
             <span class="label">金额：</span>
-            <span>总佣金：<span class="value primary">¥{{ parseFloat(task.hall_total_money || '0').toFixed(2) }}</span></span>
-            <span>基础佣金：<span class="value">¥{{ parseFloat(task.hall_money || '0').toFixed(2) }}</span></span>
-            <span>加价佣金：<span class="value warning">¥{{ parseFloat(task.hall_user_money || '0').toFixed(2) }}</span></span>
+            <span>总佣金：<span class="value primary num">¥{{ parseFloat(task.hall_total_money || '0').toFixed(2) }}</span></span>
+            <span>基础佣金：<span class="value num">¥{{ parseFloat(task.hall_money || '0').toFixed(2) }}</span></span>
+            <span>加价佣金：<span class="value warning num">¥{{ parseFloat(task.hall_user_money || '0').toFixed(2) }}</span></span>
           </div>
 
           <!-- 备注 -->
@@ -380,8 +391,8 @@ fetchTasks()
 
           <!-- 操作按钮 -->
           <div class="card-footer">
-            <el-button type="primary" size="small" @click="handleReceive(task)">接取</el-button>
-            <el-button size="small" @click="handleDetail(task)">详情</el-button>
+            <el-button class="btn btn-primary" @click="handleReceive(task)">接取</el-button>
+            <el-button class="btn" @click="handleDetail(task)">详情</el-button>
           </div>
         </el-card>
       </div>
@@ -533,35 +544,37 @@ fetchTasks()
   </div>
 </template>
 
-<script lang="ts">
-import { Search, Refresh } from '@element-plus/icons-vue'
-export default {
-  components: { Search, Refresh }
-}
-</script>
-
 <style scoped>
-.task-hall {
+.page-wrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-}
-
-.filter-card {
-  flex-shrink: 0;
-  border: 1px solid var(--border-default);
-  transition: all var(--transition-base);
-}
-
-.filter-card:hover {
-  border-color: var(--border-brand);
-  box-shadow: var(--shadow-sm);
+  gap: 20px;
 }
 
 .filter-form {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
+}
+
+.filter-form :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.filter-form :deep(.el-input__wrapper) {
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  box-shadow: none !important;
+}
+
+.filter-form :deep(.el-input__wrapper:hover) {
+  border-color: var(--border-strong);
+}
+
+.filter-form :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg) !important;
 }
 
 .task-list {
@@ -579,167 +592,168 @@ export default {
 .task-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: var(--space-4);
+  gap: 16px;
 }
 
 .task-card {
-  border-radius: var(--radius-lg);
+  background: var(--bg);
+  border-radius: var(--r-lg);
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-default);
-  transition: all var(--transition-base);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-1);
+  transition: box-shadow .15s, border-color .15s;
 }
 
 .task-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-brand);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
 }
 
 .task-card :deep(.el-card__body) {
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding: 20px;
 }
 
-.task-card .card-header {
+.task-card .tc-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .header-right {
   display: flex;
-  gap: var(--space-2);
+  gap: 6px;
 }
 
 .timeout-tag {
   color: var(--color-danger);
-  font-size: var(--font-xs);
+  font-size: 11.5px;
   font-weight: 500;
 }
 
 .project-name {
-  font-size: var(--font-md);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--brand-600);
+  color: var(--accent-fg);
   text-align: center;
-  margin-bottom: var(--space-4);
-  padding: var(--space-2) 0;
-  background: var(--brand-50);
-  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  padding: 8px 0;
+  background: var(--accent-bg);
+  border-radius: var(--r-md);
 }
 
 .project-info {
-  margin-bottom: var(--space-3);
+  margin-bottom: 12px;
 }
 
 .info-row {
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-2);
-  font-size: var(--font-sm);
+  margin-bottom: 6px;
+  font-size: 13px;
 }
 
 .info-row .label {
-  color: var(--text-secondary);
+  color: var(--fg-3);
   width: 70px;
   flex-shrink: 0;
 }
 
 .info-row .value {
-  color: var(--text-primary);
+  color: var(--fg);
 }
 
 .info-row .duration {
   margin-left: auto;
-  color: var(--text-secondary);
+  color: var(--fg-3);
 }
 
 .money-info {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  margin-bottom: var(--space-3);
-  padding: var(--space-3);
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  padding: 12px;
   background: var(--bg-soft);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  color: var(--fg-3);
   border: 1px solid var(--border-soft);
 }
 
 .money-info .label {
-  color: var(--text-secondary);
+  color: var(--fg-3);
 }
 
 .money-info .value {
   font-weight: 600;
-  color: var(--text-primary);
-  font-family: var(--font-family-base);
+  color: var(--fg);
 }
 
 .money-info .value.primary {
-  color: var(--brand-600);
+  color: var(--accent-fg);
 }
 
 .money-info .value.warning {
-  color: var(--color-warning);
+  color: var(--warning-fg);
 }
 
 .remark {
-  font-size: var(--font-sm);
-  margin-bottom: var(--space-3);
-  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: var(--fg-3);
 }
 
 .remark .label {
-  color: var(--text-secondary);
+  color: var(--fg-3);
 }
 
 .card-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border-default);
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
   margin-top: auto;
 }
 
 .pagination-wrap {
   display: flex;
   justify-content: center;
-  padding: var(--space-5) 0;
+  padding: 20px 0;
 }
 
 /* 手机端适配 */
 @media screen and (max-width: 768px) {
-  .task-hall {
-    gap: var(--space-2);
+  .page-wrap {
+    gap: 12px;
   }
 
-  .filter-card :deep(.el-form--inline .el-form-item) {
+  .filter-form :deep(.el-form-item) {
     display: flex;
     margin-right: 0;
-    margin-bottom: var(--space-2);
+    margin-bottom: 8px;
     width: 100%;
   }
 
-  .filter-card :deep(.el-form--inline) {
+  .filter-form :deep(.el-form--inline) {
     display: flex;
     flex-direction: column;
   }
 
-  .filter-card :deep(.el-input) {
+  .filter-form :deep(.el-input) {
     width: 100% !important;
   }
 
   .task-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-3);
+    gap: 12px;
   }
 
   /* 手机端弹窗适配 */
@@ -775,27 +789,27 @@ export default {
 }
 
 .take-form {
-  margin-top: var(--space-5);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border-default);
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
 }
 
 .take-form-buttons {
   text-align: center;
-  margin-top: var(--space-4);
+  margin-top: 16px;
 }
 
 .take-form-buttons .el-button + .el-button {
-  margin-left: var(--space-8);
+  margin-left: 32px;
 }
 
 .condition-section {
   display: flex;
-  margin-top: var(--space-4);
+  margin-top: 16px;
 }
 
 .condition-label {
-  color: var(--text-primary);
+  color: var(--fg);
   font-weight: 500;
   flex-shrink: 0;
   width: 50px;
@@ -806,23 +820,23 @@ export default {
 }
 
 .condition-item {
-  padding: var(--space-1) var(--space-2);
+  padding: 4px 8px;
   background: var(--bg-soft);
-  margin-bottom: var(--space-2);
-  line-height: var(--line-height-normal);
-  font-size: var(--font-sm);
-  color: var(--text-primary);
-  border-radius: var(--radius-xs);
+  margin-bottom: 8px;
+  line-height: 1.5;
+  font-size: 13px;
+  color: var(--fg);
+  border-radius: var(--r-sm);
   border: 1px solid var(--border-soft);
 }
 
 .attachment-section {
   display: flex;
-  margin-top: var(--space-4);
+  margin-top: 16px;
 }
 
 .attachment-label {
-  color: var(--text-primary);
+  color: var(--fg);
   font-weight: 500;
   flex-shrink: 0;
   width: 50px;
@@ -831,14 +845,13 @@ export default {
 .attachment-list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: 16px;
 }
 
 .attachment-item {
   text-align: center;
 }
 
-/* 手机端弹窗适配 */
 @media screen and (max-width: 768px) {
   .condition-section,
   .attachment-section {
@@ -848,16 +861,16 @@ export default {
   .condition-label,
   .attachment-label {
     width: auto;
-    margin-bottom: var(--space-2);
+    margin-bottom: 8px;
   }
 }
 
 :deep(.el-descriptions__label) {
-  color: var(--text-secondary);
+  color: var(--fg-3);
   font-weight: 500;
 }
 
 :deep(.el-descriptions__content) {
-  color: var(--text-primary);
+  color: var(--fg);
 }
 </style>
