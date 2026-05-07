@@ -5,6 +5,7 @@ import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
+import LogoMark from '@/components/LogoMark.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -50,10 +51,6 @@ async function handleLogin() {
     }
   })
 }
-</script>
-
-<script setup lang="ts">
-import LogoMark from '@/components/LogoMark.vue'
 </script>
 
 <template>
@@ -153,7 +150,7 @@ import LogoMark from '@/components/LogoMark.vue'
 
 .login-logo {
   margin-bottom: 20px;
-  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.25));
+  filter: drop-shadow(0 4px 12px rgba(99, 91, 255, 0.25));
 }
 
 .login-header h1 {
@@ -177,20 +174,16 @@ import LogoMark from '@/components/LogoMark.vue'
 
 .login-btn {
   width: 100%;
-  height: 48px;
-  font-size: 16px;
+  height: 44px;
+  font-size: 14.5px;
   font-weight: 600;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-bounce);
+  border-radius: var(--r-md);
+  letter-spacing: 0.04em;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .login-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-}
-
-.login-btn:active {
-  transform: translateY(0);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 :deep(.el-input__wrapper) {
