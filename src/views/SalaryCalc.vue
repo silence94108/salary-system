@@ -222,6 +222,54 @@ function handleViewDetail(row: SalaryRow) {
 function handleDetailConfirmed() {
   projectStore.fetchSalaryDateList()
 }
+
+/* ============================================================
+ * 近 6 个月薪资 sparkline（用于 hero 卡）
+ * ============================================================ */
+const recentSalaryTrend = computed<number[]>(() => {
+  const allRows: SalaryRow[] = []
+  Object.values(salaryByYear.value).forEach(yearRows => {
+    allRows.push(...yearRows)
+  })
+  allRows.sort((a, b) => getSalaryMonth(b).localeCompare(getSalaryMonth(a)))
+  return allRows.slice(0, 6).reverse().map(r => getSalaryAmount(r))
+})
+
+const sparkline = computed(() => {
+  const data = recentSalaryTrend.value
+  if (data.length < 2) return null
+  const max = Math.max(...data)
+  const min = Math.min(...data)
+  const range = max - min || 1
+  const W = 260
+  const H = 64
+  const PAD = 8
+  const stepX = W / (data.length - 1)
+  const dots = data.map((v, i) => ({
+    x: +(i * stepX).toFixed(1),
+    y: +(H - PAD - ((v - min) / range) * (H - PAD * 2)).toFixed(1)
+  }))
+  const line = 'M ' + dots.map(d => `${d.x},${d.y}`).join(' L ')
+  const fill = `M ${dots[0]!.x},${H} L ${dots.map(d => `${d.x},${d.y}`).join(' L ')} L ${dots[dots.length - 1]!.x},${H} Z`
+  return { dots, line, fill, W, H, last: dots[dots.length - 1]! }
+})
+
+const lastMonthSalary = computed(() => {
+  const data = recentSalaryTrend.value
+  return data.length >= 2 ? data[data.length - 2]! : 0
+})
+
+const salaryDelta = computed(() => {
+  const last = lastMonthSalary.value
+  const cur = totalSalary.value
+  if (!last) return null
+  const pct = ((cur - last) / last) * 100
+  return {
+    pct: Math.abs(pct).toFixed(1),
+    up: pct >= 0,
+    last
+  }
+})
 </script>
 
 <template>
@@ -270,45 +318,49 @@ function handleDetailConfirmed() {
       </el-form>
     </el-card>
 
-    <el-row :gutter="24" class="stat-row">
+    <el-row :gutter="16" class="stat-row">
       <el-col :xs="24" :sm="8">
-        <el-card shadow="never" class="stat-card stat-card-hover">
-          <div class="stat-card-inner">
-            <div class="stat-icon-wrapper primary">
-              <el-icon :size="24"><Document /></el-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-num primary">{{ projectStore.projects.length }}</div>
-              <div class="stat-label">当月完结项目</div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-label">当月完结项目</span>
+            <span class="stat-pill primary">
+              <el-icon :size="11"><Document /></el-icon>
+              个
+            </span>
           </div>
-        </el-card>
+          <div class="stat-value num">{{ projectStore.projects.length }}</div>
+          <div class="stat-foot">基于完结月份</div>
+        </div>
       </el-col>
       <el-col :xs="24" :sm="8">
-        <el-card shadow="never" class="stat-card stat-card-hover">
-          <div class="stat-card-inner">
-            <div class="stat-icon-wrapper warning">
-              <el-icon :size="24"><Wallet /></el-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-num warning">{{ monthFinishedTotal.toFixed(2) }}</div>
-              <div class="stat-label">完结佣金总额(元)</div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-label">完结佣金总额</span>
+            <span class="stat-pill warning">
+              <el-icon :size="11"><Wallet /></el-icon>
+              元
+            </span>
           </div>
-        </el-card>
+          <div class="stat-value">
+            <span class="cur">¥</span><span class="num">{{ monthFinishedTotal.toFixed(2) }}</span>
+          </div>
+          <div class="stat-foot">基于接单月份汇总</div>
+        </div>
       </el-col>
       <el-col :xs="24" :sm="8">
-        <el-card shadow="never" class="stat-card stat-card-hover">
-          <div class="stat-card-inner">
-            <div class="stat-icon-wrapper success">
-              <el-icon :size="24"><TrendCharts /></el-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-num success">{{ totalCommission.toFixed(2) }}</div>
-              <div class="stat-label">实得佣金(元)</div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-label">实得佣金</span>
+            <span class="stat-pill success">
+              <el-icon :size="11"><TrendCharts /></el-icon>
+              提成
+            </span>
           </div>
-        </el-card>
+          <div class="stat-value">
+            <span class="cur">¥</span><span class="num">{{ totalCommission.toFixed(2) }}</span>
+          </div>
+          <div class="stat-foot">实得 / 完结 = {{ monthFinishedTotal > 0 ? ((totalCommission / monthFinishedTotal) * 100).toFixed(0) : 0 }}%</div>
+        </div>
       </el-col>
     </el-row>
 
@@ -375,27 +427,62 @@ function handleDetailConfirmed() {
       </el-table>
     </el-card>
 
-    <el-card shadow="never" class="hero-salary-card" v-if="projectStore.projects.length > 0">
-      <div class="hero-card-bg"></div>
-      <div class="hero-card-content">
-        <div class="hero-label">{{ calcMonth }} 应发薪资</div>
-        <div class="hero-amount">
-          <span class="hero-currency">¥</span>
-          <span class="hero-value">{{ totalSalary.toFixed(2) }}</span>
-        </div>
-        <div class="hero-breakdown">
-          <div class="breakdown-item">
-            <span class="breakdown-label">底薪(含工龄)</span>
-            <span class="breakdown-value">{{ currentBaseSalary.toFixed(2) }}</span>
+    <!-- ============ Hero · 应发薪资（白底大数字 + sparkline）============ -->
+    <div class="hero-card" v-if="projectStore.projects.length > 0">
+      <div class="hero-top">
+        <div class="hero-main">
+          <div class="hero-label">
+            应发薪资
+            <span class="hero-pill">{{ calcMonth }}</span>
           </div>
-          <div class="breakdown-divider">+</div>
-          <div class="breakdown-item">
-            <span class="breakdown-label">佣金合计</span>
-            <span class="breakdown-value">{{ totalCommission.toFixed(2) }}</span>
+          <div class="hero-amount">
+            <span class="hero-cur">¥</span>
+            <span class="num">{{ totalSalary.toFixed(2) }}</span>
+          </div>
+          <div v-if="salaryDelta" class="hero-trend" :class="{ down: !salaryDelta.up }">
+            <span class="arrow">{{ salaryDelta.up ? '↑' : '↓' }}</span>
+            <span class="num">{{ salaryDelta.pct }}%</span>
+            <span class="vs">较上月（¥{{ salaryDelta.last.toFixed(2) }}）</span>
+          </div>
+          <div v-else class="hero-trend muted">
+            首月数据 · 暂无对比
+          </div>
+        </div>
+
+        <div v-if="sparkline" class="spark-wrap">
+          <div class="spark-meta">近 {{ recentSalaryTrend.length }} 个月薪资走势</div>
+          <svg class="spark" :viewBox="`0 0 ${sparkline.W} ${sparkline.H}`" preserveAspectRatio="none">
+            <defs>
+              <linearGradient :id="`spark-fill-${calcMonth}`" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--brand-500)" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="var(--brand-500)" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line :x1="0" :y1="sparkline.H / 2" :x2="sparkline.W" :y2="sparkline.H / 2" stroke="var(--gray-100)" stroke-dasharray="2,4"/>
+            <path :d="sparkline.fill" :fill="`url(#spark-fill-${calcMonth})`"/>
+            <path :d="sparkline.line" fill="none" stroke="var(--brand-500)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle v-for="(d, i) in sparkline.dots" :key="i" :cx="d.x" :cy="d.y" :r="i === sparkline.dots.length - 1 ? 3 : 2.2" :fill="i === sparkline.dots.length - 1 ? 'var(--brand-500)' : 'var(--brand-500)'" :stroke="i === sparkline.dots.length - 1 ? '#fff' : 'none'" :stroke-width="i === sparkline.dots.length - 1 ? 2 : 0"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="hero-bottom">
+        <div class="hero-cell">
+          <div class="hero-cell-label">底薪（含工龄）</div>
+          <div class="hero-cell-value num">¥{{ currentBaseSalary.toFixed(2) }}</div>
+        </div>
+        <div class="hero-cell">
+          <div class="hero-cell-label">佣金合计</div>
+          <div class="hero-cell-value num">¥{{ totalCommission.toFixed(2) }}</div>
+        </div>
+        <div class="hero-cell">
+          <div class="hero-cell-label">实得比例</div>
+          <div class="hero-cell-value accent">
+            {{ monthFinishedTotal > 0 ? ((totalCommission / monthFinishedTotal) * 100).toFixed(0) : 0 }}%
           </div>
         </div>
       </div>
-    </el-card>
+    </div>
 
     <el-card shadow="never" class="salary-date-card">
       <template #header>
@@ -569,95 +656,76 @@ function handleDetailConfirmed() {
   margin-bottom: 0;
 }
 
+/* ============ Stat 卡（Stripe 风：白底，无图标盒）============ */
 .stat-card {
-  border: 1px solid var(--border-default);
-  transition: all var(--transition-bounce);
-  overflow: hidden;
-  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow .15s, border-color .15s;
+  height: 100%;
 }
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gradient-warm);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--transition-bounce);
+.stat-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
 }
-
-.stat-card-hover:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-brand);
-  box-shadow: var(--shadow-lg);
-}
-
-.stat-card-hover:hover::before {
-  transform: scaleX(1);
-}
-
-.stat-card-inner {
+.stat-head {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-5);
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
-
-.stat-icon-wrapper {
-  flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-lg);
-  display: flex;
+.stat-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.stat-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 10px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: all var(--transition-bounce);
+  gap: 4px;
+  letter-spacing: .03em;
 }
-
-.stat-icon-wrapper.primary {
-  background: linear-gradient(135deg, var(--brand-100) 0%, var(--brand-200) 100%);
-  color: var(--brand-600);
+.stat-pill.primary {
+  background: var(--brand-50);
+  color: var(--brand-700);
 }
-
-.stat-icon-wrapper.warning {
-  background: linear-gradient(135deg, var(--color-warning-bg) 0%, #FEF3C7 100%);
-  color: var(--color-warning);
+.stat-pill.warning {
+  background: var(--color-warning-bg);
+  color: #B45309;
 }
-
-.stat-icon-wrapper.success {
-  background: linear-gradient(135deg, var(--color-success-bg) 0%, #D1FAE5 100%);
-  color: var(--color-success);
+.stat-pill.success {
+  background: var(--color-success-bg);
+  color: #047857;
 }
-
-.stat-card-hover:hover .stat-icon-wrapper {
-  transform: scale(1.1) rotate(-5deg);
-}
-
-.stat-content {
-  flex: 1;
-  text-align: left;
-}
-
-.stat-num {
-  font-size: 32px;
+.stat-value {
+  font-size: 26px;
   font-weight: 700;
   color: var(--text-primary);
-  font-family: var(--font-family-base);
-  line-height: 1.2;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
 }
-
-.stat-num.primary { color: var(--brand-600); }
-.stat-num.success { color: var(--color-success); }
-.stat-num.warning { color: var(--color-warning); }
-
-.stat-label {
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
-  margin-top: var(--space-1);
+.stat-value .cur {
+  font-size: 14px;
   font-weight: 500;
+  color: var(--text-tertiary);
+  margin-right: 2px;
+}
+.stat-value .num {
+  font-variant-numeric: tabular-nums;
+}
+.stat-foot {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
 .table-card {
@@ -665,8 +733,9 @@ function handleDetailConfirmed() {
 }
 
 .commission-value {
-  color: var(--brand-600);
+  color: var(--brand-700);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .overdue-tag {
@@ -674,135 +743,151 @@ function handleDetailConfirmed() {
   font-size: var(--font-xs);
 }
 
-.hero-salary-card {
-  position: relative;
-  background: linear-gradient(135deg, #F97316 0%, #FB923C 50%, #FDBA74 100%);
-  border: none;
+/* ============ Hero · 白底大卡 + sparkline ============ */
+.hero-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
   overflow: hidden;
-  overflow: clip;
-  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.3);
-  margin-bottom: var(--space-6);
 }
-
-.hero-card-bg {
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: min(400px, 80vw);
-  height: min(400px, 80vw);
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: pulse 4s ease-in-out infinite;
-  pointer-events: none;
+.hero-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  padding: 22px 24px 18px;
+  align-items: end;
 }
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 0.8; }
+.hero-main {
+  min-width: 0;
 }
-
-.hero-salary-card :deep(.el-card__body) {
-  padding: var(--space-10) var(--space-8);
-  position: relative;
-  z-index: 1;
-}
-
-.hero-card-content {
-  text-align: center;
-  color: white;
-}
-
 .hero-label {
-  font-size: var(--font-base);
-  opacity: 0.9;
-  margin-bottom: var(--space-4);
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-}
-
-.hero-amount {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.hero-currency {
-  font-size: 32px;
-  font-weight: 600;
-  opacity: 0.9;
-}
-
-.hero-value {
-  font-size: 56px;
-  font-weight: 800;
-  font-family: var(--font-family-base);
-  letter-spacing: -0.03em;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: countUp 0.8s ease-out;
-}
-
-@keyframes countUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.hero-breakdown {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-6);
-  padding-top: var(--space-6);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 8px;
+}
+.hero-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-variant-numeric: tabular-nums;
+}
+.hero-amount {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  color: var(--text-primary);
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.hero-cur {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-right: 4px;
+}
+.hero-trend {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: #047857;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.hero-trend.down {
+  color: #B91C1C;
+}
+.hero-trend.muted {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+.hero-trend .arrow {
+  font-size: 12px;
+}
+.hero-trend .vs {
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 4px;
 }
 
-.breakdown-item {
+/* Sparkline */
+.spark-wrap {
+  width: 260px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  align-items: flex-end;
+}
+.spark-meta {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+.spark {
+  width: 100%;
+  height: 64px;
+  display: block;
 }
 
-.breakdown-label {
-  font-size: var(--font-xs);
-  opacity: 0.8;
-  font-weight: 500;
+.hero-bottom {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--gray-100);
+  background: var(--bg-muted);
 }
-
-.breakdown-value {
-  font-size: var(--font-lg);
-  font-weight: 700;
-  font-family: var(--font-family-base);
+.hero-cell {
+  padding: 12px 18px;
+  border-right: 1px solid var(--gray-100);
 }
-
-.breakdown-divider {
-  font-size: var(--font-xl);
-  font-weight: 300;
-  opacity: 0.6;
+.hero-cell:last-child {
+  border-right: none;
+}
+.hero-cell-label {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+.hero-cell-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.hero-cell-value.accent {
+  color: var(--brand-700);
 }
 
 @media screen and (max-width: 768px) {
-  .hero-salary-card :deep(.el-card__body) {
-    padding: var(--space-6) var(--space-4);
+  .hero-top {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 18px 16px 14px;
   }
-
-  .hero-value {
-    font-size: 40px;
+  .spark-wrap {
+    width: 100%;
   }
-
-  .hero-currency {
-    font-size: 24px;
+  .hero-amount {
+    font-size: 30px;
   }
-
-  .hero-breakdown {
-    flex-direction: column;
-    gap: var(--space-4);
+  .hero-bottom {
+    grid-template-columns: 1fr;
   }
-
-  .breakdown-divider {
-    transform: rotate(90deg);
+  .hero-cell {
+    border-right: none;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .hero-cell:last-child {
+    border-bottom: none;
   }
 }
 
@@ -995,42 +1080,19 @@ function handleDetailConfirmed() {
 
   .stat-card {
     margin-bottom: var(--space-2);
+    padding: 14px 16px;
   }
 
-  .stat-card-inner {
-    padding: var(--space-4);
-    gap: var(--space-3);
-  }
-
-  .stat-icon-wrapper {
-    width: 48px;
-    height: 48px;
-  }
-
-  .stat-num {
-    font-size: 24px;
+  .stat-value {
+    font-size: 22px;
   }
 
   .stat-label {
     font-size: var(--font-xs);
-    margin-top: var(--space-1);
   }
 
   .table-card :deep(.el-table) {
     font-size: var(--font-sm);
-  }
-
-  .summary-row {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .summary-item .value {
-    font-size: 20px;
-  }
-
-  .summary-item.main .value {
-    font-size: 26px;
   }
 
   .rule-item {
