@@ -25,3 +25,4 @@ dist-ssr
 .history
 .claude
 github_ssh_key.txt
+.playwright-mcp
