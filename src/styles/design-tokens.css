@@ -245,6 +245,52 @@
   --z-popover:   2100;
   --z-tooltip:   2200;
   --z-toast:     3000;
+
+  /* ============================================================
+   * 16. 原型别名层 · Stripe Redesign Compatibility
+   * 仅供原型规格 CSS（.btn/.card/.pill/.t/.hero 等）直接引用，
+   * 值复用上方主体系，方便从 prototypes/stripe-redesign.html 1:1 移植。
+   * ============================================================ */
+
+  /* Surface */
+  --bg:           var(--bg-surface);     /* #FFFFFF */
+  --bg-side:      var(--bg-muted);       /* #FAFAFD */
+  --bg-hover:     #F2F2F7;
+
+  /* Border（比主体系 gray-200 更柔和） */
+  --border-soft:  #EBEBF1;
+  --border-strong:#D8DAE5;
+
+  /* Accent · Stripe Indigo 别名 */
+  --accent:       var(--brand-500);
+  --accent-hover: var(--brand-600);
+  --accent-deep:  var(--brand-700);
+  --accent-bg:    var(--brand-50);
+  --accent-bg-2:  var(--brand-100);
+  --accent-fg:    #4F46E5;
+
+  /* Foreground · Stripe ink palette */
+  --fg:           var(--text-primary);
+  --fg-2:         #3C4257;
+  --fg-3:         #54575F;
+  --fg-4:         #8C8F96;
+  --fg-5:         #A3A8B4;
+
+  /* Semantic foreground（更深，专用于 pill 标签文字） */
+  --success-fg:   #006D49;
+  --warning-fg:   #8B5300;
+  --danger-fg:    #A4302C;
+
+  /* Shadow · 极克制（与主体系 --shadow-xs/sm/md/lg 共存，互不干扰） */
+  --shadow-1: 0 1px 1px rgba(0, 0, 0, .03), 0 1px 2px rgba(0, 0, 0, .04);
+  --shadow-2: 0 1px 3px rgba(0, 0, 0, .04), 0 4px 8px rgba(0, 0, 0, .04);
+  --shadow-3: 0 2px 6px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+
+  /* Radius · 短别名（与主体系 --radius-* 共存） */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-xl: 12px;
 }
 
 /* ============================================================
