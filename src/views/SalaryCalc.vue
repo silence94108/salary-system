@@ -825,13 +825,13 @@ function handleDetailConfirmed() {
 
 @media screen and (max-width: 768px) {
   .salary-calc {
-    gap: 10px;
+    gap: var(--space-2);
   }
 
   .card-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .header-right {
@@ -842,7 +842,7 @@ function handleDetailConfirmed() {
   .setting-card :deep(.el-form--inline .el-form-item) {
     display: flex;
     margin-right: 0;
-    margin-bottom: 10px;
+    margin-bottom: var(--space-2);
     width: 100%;
   }
 
@@ -857,8 +857,8 @@ function handleDetailConfirmed() {
   }
 
   .stat-card {
-    padding: 6px 0;
-    margin-bottom: 10px;
+    padding: var(--space-2) 0;
+    margin-bottom: var(--space-2);
   }
 
   .stat-num {
@@ -866,17 +866,17 @@ function handleDetailConfirmed() {
   }
 
   .stat-label {
-    font-size: 12px;
-    margin-top: 4px;
+    font-size: var(--font-xs);
+    margin-top: var(--space-1);
   }
 
   .table-card :deep(.el-table) {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .summary-row {
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .summary-item .value {
@@ -888,12 +888,12 @@ function handleDetailConfirmed() {
   }
 
   .rule-item {
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: var(--space-2);
+    margin-bottom: var(--space-2);
   }
 
   .rule-title {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .rule-desc {
@@ -901,7 +901,7 @@ function handleDetailConfirmed() {
   }
 
   .rule-rate {
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 }
 </style>

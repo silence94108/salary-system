@@ -544,11 +544,18 @@ export default {
 .task-hall {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .filter-card {
   flex-shrink: 0;
+  border: 1px solid var(--border-default);
+  transition: all var(--transition-base);
+}
+
+.filter-card:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-sm);
 }
 
 .filter-form {
@@ -572,13 +579,21 @@ export default {
 .task-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .task-card {
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-default);
+  transition: all var(--transition-base);
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-lg);
 }
 
 .task-card :deep(.el-card__body) {
@@ -591,120 +606,125 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .header-right {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .timeout-tag {
-  color: #f56c6c;
-  font-size: 12px;
+  color: var(--color-danger);
+  font-size: var(--font-xs);
+  font-weight: 500;
 }
 
 .project-name {
-  font-size: 16px;
+  font-size: var(--font-md);
   font-weight: 600;
-  color: #409eff;
+  color: var(--brand-600);
   text-align: center;
-  margin-bottom: 16px;
-  padding: 8px 0;
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) 0;
+  background: var(--brand-50);
+  border-radius: var(--radius-sm);
 }
 
 .project-info {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .info-row {
   display: flex;
   align-items: center;
-  margin-bottom: 6px;
-  font-size: 13px;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-sm);
 }
 
 .info-row .label {
-  color: #666;
+  color: var(--text-secondary);
   width: 70px;
   flex-shrink: 0;
 }
 
 .info-row .value {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .info-row .duration {
   margin-left: auto;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .money-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
-  margin-bottom: 12px;
-  padding: 10px;
-  background: #f9f9f9;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #666;
+  gap: var(--space-1) var(--space-4);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-soft);
 }
 
 .money-info .label {
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .money-info .value {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
+  font-family: var(--font-family-base);
 }
 
 .money-info .value.primary {
-  color: #409eff;
+  color: var(--brand-600);
 }
 
 .money-info .value.warning {
-  color: #e6a23c;
+  color: var(--color-warning);
 }
 
 .remark {
-  font-size: 13px;
-  margin-bottom: 12px;
-  color: #666;
+  font-size: var(--font-sm);
+  margin-bottom: var(--space-3);
+  color: var(--text-secondary);
 }
 
 .remark .label {
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .card-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-default);
   margin-top: auto;
 }
 
 .pagination-wrap {
   display: flex;
   justify-content: center;
-  padding: 20px 0;
+  padding: var(--space-5) 0;
 }
 
 /* 手机端适配 */
 @media screen and (max-width: 768px) {
   .task-hall {
-    gap: 10px;
+    gap: var(--space-2);
   }
 
   .filter-card :deep(.el-form--inline .el-form-item) {
     display: flex;
     margin-right: 0;
-    margin-bottom: 10px;
+    margin-bottom: var(--space-2);
     width: 100%;
   }
 
@@ -719,6 +739,7 @@ export default {
 
   .task-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-3);
   }
 
   /* 手机端弹窗适配 */
@@ -754,27 +775,27 @@ export default {
 }
 
 .take-form {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-default);
 }
 
 .take-form-buttons {
   text-align: center;
-  margin-top: 16px;
+  margin-top: var(--space-4);
 }
 
 .take-form-buttons .el-button + .el-button {
-  margin-left: 30px;
+  margin-left: var(--space-8);
 }
 
 .condition-section {
   display: flex;
-  margin-top: 16px;
+  margin-top: var(--space-4);
 }
 
 .condition-label {
-  color: #606266;
+  color: var(--text-primary);
   font-weight: 500;
   flex-shrink: 0;
   width: 50px;
@@ -785,21 +806,23 @@ export default {
 }
 
 .condition-item {
-  padding: 4px 10px;
-  background: #f8f8f8;
-  margin-bottom: 10px;
-  line-height: 1.5;
-  font-size: 13px;
-  color: #333;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-soft);
+  margin-bottom: var(--space-2);
+  line-height: var(--line-height-normal);
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-soft);
 }
 
 .attachment-section {
   display: flex;
-  margin-top: 16px;
+  margin-top: var(--space-4);
 }
 
 .attachment-label {
-  color: #606266;
+  color: var(--text-primary);
   font-weight: 500;
   flex-shrink: 0;
   width: 50px;
@@ -808,7 +831,7 @@ export default {
 .attachment-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .attachment-item {
@@ -825,7 +848,16 @@ export default {
   .condition-label,
   .attachment-label {
     width: auto;
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
   }
+}
+
+:deep(.el-descriptions__label) {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+:deep(.el-descriptions__content) {
+  color: var(--text-primary);
 }
 </style>
