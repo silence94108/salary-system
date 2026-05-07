@@ -417,35 +417,26 @@ function handleOpen() {
 </template>
 
 <style scoped>
-/* 配色系统 */
-:root {
-  --salary-primary: #2563eb;
-  --salary-bg: #f8fafc;
-  --salary-text-main: #1e293b;
-  --salary-text-muted: #64748b;
-  --salary-border: #e2e8f0;
-}
-
 .salary-detail-dialog :deep(.el-dialog) {
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
 .salary-detail-dialog :deep(.el-dialog__header) {
   margin-right: 0;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--salary-border);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .salary-detail-dialog :deep(.el-dialog__title) {
-  font-size: 18px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: var(--salary-text-main);
+  color: var(--text-primary);
 }
 
 .salary-detail-dialog :deep(.el-dialog__body) {
-  padding: 0 24px 20px;
-  background-color: var(--salary-bg);
+  padding: 0 var(--space-6) var(--space-5);
+  background-color: var(--bg-soft);
   max-height: 70vh;
   overflow-y: auto;
 }
@@ -453,66 +444,66 @@ function handleOpen() {
 .style-switcher {
   display: flex;
   justify-content: center;
-  padding: 12px 0 20px;
-  background: white;
-  margin: 0 -24px;
-  border-bottom: 1px solid var(--salary-border);
+  padding: var(--space-3) 0 var(--space-5);
+  background: var(--bg-surface);
+  margin: 0 calc(var(--space-6) * -1);
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-sticky);
 }
 
 .detail-content {
-  padding-top: 20px;
+  padding-top: var(--space-5);
 }
 
 /* ==================== 极简列表样式 (List) ==================== */
 .salary-list-flat {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .flat-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .flat-title {
-  font-size: 13px;
-  color: var(--salary-text-muted);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: var(--letter-spacing-wide);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .flat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
 }
 
 .flat-label {
-  font-size: 15px;
-  color: var(--salary-text-main);
+  font-size: var(--font-md);
+  color: var(--text-primary);
 }
 
 .flat-value {
-  font-family: 'Monaco', 'Consolas', monospace;
+  font-family: var(--font-family-base);
   font-weight: 600;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .flat-value.negative {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .flat-value.info {
-  color: #64748b;
+  color: var(--text-secondary);
   font-style: italic;
   font-weight: 400;
 }
@@ -522,9 +513,9 @@ function handleOpen() {
 }
 
 .flat-row.total {
-  margin-top: 4px;
-  padding-top: 12px;
-  border-top: 1px dashed #cbd5e1;
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-default);
 }
 
 .flat-row.total .flat-label {
@@ -532,24 +523,29 @@ function handleOpen() {
 }
 
 .flat-result {
-  margin-top: 12px;
-  background: #1e293b;
-  padding: 24px;
-  border-radius: 16px;
+  margin-top: var(--space-3);
+  background: var(--gradient-cool);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
   text-align: center;
   color: white;
+  box-shadow: var(--shadow-lg);
 }
 
 .result-label {
-  font-size: 14px;
+  font-size: var(--font-base);
   opacity: 0.8;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .result-value {
   font-size: 32px;
   font-weight: 700;
-  color: #fbbf24;
+  background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.3));
 }
 
 /* ==================== 薪资流向样式 (Flow) ==================== */
@@ -562,18 +558,24 @@ function handleOpen() {
 .flow-step {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
+  gap: var(--space-5);
   width: 100%;
-  padding: 20px;
-  border-radius: 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  transition: all var(--transition-base);
+}
+
+.flow-step:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-md);
 }
 
 .step-icon {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -581,52 +583,53 @@ function handleOpen() {
   flex-shrink: 0;
 }
 
-.positive .step-icon { background: #eff6ff; color: #2563eb; }
-.negative .step-icon { background: #fef2f2; color: #ef4444; }
-.final .step-icon { background: #1e293b; color: #fbbf24; }
+.positive .step-icon { background: var(--brand-50); color: var(--brand-600); }
+.negative .step-icon { background: var(--color-danger-bg); color: var(--color-danger); }
+.final .step-icon { background: var(--gray-800); color: #FBBF24; }
 
 .step-content {
   flex: 1;
 }
 
 .step-title {
-  font-size: 14px;
-  color: var(--salary-text-muted);
-  margin-bottom: 4px;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
 }
 
 .step-money {
   font-size: 20px;
   font-weight: 700;
-  color: var(--salary-text-main);
+  color: var(--text-primary);
+  font-family: var(--font-family-base);
 }
 
 .step-money-total {
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 700;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed #e2e8f0;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-default);
 }
 
-.positive .step-money-total { color: #2563eb; }
-.negative .step-money-total { color: #ef4444; }
+.positive .step-money-total { color: var(--brand-600); }
+.negative .step-money-total { color: var(--color-danger); }
 
 .step-details-inline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .inline-item {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .inline-item .label {
-  color: var(--salary-text-muted);
+  color: var(--text-secondary);
 }
 
 .inline-item .value {
@@ -635,42 +638,43 @@ function handleOpen() {
 
 .step-tip {
   font-size: 11px;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 4px;
-  margin-top: 8px;
+  color: var(--text-secondary);
+  background: var(--bg-soft);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-xs);
+  margin-top: var(--space-2);
   display: inline-block;
+  border: 1px solid var(--border-soft);
 }
 
 .step-tags {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .step-tags span {
   font-size: 11px;
-  padding: 2px 8px;
-  background: #f1f5f9;
-  color: #64748b;
-  border-radius: 4px;
+  padding: 2px var(--space-2);
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
 }
 
 .flow-line {
   width: 2px;
   height: 30px;
-  background: linear-gradient(to bottom, #e2e8f0, transparent);
-  margin: 4px 0;
+  background: linear-gradient(to bottom, var(--border-default), transparent);
+  margin: var(--space-1) 0;
 }
 
 .step-desc {
-  font-size: 12px;
-  color: #10b981;
-  margin-top: 4px;
+  font-size: var(--font-xs);
+  color: var(--color-success);
+  margin-top: var(--space-1);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .step-desc::before {
@@ -687,16 +691,16 @@ function handleOpen() {
 .salary-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .salary-item {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid transparent;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-xs);
 }
 
 .salary-item.has-details {
@@ -704,7 +708,9 @@ function handleOpen() {
 }
 
 .salary-item.has-details:hover {
-  border-color: var(--salary-primary);
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .item-header {
@@ -716,15 +722,15 @@ function handleOpen() {
 .item-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .item-icon {
   font-size: 20px;
-  color: var(--salary-primary);
-  background: #eff6ff;
-  padding: 8px;
-  border-radius: 8px;
+  color: var(--brand-600);
+  background: var(--brand-50);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
   width: 36px;
   height: 36px;
   display: flex;
@@ -733,19 +739,20 @@ function handleOpen() {
 }
 
 .item-name {
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 500;
-  color: var(--salary-text-main);
+  color: var(--text-primary);
 }
 
 .arrow-icon {
-  font-size: 14px;
-  color: var(--salary-text-muted);
-  transition: transform 0.3s;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  transition: transform var(--transition-base);
 }
 
 .arrow-icon.expanded {
   transform: rotate(180deg);
+  color: var(--brand-600);
 }
 
 .item-right {
@@ -755,30 +762,32 @@ function handleOpen() {
 }
 
 .currency {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
-  color: var(--salary-text-muted);
+  color: var(--text-secondary);
 }
 
 .item-value {
   font-size: 17px;
   font-weight: 700;
-  font-family: 'Monaco', 'Consolas', monospace;
-  color: var(--salary-text-main);
+  font-family: var(--font-family-base);
+  color: var(--text-primary);
 }
 
 .text-error {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 /* 强调样式 */
 .highlight-soft {
-  background: #f1f5f9;
+  background: var(--brand-50);
+  border-color: var(--brand-200);
 }
 
 .final-item {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: var(--gradient-cool);
   color: white;
+  box-shadow: var(--shadow-lg);
 }
 
 .final-item .item-name,
@@ -789,55 +798,60 @@ function handleOpen() {
 
 .final-item .item-icon {
   background: rgba(255, 255, 255, 0.15);
-  color: #fbbf24;
+  color: #FBBF24;
   font-size: 22px;
 }
 
 .item-value.large {
   font-size: 22px;
-  color: #fbbf24;
+  background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 /* 详情展开 */
 .item-details {
-  margin-top: 14px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
+  border: 1px solid var(--border-soft);
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .detail-label {
-  color: var(--salary-text-muted);
+  color: var(--text-secondary);
 }
 
 .detail-value {
-  color: var(--salary-text-main);
+  color: var(--text-primary);
   font-weight: 500;
+  font-family: var(--font-family-base);
 }
 
 .objection-remark {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .dialog-footer {
-  padding: 16px 24px 24px;
+  padding: var(--space-4) var(--space-6) var(--space-6);
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .dialog-footer :deep(.el-button) {
-  padding: 10px 20px;
-  border-radius: 10px;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
   font-weight: 500;
 }
 
