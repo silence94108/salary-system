@@ -74,7 +74,7 @@ withDefaults(defineProps<{
 <style scoped>
 .logo-mark {
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.28));
+  filter: drop-shadow(0 4px 12px rgba(99, 91, 255, 0.28));
   transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1),
               filter 250ms ease;
 }
@@ -82,5 +82,12 @@ withDefaults(defineProps<{
 .logo-mark:hover {
   transform: rotate(-4deg) scale(1.05);
   filter: drop-shadow(0 6px 16px rgba(236, 72, 153, 0.35));
+}
+
+[data-theme="dark"] .logo-mark {
+  filter: drop-shadow(0 4px 14px rgba(139, 133, 255, 0.40));
+}
+[data-theme="dark"] .logo-mark:hover {
+  filter: drop-shadow(0 6px 18px rgba(244, 114, 182, 0.45));
 }
 </style>

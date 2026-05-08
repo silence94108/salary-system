@@ -20,30 +20,30 @@ const emit = defineEmits<{
     <div class="empty-illustration">
       <!-- 默认空态插画 -->
       <svg v-if="type === 'default'" width="120" height="120" viewBox="0 0 120 120" fill="none">
-        <circle cx="60" cy="60" r="50" fill="#FFF7ED" />
-        <path d="M40 55 L50 65 L70 45" stroke="#F97316" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" />
-        <rect x="35" y="70" width="50" height="30" rx="4" fill="#FFEDD5" />
-        <line x1="45" y1="78" x2="65" y2="78" stroke="#FB923C" stroke-width="2" stroke-linecap="round" />
-        <line x1="45" y1="85" x2="75" y2="85" stroke="#FB923C" stroke-width="2" stroke-linecap="round" />
-        <line x1="45" y1="92" x2="70" y2="92" stroke="#FB923C" stroke-width="2" stroke-linecap="round" />
+        <circle cx="60" cy="60" r="50" fill="var(--brand-50)" />
+        <path d="M40 55 L50 65 L70 45" stroke="var(--brand-500)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" />
+        <rect x="35" y="70" width="50" height="30" rx="4" fill="var(--brand-100)" />
+        <line x1="45" y1="78" x2="65" y2="78" stroke="var(--brand-400)" stroke-width="2" stroke-linecap="round" />
+        <line x1="45" y1="85" x2="75" y2="85" stroke="var(--brand-400)" stroke-width="2" stroke-linecap="round" />
+        <line x1="45" y1="92" x2="70" y2="92" stroke="var(--brand-400)" stroke-width="2" stroke-linecap="round" />
       </svg>
 
       <!-- 搜索空态插画 -->
       <svg v-else-if="type === 'search'" width="120" height="120" viewBox="0 0 120 120" fill="none">
-        <circle cx="60" cy="60" r="50" fill="#FFF7ED" />
-        <circle cx="55" cy="55" r="20" stroke="#F97316" stroke-width="3" fill="none" />
-        <line x1="70" y1="70" x2="85" y2="85" stroke="#F97316" stroke-width="3" stroke-linecap="round" />
-        <path d="M50 55 Q55 50 60 55" stroke="#FB923C" stroke-width="2" fill="none" opacity="0.5" />
+        <circle cx="60" cy="60" r="50" fill="var(--brand-50)" />
+        <circle cx="55" cy="55" r="20" stroke="var(--brand-500)" stroke-width="3" fill="none" />
+        <line x1="70" y1="70" x2="85" y2="85" stroke="var(--brand-500)" stroke-width="3" stroke-linecap="round" />
+        <path d="M50 55 Q55 50 60 55" stroke="var(--brand-400)" stroke-width="2" fill="none" opacity="0.5" />
       </svg>
 
       <!-- 数据空态插画 -->
       <svg v-else-if="type === 'data'" width="120" height="120" viewBox="0 0 120 120" fill="none">
-        <circle cx="60" cy="60" r="50" fill="#FFF7ED" />
-        <rect x="30" y="45" width="60" height="40" rx="4" fill="#FFEDD5" />
-        <line x1="40" y1="55" x2="80" y2="55" stroke="#FB923C" stroke-width="2" />
-        <line x1="40" y1="65" x2="70" y2="65" stroke="#FB923C" stroke-width="2" opacity="0.6" />
-        <line x1="40" y1="75" x2="75" y2="75" stroke="#FB923C" stroke-width="2" opacity="0.4" />
-        <circle cx="75" cy="35" r="8" fill="#F97316" />
+        <circle cx="60" cy="60" r="50" fill="var(--brand-50)" />
+        <rect x="30" y="45" width="60" height="40" rx="4" fill="var(--brand-100)" />
+        <line x1="40" y1="55" x2="80" y2="55" stroke="var(--brand-400)" stroke-width="2" />
+        <line x1="40" y1="65" x2="70" y2="65" stroke="var(--brand-400)" stroke-width="2" opacity="0.6" />
+        <line x1="40" y1="75" x2="75" y2="75" stroke="var(--brand-400)" stroke-width="2" opacity="0.4" />
+        <circle cx="75" cy="35" r="8" fill="var(--brand-500)" />
         <path d="M73 35 L75 37 L79 33" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </div>
@@ -83,7 +83,10 @@ const emit = defineEmits<{
 }
 
 .empty-illustration svg {
-  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.15));
+  filter: drop-shadow(0 4px 12px rgba(99, 91, 255, 0.15));
+}
+[data-theme="dark"] .empty-illustration svg {
+  filter: drop-shadow(0 4px 16px rgba(139, 133, 255, 0.30));
 }
 
 .empty-title {
