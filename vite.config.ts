@@ -4,7 +4,7 @@ import detectPort from 'detect-port'
 import { resolve } from 'path'
 
 export default defineConfig(async () => {
-  const basePort = 5173
+  const basePort = 5500
   const port = await detectPort(basePort)
   if (port !== basePort) {
     console.log(`[dev] port ${basePort} in use, switched to ${port}`)
