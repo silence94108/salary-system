@@ -378,7 +378,7 @@ const isNewRules = computed(() => calcMonth.value >= '2026-04')
               :cy="d.y"
               :r="i === sparkline.dots.length - 1 ? 3 : 2.2"
               fill="var(--accent)"
-              :stroke="i === sparkline.dots.length - 1 ? '#fff' : 'none'"
+              :stroke="i === sparkline.dots.length - 1 ? 'var(--bg-surface)' : 'none'"
               :stroke-width="i === sparkline.dots.length - 1 ? 2 : 0"
             />
           </svg>

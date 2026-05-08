@@ -950,3 +950,14 @@ a.link:hover {
     align-items: stretch;
   }
 }
+
+/* ---------- 主题切换：下拉菜单当前项高亮（teleport 出去的，必须全局样式） ---------- */
+.el-dropdown-menu__item.is-current-theme {
+  color: var(--brand-700);
+  font-weight: 600;
+  background: var(--brand-50);
+}
+.el-dropdown-menu__item.is-current-theme:hover {
+  background: var(--brand-100);
+}
+

@@ -603,15 +603,15 @@ function handleOpen() {
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  background: #FFF4E0;
-  border: 1px solid #FCD34D;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
   border-radius: 10px;
 }
 .obj-icon {
   flex-shrink: 0;
   width: 22px; height: 22px;
   border-radius: 50%;
-  background: #BC6E00;
+  background: var(--color-warning);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 700;
@@ -620,7 +620,7 @@ function handleOpen() {
 .obj-title {
   font-size: 12.5px;
   font-weight: 600;
-  color: #8B5300;
+  color: var(--warning-fg);
   margin-bottom: 4px;
 }
 .obj-text {

@@ -726,4 +726,46 @@ async function handleLogin() {
   .bg-watermark-2 { display: none; }
   .shape-dot-cluster, .shape-dot-cluster-2 { display: none; }
 }
+
+/* ============ 暗色主题覆盖 ============ */
+[data-theme="dark"] .login-container::before {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(139, 133, 255, .14) 1px, transparent 1px);
+  opacity: 0.4;
+}
+
+/* 暗色下 blob 透明度略降，避免亮色斑点过于刺眼 */
+[data-theme="dark"] .blob-1 { opacity: 0.32; }
+[data-theme="dark"] .blob-2 { opacity: 0.36; }
+[data-theme="dark"] .blob-3 { opacity: 0.20; }
+[data-theme="dark"] .blob-4 { opacity: 0.24; }
+[data-theme="dark"] .blob-5 { opacity: 0.24; }
+
+/* mini-card 在深底上需要换深色玻璃风 */
+[data-theme="dark"] .mini-card {
+  background: rgba(24, 29, 44, .65);
+  border-color: rgba(139, 133, 255, .25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  color: var(--text-secondary);
+}
+
+/* 登录卡阴影加深 */
+[data-theme="dark"] .login-card {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, .4),
+    0 24px 60px rgba(0, 0, 0, .55);
+}
+
+/* 主按钮阴影改紫光 */
+[data-theme="dark"] .login-btn {
+  box-shadow: 0 4px 16px rgba(139, 133, 255, .25);
+}
+[data-theme="dark"] .login-btn:hover {
+  box-shadow: 0 6px 22px rgba(139, 133, 255, .40);
+}
+
+/* noise 纹理在暗色下叠加效果不同，降不透明度 */
+[data-theme="dark"] .bg-noise {
+  opacity: 0.25;
+}
 </style>

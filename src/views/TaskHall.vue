@@ -430,7 +430,7 @@ fetchTasks()
                 接取后分配（佣金总额：¥{{ currentTask.bountymoney || '0' }}）
               </template>
               <template v-else>
-                <span style="color: #409eff; font-weight: 600;">¥{{ currentTask.money || currentTask.bountymoney || '0' }}</span>
+                <span style="color: var(--accent); font-weight: 600;">¥{{ currentTask.money || currentTask.bountymoney || '0' }}</span>
                 <span v-if="currentTask.moneytype === 1">/人</span>
               </template>
             </el-descriptions-item>
