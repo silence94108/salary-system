@@ -29,7 +29,7 @@ type MenuChild = { index: string; title: string }
 type MenuItem = {
   index: string
   title: string
-  icon: 'grid' | 'list' | 'wallet' | 'chart' | 'gear' | 'report' | 'flow' | 'trophy' | 'bell' | 'plug'
+  icon: 'grid' | 'list' | 'wallet'
   badge?: MenuBadge
   children?: MenuChild[]
 }
@@ -42,34 +42,9 @@ const menuGroups: MenuGroup[] = [
   {
     name: '工作台',
     items: [
-      { index: '/hall',   title: '任务大厅', icon: 'grid',   badge: { text: 'NEW', type: 'new' } },
+      { index: '/hall',   title: '任务大厅', icon: 'grid', badge: { text: 'NEW', type: 'new' } },
       { index: '/tasks',  title: '我的任务', icon: 'list' },
-      {
-        index: '/salary',
-        title: '薪资计算',
-        icon: 'wallet',
-        children: [
-          { index: '/salary',         title: '月度计算' },
-          { index: '/salary/history', title: '历史薪资' },
-          { index: '/salary/rules',   title: '规则配置' }
-        ]
-      }
-    ]
-  },
-  {
-    name: '分析',
-    items: [
-      { index: '/reports',      title: '数据报表', icon: 'chart' },
-      { index: '/transactions', title: '结算流水', icon: 'flow' },
-      { index: '/leaderboard',  title: '业绩排行', icon: 'trophy', badge: { text: 'NEW', type: 'new' } }
-    ]
-  },
-  {
-    name: '设置',
-    items: [
-      { index: '/preferences',   title: '偏好设置', icon: 'gear' },
-      { index: '/notifications', title: '通知设置', icon: 'bell' },
-      { index: '/integrations',  title: '集成与 API', icon: 'plug', badge: { text: 'BETA', type: 'beta' } }
+      { index: '/salary', title: '薪资计算', icon: 'wallet' }
     ]
   }
 ]
@@ -229,41 +204,9 @@ function toggleUserMenu() {
                 <line x1="3" y1="12" x2="13" y2="12"/>
               </svg>
               <!-- icon-wallet -->
-              <svg v-else-if="item.icon === 'wallet'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg v-else class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="8" cy="8" r="6"/>
                 <path d="M8 4.5v3.5l2.2 1.3"/>
-              </svg>
-              <!-- icon-chart -->
-              <svg v-else-if="item.icon === 'chart'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <polyline points="2,12 6,7 9,10 14,4"/>
-              </svg>
-              <!-- icon-flow（结算流水：双向箭头） -->
-              <svg v-else-if="item.icon === 'flow'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M3 5h9M10 3l2 2-2 2"/>
-                <path d="M13 11H4M6 13l-2-2 2-2"/>
-              </svg>
-              <!-- icon-trophy（业绩排行：奖杯） -->
-              <svg v-else-if="item.icon === 'trophy'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M5 2h6v4a3 3 0 0 1-6 0V2z"/>
-                <path d="M5 4H3v1a2 2 0 0 0 2 2M11 4h2v1a2 2 0 0 1-2 2"/>
-                <line x1="8" y1="9" x2="8" y2="12"/>
-                <line x1="5.5" y1="14" x2="10.5" y2="14"/>
-              </svg>
-              <!-- icon-bell（通知设置） -->
-              <svg v-else-if="item.icon === 'bell'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4z"/>
-                <path d="M6.5 13a1.5 1.5 0 0 0 3 0"/>
-              </svg>
-              <!-- icon-plug（集成与 API） -->
-              <svg v-else-if="item.icon === 'plug'" class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M9 2v3M5 2v3"/>
-                <rect x="3" y="5" width="8" height="4" rx="1"/>
-                <path d="M7 9v2a2 2 0 0 0 2 2h3"/>
-              </svg>
-              <!-- icon-gear -->
-              <svg v-else class="sb-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="8" cy="8" r="2.5"/>
-                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/>
               </svg>
 
               <span class="sb-item-text">{{ item.title }}</span>
@@ -323,31 +266,6 @@ function toggleUserMenu() {
 
       <!-- Sidebar footer -->
       <div class="sb-foot">
-        <div class="sb-tools">
-          <button class="sb-tool" title="帮助">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="8" cy="8" r="6"/>
-              <path d="M6.3 6.3a1.7 1.7 0 0 1 3.4 0c0 1-1.7 1.4-1.7 2.4M8 11h.01"/>
-            </svg>
-          </button>
-          <button class="sb-tool" title="反馈">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M3 3h10v8H6l-3 3z"/>
-            </svg>
-          </button>
-          <button class="sb-tool" title="主题">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M8 2a6 6 0 1 0 5.5 8.5A5 5 0 0 1 8 2z"/>
-            </svg>
-          </button>
-          <button class="sb-tool" title="快捷键">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="2" y="4" width="12" height="8" rx="1.5"/>
-              <line x1="5" y1="9.5" x2="11" y2="9.5"/>
-            </svg>
-          </button>
-        </div>
-
         <div class="sb-user" @click="toggleUserMenu">
           <div class="sb-avatar">
             {{ userInitial }}
@@ -398,20 +316,7 @@ function toggleUserMenu() {
           </div>
         </div>
 
-        <div class="tb-right">
-          <button class="tb-icon" title="搜索">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="13.5" y2="13.5"/>
-            </svg>
-          </button>
-          <button class="tb-icon" title="通知">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4z"/>
-              <path d="M6.5 13a1.5 1.5 0 0 0 3 0"/>
-            </svg>
-            <span class="tb-icon-dot"></span>
-          </button>
-        </div>
+        <div class="tb-right"></div>
       </header>
 
       <!-- 主内容 -->
@@ -798,36 +703,6 @@ export default {
   border-top: 1px solid var(--gray-100);
   padding: 8px;
 }
-.sb-tools {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 4px 0 8px;
-  border-bottom: 1px solid var(--gray-100);
-  margin-bottom: 8px;
-}
-.sb-tool {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  transition: all .12s;
-  cursor: pointer;
-  font-family: inherit;
-}
-.sb-tool:hover {
-  background: var(--gray-100);
-  color: var(--brand-700);
-}
-.sb-tool svg {
-  width: 15px;
-  height: 15px;
-}
 
 .sb-user {
   display: flex;
@@ -976,35 +851,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-.tb-icon {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all .12s;
-  font-family: inherit;
-}
-.tb-icon:hover {
-  background: var(--gray-100);
-  color: var(--text-primary);
-}
-.tb-icon-dot {
-  position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-danger);
-  border: 1.5px solid var(--bg-surface);
 }
 
 /* Content */

@@ -49,54 +49,6 @@ const routes: RouteRecordRaw[] = [
         name: 'Salary',
         component: () => import('@/views/SalaryCalc.vue'),
         meta: { title: '薪资计算' }
-      },
-      {
-        path: 'salary/history',
-        name: 'SalaryHistory',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '历史薪资' }
-      },
-      {
-        path: 'salary/rules',
-        name: 'SalaryRules',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '规则配置' }
-      },
-      {
-        path: 'reports',
-        name: 'Reports',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '数据报表' }
-      },
-      {
-        path: 'transactions',
-        name: 'Transactions',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '结算流水' }
-      },
-      {
-        path: 'leaderboard',
-        name: 'Leaderboard',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '业绩排行' }
-      },
-      {
-        path: 'preferences',
-        name: 'Preferences',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '偏好设置' }
-      },
-      {
-        path: 'notifications',
-        name: 'Notifications',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '通知设置' }
-      },
-      {
-        path: 'integrations',
-        name: 'Integrations',
-        component: () => import('@/views/PlaceholderPage.vue'),
-        meta: { title: '集成与 API' }
       }
     ]
   },
