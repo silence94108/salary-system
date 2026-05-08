@@ -10,20 +10,6 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, title: '登录' }
   },
   {
-    // 设计系统 Demo 页（独立预览，无需登录）
-    path: '/design',
-    name: 'DesignSystem',
-    component: () => import('@/views/DesignSystem.vue'),
-    meta: { requiresAuth: false, title: '设计系统 · 活力科技橙' }
-  },
-  {
-    // Logo 候选对比页（无需登录）
-    path: '/logo-picker',
-    name: 'LogoPicker',
-    component: () => import('@/views/LogoPicker.vue'),
-    meta: { requiresAuth: false, title: 'Logo 候选对比' }
-  },
-  {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
