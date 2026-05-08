@@ -24,6 +24,13 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, title: 'Logo 候选对比' }
   },
   {
+    // 导航呈现方式 Demo（无需登录）
+    path: '/nav-demo',
+    name: 'NavDemo',
+    component: () => import('@/views/NavDemo.vue'),
+    meta: { requiresAuth: false, title: '导航呈现方式 · Demo' }
+  },
+  {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
