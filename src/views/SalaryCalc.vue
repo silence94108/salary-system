@@ -199,6 +199,11 @@ function getSalaryConfirmPill(row: SalaryRow): string {
   return 'pill-muted'
 }
 
+function canViewDetail(row: SalaryRow): boolean {
+  const v = row.salary_structure_is_confirm
+  return !(v === false || v === '0' || v === 0)
+}
+
 // 状态文本 → pill class（用于完结明细表）
 function getRulePill(ruleNum: number): string {
   if (ruleNum === 1) return 'pill-info'
@@ -614,7 +619,12 @@ const isNewRules = computed(() => calcMonth.value >= '2026-04')
               </el-table-column>
               <el-table-column label="操作" width="120" fixed="right" align="right">
                 <template #default="{ row }">
-                  <a class="link" @click="handleViewDetail(row)">查看详情</a>
+                  <a
+                    v-if="canViewDetail(row)"
+                    class="link"
+                    @click="handleViewDetail(row)"
+                  >查看详情</a>
+                  <span v-else class="link-disabled" title="工资未生成">查看详情</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -780,6 +790,14 @@ const isNewRules = computed(() => calcMonth.value >= '2026-04')
 .accent-text {
   color: var(--accent-fg);
   font-weight: 600;
+}
+
+/* ---------- 查看详情 · 禁用态 ---------- */
+.link-disabled {
+  color: var(--fg-4);
+  font-weight: 500;
+  cursor: not-allowed;
+  user-select: none;
 }
 
 /* ---------- 旧规则四列网格 ---------- */

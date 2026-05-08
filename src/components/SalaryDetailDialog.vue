@@ -38,16 +38,8 @@ const deductionTotal = computed(() => {
   return (Number(detail.value.daikou_total) || 0) + (Number(detail.value.tax) || 0)
 })
 
-const totalSalaryParts = computed(() => {
-  const v = detail.value ? Number(detail.value.total_salary) || 0 : 0
-  const fixed = v.toFixed(2)
-  const [intPart, decPart] = fixed.split('.')
-  return { int: intPart || '0', dec: '.' + (decPart || '00') }
-})
-
 async function loadDetail() {
   if (!props.userId || !props.date) return
-
   loading.value = true
   try {
     detail.value = await getSalaryDetail({
@@ -60,7 +52,6 @@ async function loadDetail() {
     loading.value = false
   }
 }
-
 function formatMoney(value: string | number | undefined): string {
   if (value === undefined || value === null || value === '') return '0.00'
   const num = typeof value === 'string' ? parseFloat(value) : value
@@ -69,23 +60,16 @@ function formatMoney(value: string | number | undefined): string {
 
 async function handleConfirm() {
   if (!detail.value) return
-
   try {
     await ElMessageBox.confirm(
       '确认当月工资发放无误？逾期未确认则默认认可核算方式。',
       '确认工资',
-      {
-        confirmButtonText: '确定无误',
-        cancelButtonText: '再看看',
-        type: 'info'
-      }
+      { confirmButtonText: '确定无误', cancelButtonText: '再看看', type: 'info' }
     )
-
     await confirmSalary({
       is_confirm: 2,
       salary_structure_id: detail.value.salary_structure
     })
-
     ElMessage.success('确认成功')
     detail.value.is_confirm = 2
     emit('confirmed')
@@ -98,7 +82,6 @@ async function handleConfirm() {
 
 async function handleObjection() {
   if (!detail.value) return
-
   try {
     const result = await ElMessageBox.prompt('请简要说明您的异议内容', '提出异议', {
       confirmButtonText: '提交',
@@ -112,17 +95,13 @@ async function handleObjection() {
         return true
       }
     })
-
     const remarks = typeof result === 'object' && result && 'value' in result
-      ? String(result.value)
-      : String(result)
-
+      ? String(result.value) : String(result)
     await confirmSalary({
       is_confirm: 3,
       salary_structure_id: detail.value.salary_structure,
       remarks
     })
-
     ElMessage.success('异议已提交')
     detail.value.is_confirm = 3
     detail.value.remark = remarks
@@ -135,154 +114,101 @@ async function handleObjection() {
   }
 }
 
-function handleOpen() {
-  loadDetail()
-}
+function handleOpen() { loadDetail() }
 </script>
-
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :width="560"
+    :width="520"
     class="receipt-dialog"
+    :z-index="3000"
     :show-close="true"
+    append-to-body
     destroy-on-close
     align-center
     @open="handleOpen"
   >
-    <!-- 自定义 header -->
     <template #header>
-      <div class="receipt-head">
-        <div class="receipt-head-left">
-          <div class="receipt-eyebrow">SALARY · 工资单</div>
-          <div class="receipt-title">{{ date || '—' }} 月薪资明细</div>
-        </div>
-        <span class="pill" :class="confirmPill.cls">{{ confirmPill.text }}</span>
+      <div class="slip-header">
+        <div class="slip-title">工资条额</div>
+        <div class="slip-meta">{{ date || '—' }} | {{ confirmPill.text }}</div>
       </div>
     </template>
 
-    <div v-loading="loading" class="receipt-body">
+    <div v-loading="loading" class="slip-body">
       <template v-if="detail">
+        <div class="slip-hero">
+          <div class="slip-hero-label">实发工资</div>
+          <div class="slip-hero-value">¥{{ formatMoney(detail.total_salary) }}</div>
+        </div>
 
-        <!-- ============ Hero · 实发大数字 ============ -->
-        <section class="receipt-hero">
-          <div class="hero-label">实发工资</div>
-          <div class="hero-amount">
-            <span class="hero-cur">¥</span>
-            <span class="hero-int num">{{ totalSalaryParts.int }}</span>
-            <span class="hero-dec">{{ totalSalaryParts.dec }}</span>
+        <template v-for="(item, index) in detail.type_archives" :key="index">
+          <div class="slip-line">
+            <span class="slip-line-label">{{ item.fname }}</span>
+            <span class="slip-line-value">¥{{ formatMoney(item.sum) }}</span>
           </div>
-          <div class="hero-meta">
-            应发
-            <b class="num">¥{{ formatMoney(detail.shuiqian_salary) }}</b>
-            <span class="dot-sep">·</span>
-            扣除
-            <b class="num">¥{{ formatMoney(deductionTotal) }}</b>
-          </div>
-        </section>
-
-        <!-- ============ 收入项 ============ -->
-        <section class="rcp-section">
-          <div class="rcp-section-head">
-            <div class="rcp-section-title">收入项</div>
-            <div class="rcp-section-meta">{{ detail.type_archives?.length || 0 }} 项</div>
-          </div>
-          <div class="rcp-lines">
-            <template v-for="(item, index) in detail.type_archives" :key="index">
-              <div class="rcp-line">
-                <span class="rcp-label">{{ item.fname }}</span>
-                <span class="rcp-value positive num">+ ¥{{ formatMoney(item.sum) }}</span>
-              </div>
-              <div v-if="item.zd && item.zd.length" class="rcp-sub">
-                <div v-for="(z, zi) in item.zd" :key="zi" class="rcp-sub-line">
-                  <span class="rcp-sub-label">└ {{ z.title }}</span>
-                  <span class="rcp-sub-value num">¥{{ formatMoney(z.data) }}</span>
-                </div>
-              </div>
-            </template>
-          </div>
-          <div class="rcp-line rcp-line-subtotal">
-            <span class="rcp-label">收入小计</span>
-            <span class="rcp-value num">¥{{ formatMoney(detail.shuiqian_salary) }}</span>
-          </div>
-        </section>
-
-        <!-- ============ 扣除项 ============ -->
-        <section
-          v-if="Number(detail.daikou_total) > 0 || Number(detail.tax) > 0"
-          class="rcp-section"
-        >
-          <div class="rcp-section-head">
-            <div class="rcp-section-title">扣除项</div>
-            <div class="rcp-section-meta">合计 ¥{{ formatMoney(deductionTotal) }}</div>
-          </div>
-          <div class="rcp-lines">
-            <template v-if="Number(detail.daikou_total) > 0">
-              <div class="rcp-line">
-                <span class="rcp-label">代扣代缴（社保公积金）</span>
-                <span class="rcp-value negative num">− ¥{{ formatMoney(detail.daikou_total) }}</span>
-              </div>
-              <div v-if="detail.daikou" class="rcp-sub">
-                <div v-for="(value, key) in detail.daikou" :key="key" class="rcp-sub-line">
-                  <span class="rcp-sub-label">└ {{ key }}</span>
-                  <span class="rcp-sub-value num">¥{{ formatMoney(value) }}</span>
-                </div>
-              </div>
-            </template>
-            <div v-if="Number(detail.tax) > 0" class="rcp-line">
-              <span class="rcp-label">个人所得税</span>
-              <span class="rcp-value negative num">− ¥{{ formatMoney(detail.tax) }}</span>
+          <div v-if="item.zd && item.zd.length" class="slip-sub">
+            <div v-for="(z, zi) in item.zd" :key="zi" class="slip-line">
+              <span class="slip-line-label">{{ z.title }}</span>
+              <span class="slip-line-value">¥{{ formatMoney(z.data) }}</span>
             </div>
           </div>
-        </section>
+        </template>
 
-        <!-- ============ 免税额（专项附加） ============ -->
-        <section v-if="Number(detail.special?.sum) > 0" class="rcp-section rcp-section-info">
-          <div class="rcp-section-head">
-            <div class="rcp-section-title">
-              专项附加扣除
-              <span class="rcp-tip">已节省个税</span>
+        <div class="slip-line slip-line-subtotal">
+          <span class="slip-line-label">应发小计</span>
+          <span class="slip-line-value">¥{{ formatMoney(detail.shuiqian_salary) }}</span>
+        </div>
+
+        <div class="slip-divider"></div>
+        <template v-if="Number(detail.daikou_total) > 0">
+          <div class="slip-line">
+            <span class="slip-line-label">代扣代缴（社保公积金）</span>
+            <span class="slip-line-value negative">-¥{{ formatMoney(detail.daikou_total) }}</span>
+          </div>
+          <div v-if="detail.daikou" class="slip-sub">
+            <div v-for="(value, key) in detail.daikou" :key="key" class="slip-line">
+              <span class="slip-line-label">{{ key }}</span>
+              <span class="slip-line-value">¥{{ formatMoney(value) }}</span>
             </div>
-            <div class="rcp-section-meta accent">
-              抵扣 ¥{{ formatMoney(detail.special.sum) }}
+          </div>
+        </template>
+
+        <div v-if="Number(detail.tax) > 0" class="slip-line">
+          <span class="slip-line-label">个人所得税</span>
+          <span class="slip-line-value negative">-¥{{ formatMoney(detail.tax) }}</span>
+        </div>
+
+        <template v-if="Number(detail.special?.sum) > 0">
+          <div class="slip-divider"></div>
+          <div class="slip-line">
+            <span class="slip-line-label">专项附加扣除（已节省个税）</span>
+            <span class="slip-line-value accent">¥{{ formatMoney(detail.special.sum) }}</span>
+          </div>
+          <div v-if="detail.special.zd && detail.special.zd.length" class="slip-sub">
+            <div v-for="(z, zi) in detail.special.zd" :key="zi" class="slip-line">
+              <span class="slip-line-label">{{ z.title }}</span>
+              <span class="slip-line-value">¥{{ formatMoney(z.data) }}</span>
             </div>
           </div>
-          <div v-if="detail.special.zd && detail.special.zd.length" class="rcp-lines">
-            <div v-for="(z, zi) in detail.special.zd" :key="zi" class="rcp-line subtle">
-              <span class="rcp-label">{{ z.title }}</span>
-              <span class="rcp-value info num">¥{{ formatMoney(z.data) }}</span>
-            </div>
-          </div>
-        </section>
+        </template>
 
-        <!-- ============ 实发结果 ============ -->
-        <section class="rcp-final">
-          <div class="rcp-final-divider"></div>
-          <div class="rcp-final-row">
-            <span class="rcp-final-label">实发合计</span>
-            <span class="rcp-final-value">
-              <span class="cur">¥</span>
-              <span class="num">{{ formatMoney(detail.total_salary) }}</span>
-            </span>
-          </div>
-        </section>
+        <div class="slip-line slip-total">
+          <span class="slip-line-label">实发工资</span>
+          <span class="slip-line-value">¥{{ formatMoney(detail.total_salary) }}</span>
+        </div>
 
-        <!-- ============ 异议备注 ============ -->
-        <section v-if="detail.remark" class="rcp-objection">
-          <div class="obj-icon">!</div>
-          <div class="obj-content">
-            <div class="obj-title">异议回复</div>
-            <div class="obj-text">{{ detail.remark }}</div>
-          </div>
-        </section>
-
+        <div v-if="detail.remark" class="slip-remark">
+          <div class="slip-remark-title">异议回复</div>
+          <div class="slip-remark-text">{{ detail.remark }}</div>
+        </div>
       </template>
 
-      <el-empty v-else description="未查询到薪资数据" :image-size="80" />
+      <el-empty v-else-if="!loading" description="未查询到薪资数据" :image-size="80" />
     </div>
 
     <template #footer>
-      <div class="rcp-footer">
+      <div class="slip-footer">
         <template v-if="detail && !isConfirmed">
           <button class="btn" @click="handleObjection">提出异议</button>
           <button class="btn btn-primary" @click="handleConfirm">确认无误</button>
@@ -295,393 +221,70 @@ function handleOpen() {
     </template>
   </el-dialog>
 </template>
+<style>
+.receipt-dialog .el-dialog { border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(15,23,42,.2); border: 1px solid var(--border-soft); }
+.receipt-dialog .el-dialog__header { padding: 0; margin: 0; border-bottom: 1px solid var(--border-soft); }
+.receipt-dialog .el-dialog__body { padding: 0; background: var(--bg); }
+.receipt-dialog .el-dialog__footer { padding: 16px 24px; border-top: 1px solid var(--border-soft); background: var(--bg); }
+.receipt-dialog .el-dialog__headerbtn { top: 10px; right: 12px; width: 28px; height: 28px; font-size: 16px; z-index: 1; }
+.receipt-dialog .el-dialog__close { color: var(--fg-4); }
+.receipt-dialog .el-dialog__close:hover { color: var(--fg); }
+</style>
 
 <style scoped>
-/* ============ Dialog 容器深度样式 ============ */
-:deep(.el-dialog) {
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
-  border: 1px solid var(--border-soft);
-}
+:deep(.el-dialog) { border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(15,23,42,.2); border: 1px solid var(--border-soft); }
+:deep(.el-dialog__header) { padding: 0; margin: 0; border-bottom: 1px solid var(--border-soft); }
+:deep(.el-dialog__body) { padding: 0; background: var(--bg); }
+:deep(.el-dialog__footer) { padding: 16px 24px; border-top: 1px solid var(--border-soft); background: var(--bg); }
+:deep(.el-dialog__headerbtn) { top: 10px; right: 12px; width: 28px; height: 28px; font-size: 16px; z-index: 1; }
+:deep(.el-dialog__close) { color: var(--fg-4); }
+:deep(.el-dialog__close:hover) { color: var(--fg); }
 
-:deep(.el-dialog__header) {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border-soft);
-  background: var(--bg);
-  margin: 0;
-}
+.slip-header { text-align: center; padding: 14px 48px 10px; }
+.slip-title { font-size: 16px; font-weight: 700; color: var(--fg); margin-bottom: 2px; }
+.slip-meta { font-size: 12px; color: var(--fg-4); font-variant-numeric: tabular-nums; }
+.slip-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
 
-:deep(.el-dialog__body) {
-  padding: 0;
-  background: var(--bg);
-}
+.slip-hero { background: var(--bg-hover, #F2F2F7); border: 1px solid var(--border-soft); border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center; }
+.slip-hero-label { font-size: 11px; color: var(--fg-4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+.slip-hero-value { font-size: 36px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
 
-:deep(.el-dialog__footer) {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border-soft);
-  background: var(--bg-soft);
-}
+.slip-line { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; font-size: 14px; border-bottom: 1px solid var(--border-soft); }
+.slip-line:last-child { border-bottom: none; }
+.slip-line-label { color: var(--fg-2); font-weight: 500; flex: 1; }
+.slip-line-value { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--fg); text-align: right; min-width: 100px; }
+.slip-line-value.negative { color: var(--danger-fg); }
+.slip-line-value.accent { color: var(--accent-fg); }
+.slip-line-subtotal { border-bottom: none; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--border-soft); }
+.slip-line-subtotal .slip-line-label { font-weight: 600; color: var(--fg); }
 
-:deep(.el-dialog__close) {
-  font-size: 18px;
-  color: var(--fg-4);
-}
-:deep(.el-dialog__close:hover) {
-  color: var(--fg);
-}
+.slip-divider { height: 1px; margin: 16px 0; background: repeating-linear-gradient(to right, var(--border-strong) 0px, var(--border-strong) 4px, transparent 4px, transparent 8px); }
 
-:deep(.el-dialog__headerbtn) {
-  top: 18px;
-  right: 20px;
-}
+.slip-sub { padding-left: 16px; margin-top: 2px; margin-bottom: 4px; border-left: 2px solid var(--border-soft); }
+.slip-sub .slip-line { font-size: 13px; padding: 5px 0; }
+.slip-sub .slip-line-label { color: var(--fg-3); }
+.slip-sub .slip-line-value { color: var(--fg-3); font-weight: 500; }
 
-/* ============ Header ============ */
-.receipt-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.receipt-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .12em;
-  color: var(--fg-4);
-  margin-bottom: 4px;
-}
-.receipt-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--fg);
-  letter-spacing: -.015em;
-  line-height: 1.2;
-}
+.slip-total { margin-top: 16px; padding-top: 16px !important; border-top: 2px solid var(--fg) !important; border-bottom: none !important; }
+.slip-total .slip-line-label { font-weight: 700; color: var(--fg); font-size: 15px; }
+.slip-total .slip-line-value { font-size: 18px; font-weight: 700; color: var(--accent); }
 
-/* ============ Body ============ */
-.receipt-body {
-  padding: 24px;
-  max-height: 70vh;
-  overflow-y: auto;
-}
+.slip-remark { margin-top: 20px; padding: 12px 16px; background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); border-radius: 8px; }
+.slip-remark-title { font-size: 12px; font-weight: 600; color: var(--warning-fg); margin-bottom: 4px; }
+.slip-remark-text { font-size: 13px; color: var(--fg-2); line-height: 1.5; }
 
-/* ============ Hero · 实发大数字 ============ */
-.receipt-hero {
-  position: relative;
-  padding: 24px 24px 22px;
-  margin-bottom: 22px;
-  border-radius: 12px;
-  background:
-    radial-gradient(at 100% 0%, var(--accent-bg-2) 0%, transparent 60%),
-    linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-soft) 100%);
-  border: 1px solid var(--border-soft);
-  overflow: hidden;
-}
-.receipt-hero::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent) 0%, #EC4899 100%);
-}
+.slip-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.slip-footer .btn { height: 34px; padding: 0 16px; font-size: 13px; font-weight: 500; color: var(--fg-2); background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--r-md); cursor: pointer; transition: all .12s; font-family: inherit; }
+.slip-footer .btn:hover:not(:disabled) { border-color: var(--border-strong); color: var(--fg); }
+.slip-footer .btn:disabled { cursor: default; color: var(--fg-4); background: var(--bg-hover, #F2F2F7); }
+.slip-footer .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; box-shadow: 0 2px 6px rgba(99,91,255,.25); }
+.slip-footer .btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; box-shadow: 0 4px 10px rgba(99,91,255,.35); }
 
-.hero-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fg-3);
-  letter-spacing: .04em;
-  margin-bottom: 6px;
-}
-.hero-amount {
-  display: flex;
-  align-items: baseline;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum';
-  color: var(--fg);
-}
-.hero-cur {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--fg-3);
-  margin-right: 3px;
-}
-.hero-int {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -.025em;
-  line-height: 1;
-}
-.hero-dec {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--fg-4);
-  margin-left: 1px;
-}
-
-.hero-meta {
-  margin-top: 10px;
-  font-size: 12.5px;
-  color: var(--fg-3);
-}
-.hero-meta b {
-  color: var(--fg);
-  font-weight: 600;
-}
-.dot-sep {
-  margin: 0 8px;
-  color: var(--fg-4);
-}
-
-/* ============ Section ============ */
-.rcp-section {
-  margin-bottom: 18px;
-}
-.rcp-section:last-child { margin-bottom: 0; }
-
-.rcp-section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0 8px;
-  border-bottom: 1px dashed var(--border-soft);
-  margin-bottom: 4px;
-}
-.rcp-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--fg);
-  letter-spacing: -.005em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.rcp-tip {
-  font-size: 10.5px;
-  font-weight: 500;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: var(--accent-bg);
-  color: var(--accent-fg);
-  letter-spacing: .04em;
-}
-.rcp-section-meta {
-  font-size: 12px;
-  color: var(--fg-4);
-  font-variant-numeric: tabular-nums;
-}
-.rcp-section-meta.accent {
-  color: var(--accent-fg);
-  font-weight: 600;
-}
-
-/* ============ Lines ============ */
-.rcp-lines {
-  display: flex;
-  flex-direction: column;
-}
-
-.rcp-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 0;
-  border-bottom: 1px dashed var(--border-soft);
-  font-size: 13.5px;
-}
-.rcp-line:last-child { border-bottom: none; }
-.rcp-line.subtle .rcp-label,
-.rcp-line.subtle .rcp-value { color: var(--fg-3); }
-
-.rcp-label {
-  color: var(--fg-2);
-  font-weight: 500;
-}
-.rcp-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--fg);
-}
-.rcp-value.positive { color: var(--success-fg); }
-.rcp-value.negative { color: var(--danger-fg); }
-.rcp-value.info     { color: var(--accent-fg); }
-
-/* 子明细 */
-.rcp-sub {
-  display: flex;
-  flex-direction: column;
-  padding: 4px 0 8px 16px;
-  background: var(--bg-soft);
-  margin: -1px -8px 4px;
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: 1px dashed var(--border-soft);
-}
-.rcp-sub-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 12.5px;
-}
-.rcp-sub-label {
-  color: var(--fg-3);
-  font-family: 'Inter', monospace;
-}
-.rcp-sub-value {
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-}
-
-/* 小计行 */
-.rcp-line-subtotal {
-  margin-top: 4px;
-  padding: 12px 0 4px;
-  border-top: 1px solid var(--border-soft);
-  border-bottom: none;
-  font-size: 13.5px;
-}
-.rcp-line-subtotal .rcp-label {
-  font-weight: 600;
-  color: var(--fg);
-}
-
-/* 信息块（专项附加） */
-.rcp-section-info {
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-bg-2);
-  border-radius: 10px;
-  padding: 4px 16px 12px;
-}
-.rcp-section-info .rcp-section-head {
-  border-bottom-color: var(--accent-bg-2);
-}
-.rcp-section-info .rcp-line {
-  border-bottom-color: var(--accent-bg-2);
-}
-
-/* ============ Final · 实发合计 ============ */
-.rcp-final {
-  margin-top: 24px;
-  margin-bottom: 8px;
-}
-.rcp-final-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--border-strong) 50%, transparent 100%);
-  margin-bottom: 16px;
-}
-.rcp-final-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 8px 0;
-}
-.rcp-final-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--fg);
-  letter-spacing: -.005em;
-}
-.rcp-final-value {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
-  color: var(--accent-fg);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-}
-.rcp-final-value .cur { font-size: 15px; opacity: 0.85; }
-.rcp-final-value .num {
-  font-size: 28px;
-  letter-spacing: -.022em;
-  line-height: 1;
-}
-
-/* ============ 异议备注 ============ */
-.rcp-objection {
-  margin-top: 18px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  border-radius: 10px;
-}
-.obj-icon {
-  flex-shrink: 0;
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--color-warning);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-}
-.obj-title {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--warning-fg);
-  margin-bottom: 4px;
-}
-.obj-text {
-  font-size: 13px;
-  color: var(--fg-2);
-  line-height: 1.5;
-}
-
-/* ============ Footer ============ */
-.rcp-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.rcp-footer .btn {
-  height: 34px;
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--fg-2);
-  background: var(--bg);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  transition: all .12s;
-  font-family: inherit;
-}
-.rcp-footer .btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  color: var(--fg);
-}
-.rcp-footer .btn:disabled {
-  cursor: default;
-  color: var(--fg-4);
-  background: var(--bg-soft);
-}
-.rcp-footer .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(99, 91, 255, .25);
-}
-.rcp-footer .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: #fff;
-  box-shadow: 0 4px 10px rgba(99, 91, 255, .35);
-}
-
-/* ============ 响应式 ============ */
 @media (max-width: 600px) {
-  :deep(.el-dialog) {
-    width: 92vw !important;
-    margin: 5vh auto !important;
-  }
-  .receipt-body { padding: 16px; max-height: 75vh; }
-  .receipt-hero { padding: 18px 18px 16px; }
-  .hero-int { font-size: 30px; }
-  .rcp-final-value .num { font-size: 24px; }
-  :deep(.el-dialog__header) { padding: 16px 20px 12px; }
-  :deep(.el-dialog__footer) { padding: 12px 20px; }
+  :deep(.el-dialog) { width: 92vw !important; margin: 5vh auto !important; }
+  .slip-body { padding: 16px; }
+  .slip-header { padding: 16px 40px 12px; }
+  .slip-hero-value { font-size: 28px; }
+  .slip-total .slip-line-value { font-size: 16px; }
 }
 </style>
