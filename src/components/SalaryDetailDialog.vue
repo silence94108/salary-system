@@ -117,81 +117,136 @@ async function handleObjection() {
 function handleOpen() { loadDetail() }
 </script>
 <template>
-  <el-dialog v-model="dialogVisible" :width="520" class="receipt-dialog" :z-index="3000" :show-close="true"
-    append-to-body destroy-on-close align-center @open="handleOpen">
+  <el-dialog
+    v-model="dialogVisible"
+    :width="760"
+    class="salary-timeline-dialog"
+    :z-index="3000"
+    :show-close="true"
+    append-to-body
+    destroy-on-close
+    align-center
+    @open="handleOpen"
+  >
     <template #header>
-      <div class="slip-header">
-        <div class="slip-title">工资条额</div>
-        <div class="slip-meta">{{ date || '—' }} | {{ confirmPill.text }}</div>
+      <div class="timeline-header">
+        <div>
+          <div class="timeline-title">工资核算时间线</div>
+          <div class="timeline-meta">{{ date || '—' }} · 工资详情</div>
+        </div>
+        <span class="status-pill" :class="confirmPill.cls">{{ confirmPill.text }}</span>
       </div>
     </template>
 
-    <div v-loading="loading" class="slip-body">
+    <div v-loading="loading" class="timeline-body">
       <template v-if="detail">
-        <div class="slip-hero">
-          <div class="slip-hero-label">实发工资</div>
-          <div class="slip-hero-value">¥{{ formatMoney(detail.total_salary) }}</div>
-        </div>
-
-        <template v-for="(item, index) in detail.type_archives" :key="index">
-          <div class="slip-line">
-            <span class="slip-line-label">{{ item.fname }}</span>
-            <span class="slip-line-value">¥{{ formatMoney(item.sum) }}</span>
+        <div class="timeline-summary">
+          <div>
+            <div class="summary-label">实发工资</div>
+            <div class="summary-value">¥{{ formatMoney(detail.total_salary) }}</div>
           </div>
-          <div v-if="item.zd && item.zd.length" class="slip-sub">
-            <div v-for="(z, zi) in item.zd" :key="zi" class="slip-line">
-              <span class="slip-line-label">{{ z.title }}</span>
-              <span class="slip-line-value">¥{{ formatMoney(z.data) }}</span>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span>应发工资</span>
+              <strong>¥{{ formatMoney(detail.shuiqian_salary) }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>扣款合计</span>
+              <strong class="negative">-¥{{ formatMoney(deductionTotal) }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>专项附加扣除</span>
+              <strong class="accent">¥{{ formatMoney(detail.special?.sum) }}</strong>
             </div>
           </div>
-        </template>
-
-        <div class="slip-line slip-line-subtotal">
-          <span class="slip-line-label">应发小计</span>
-          <span class="slip-line-value">¥{{ formatMoney(detail.shuiqian_salary) }}</span>
         </div>
 
-        <div class="slip-divider"></div>
-        <template v-if="Number(detail.daikou_total) > 0">
-          <div class="slip-line">
-            <span class="slip-line-label">代扣代缴（社保公积金）</span>
-            <span class="slip-line-value negative">-¥{{ formatMoney(detail.daikou_total) }}</span>
-          </div>
-          <div v-if="detail.daikou" class="slip-sub">
-            <div v-for="(value, key) in detail.daikou" :key="key" class="slip-line">
-              <span class="slip-line-label">{{ key }}</span>
-              <span class="slip-line-value">¥{{ formatMoney(value) }}</span>
+        <div class="salary-timeline">
+          <section class="timeline-step">
+            <div class="step-content">
+              <div class="step-main">
+                <div class="step-title">收入汇总</div>
+                <div class="step-desc">基本工资、绩效佣金、补贴津贴等项目计入应发工资。</div>
+              </div>
+              <div class="step-amount positive">¥{{ formatMoney(detail.shuiqian_salary) }}</div>
             </div>
-          </div>
-        </template>
 
-        <div v-if="Number(detail.tax) > 0" class="slip-line">
-          <span class="slip-line-label">个人所得税</span>
-          <span class="slip-line-value negative">-¥{{ formatMoney(detail.tax) }}</span>
-        </div>
-
-        <template v-if="Number(detail.special?.sum) > 0">
-          <div class="slip-divider"></div>
-          <div class="slip-line">
-            <span class="slip-line-label">专项附加扣除（已节省个税）</span>
-            <span class="slip-line-value accent">¥{{ formatMoney(detail.special.sum) }}</span>
-          </div>
-          <div v-if="detail.special.zd && detail.special.zd.length" class="slip-sub">
-            <div v-for="(z, zi) in detail.special.zd" :key="zi" class="slip-line">
-              <span class="slip-line-label">{{ z.title }}</span>
-              <span class="slip-line-value">¥{{ formatMoney(z.data) }}</span>
+            <div class="step-detail">
+              <template v-for="(item, index) in detail.type_archives" :key="index">
+                <div class="detail-row">
+                  <span class="detail-name">{{ item.fname }}</span>
+                  <span class="detail-value">¥{{ formatMoney(item.sum) }}</span>
+                </div>
+                <div v-if="item.zd && item.zd.length" class="detail-sub">
+                  <div v-for="(z, zi) in item.zd" :key="zi" class="detail-row">
+                    <span class="detail-name">{{ z.title }}</span>
+                    <span class="detail-value">¥{{ formatMoney(z.data) }}</span>
+                  </div>
+                </div>
+              </template>
             </div>
-          </div>
-        </template>
+          </section>
 
-        <div class="slip-line slip-total">
-          <span class="slip-line-label">实发工资</span>
-          <span class="slip-line-value">¥{{ formatMoney(detail.total_salary) }}</span>
+          <section class="timeline-step">
+            <div class="step-content">
+              <div class="step-main">
+                <div class="step-title">社保公积金代扣</div>
+                <div class="step-desc">养老、医疗、失业与住房公积金等代扣项合并展示。</div>
+              </div>
+              <div class="step-amount negative">-¥{{ formatMoney(detail.daikou_total) }}</div>
+            </div>
+
+            <div v-if="Number(detail.daikou_total) > 0 && detail.daikou" class="step-detail">
+              <div v-for="(value, key) in detail.daikou" :key="key" class="detail-row">
+                <span class="detail-name">{{ key }}</span>
+                <span class="detail-value">¥{{ formatMoney(value) }}</span>
+              </div>
+            </div>
+            <div v-else class="step-empty">本月暂无社保公积金代扣项</div>
+          </section>
+
+          <section class="timeline-step">
+            <div class="step-content">
+              <div class="step-main">
+                <div class="step-title">个人所得税</div>
+                <div class="step-desc">结合应发工资、代扣项与专项附加扣除后核算。</div>
+              </div>
+              <div class="step-amount negative">-¥{{ formatMoney(detail.tax) }}</div>
+            </div>
+          </section>
+
+          <section class="timeline-step">
+            <div class="step-content">
+              <div class="step-main">
+                <div class="step-title">专项附加扣除</div>
+                <div class="step-desc">用于个税核算的专项扣除信息，帮助降低应纳税额。</div>
+              </div>
+              <div class="step-amount accent">¥{{ formatMoney(detail.special?.sum) }}</div>
+            </div>
+
+            <div v-if="Number(detail.special?.sum) > 0 && detail.special?.zd?.length" class="step-detail">
+              <div v-for="(z, zi) in detail.special.zd" :key="zi" class="detail-row">
+                <span class="detail-name">{{ z.title }}</span>
+                <span class="detail-value">¥{{ formatMoney(z.data) }}</span>
+              </div>
+            </div>
+            <div v-else class="step-empty">本月暂无专项附加扣除明细</div>
+          </section>
+
+          <section class="timeline-step timeline-result">
+            <div class="step-content">
+              <div class="step-main">
+                <div class="step-title">实发工资</div>
+                <div class="step-desc">确认无误后，本月工资结构状态会同步更新。</div>
+              </div>
+              <div class="step-amount result">¥{{ formatMoney(detail.total_salary) }}</div>
+            </div>
+          </section>
         </div>
 
-        <div v-if="detail.remark" class="slip-remark">
-          <div class="slip-remark-title">异议回复</div>
-          <div class="slip-remark-text">{{ detail.remark }}</div>
+        <div v-if="detail.remark" class="timeline-remark">
+          <div class="remark-title">异议回复</div>
+          <div class="remark-text">{{ detail.remark }}</div>
         </div>
       </template>
 
@@ -199,7 +254,7 @@ function handleOpen() { loadDetail() }
     </div>
 
     <template #footer>
-      <div class="slip-footer">
+      <div class="timeline-footer">
         <template v-if="detail && !isConfirmed">
           <button class="btn" @click="handleObjection">提出异议</button>
           <button class="btn btn-primary" @click="handleConfirm">确认无误</button>
@@ -212,321 +267,436 @@ function handleOpen() { loadDetail() }
     </template>
   </el-dialog>
 </template>
+
 <style>
-.receipt-dialog .el-dialog {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, .2);
+.salary-timeline-dialog.el-dialog {
   border: 1px solid var(--border-soft);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, .18);
 }
 
-.receipt-dialog .el-dialog__header {
+.salary-timeline-dialog .el-dialog__header {
   padding: 0;
   margin: 0;
   border-bottom: 1px solid var(--border-soft);
+  background: var(--bg);
 }
 
-.receipt-dialog .el-dialog__body {
+.salary-timeline-dialog .el-dialog__body {
   padding: 0;
   background: var(--bg);
 }
 
-.receipt-dialog .el-dialog__footer {
-  padding: 16px 24px;
+.salary-timeline-dialog .el-dialog__footer {
+  padding: 14px 22px;
   border-top: 1px solid var(--border-soft);
-  background: var(--bg);
+  background: var(--bg-side);
 }
 
-.receipt-dialog .el-dialog__headerbtn {
-  top: 10px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
+.salary-timeline-dialog .el-dialog__headerbtn {
+  top: 15px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
   z-index: 1;
 }
 
-.receipt-dialog .el-dialog__close {
+.salary-timeline-dialog .el-dialog__close {
   color: var(--fg-4);
 }
 
-.receipt-dialog .el-dialog__close:hover {
+.salary-timeline-dialog .el-dialog__close:hover {
   color: var(--fg);
+}
+
+@media (max-width: 760px) {
+  .salary-timeline-dialog.el-dialog {
+    width: 92vw !important;
+    margin: 5vh auto !important;
+  }
 }
 </style>
 
 <style scoped>
-:deep(.el-dialog) {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, .2);
-  border: 1px solid var(--border-soft);
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 58px 18px 22px;
 }
 
-:deep(.el-dialog__header) {
-  padding: 0;
-  margin: 0;
-  border-bottom: 1px solid var(--border-soft);
-}
-
-:deep(.el-dialog__body) {
-  padding: 0;
-  background: var(--bg);
-}
-
-:deep(.el-dialog__footer) {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border-soft);
-  background: var(--bg);
-}
-
-:deep(.el-dialog__headerbtn) {
-  top: 10px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
-  z-index: 1;
-}
-
-:deep(.el-dialog__close) {
-  color: var(--fg-4);
-}
-
-:deep(.el-dialog__close:hover) {
+.timeline-title {
   color: var(--fg);
-}
-
-.slip-header {
-  text-align: center;
-  padding: 14px 48px 10px;
-}
-
-.slip-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--fg);
-  margin-bottom: 2px;
+  line-height: 1.35;
 }
 
-.slip-meta {
-  font-size: 12px;
+.timeline-meta {
+  margin-top: 3px;
   color: var(--fg-4);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
-.slip-body {
-  padding: 24px;
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill-success {
+  color: var(--success-fg);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+}
+
+.pill-warning {
+  color: var(--warning-fg);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+}
+
+.pill-muted {
+  color: var(--accent-fg);
+  background: var(--accent-bg);
+  border: 1px solid var(--border-soft);
+}
+
+.timeline-body {
   max-height: 70vh;
+  padding: 22px;
   overflow-y: auto;
 }
 
-.slip-hero {
-  background: var(--bg-hover, #F2F2F7);
+.timeline-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  margin-bottom: 18px;
+  background: var(--accent-bg);
   border: 1px solid var(--border-soft);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  text-align: center;
+  border-radius: var(--r-xl);
 }
 
-.slip-hero-label {
-  font-size: 11px;
+.summary-label {
   color: var(--fg-4);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.slip-hero-value {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.5px;
-}
-
-.slip-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 9px 0;
-  font-size: 14px;
-  border-bottom: 1px solid var(--border-soft);
-}
-
-.slip-line:last-child {
-  border-bottom: none;
-}
-
-.slip-line-label {
-  color: var(--fg-2);
-  font-weight: 500;
-  flex: 1;
-}
-
-.slip-line-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--fg);
-  text-align: right;
-  min-width: 100px;
-}
-
-.slip-line-value.negative {
-  color: var(--danger-fg);
-}
-
-.slip-line-value.accent {
-  color: var(--accent-fg);
-}
-
-.slip-line-subtotal {
-  border-bottom: none;
-  padding-top: 12px;
-  margin-top: 4px;
-  border-top: 1px solid var(--border-soft);
-}
-
-.slip-line-subtotal .slip-line-label {
-  font-weight: 600;
-  color: var(--fg);
-}
-
-.slip-divider {
-  height: 1px;
-  margin: 16px 0;
-  background: repeating-linear-gradient(to right, var(--border-strong) 0px, var(--border-strong) 4px, transparent 4px, transparent 8px);
-}
-
-.slip-sub {
-  padding-left: 16px;
-  margin-top: 2px;
-  margin-bottom: 4px;
-  border-left: 2px solid var(--border-soft);
-}
-
-.slip-sub .slip-line {
-  font-size: 13px;
-  padding: 5px 0;
-}
-
-.slip-sub .slip-line-label {
-  color: var(--fg-3);
-}
-
-.slip-sub .slip-line-value {
-  color: var(--fg-3);
-  font-weight: 500;
-}
-
-.slip-total {
-  margin-top: 16px;
-  padding-top: 16px !important;
-  border-top: 2px solid var(--fg) !important;
-  border-bottom: none !important;
-}
-
-.slip-total .slip-line-label {
-  font-weight: 700;
-  color: var(--fg);
-  font-size: 15px;
-}
-
-.slip-total .slip-line-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.slip-remark {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  border-radius: 8px;
-}
-
-.slip-remark-title {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--warning-fg);
-  margin-bottom: 4px;
+  font-weight: 700;
 }
 
-.slip-remark-text {
-  font-size: 13px;
-  color: var(--fg-2);
+.summary-value {
+  margin-top: 6px;
+  color: var(--accent);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0 10px;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  font-size: 12px;
+}
+
+.summary-item span {
+  color: var(--fg-3);
+  font-weight: 600;
+}
+
+.summary-item strong {
+  color: var(--fg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.salary-timeline {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding-left: 22px;
+}
+
+.salary-timeline::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 7px;
+  width: 2px;
+  background: var(--border-soft);
+}
+
+.timeline-step {
+  position: relative;
+  padding: 14px;
+  background: var(--bg-side);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-xl);
+}
+
+.timeline-step::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: -21px;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent-bg-2);
+}
+
+.timeline-result {
+  background: var(--accent-bg);
+  border-color: var(--border-soft);
+}
+
+.step-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.step-title {
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.step-desc {
+  margin-top: 3px;
+  color: var(--fg-3);
+  font-size: 12px;
   line-height: 1.5;
 }
 
-.slip-footer {
+.step-amount {
+  color: var(--fg);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.step-amount.result {
+  color: var(--accent);
+  font-size: 19px;
+}
+
+.positive {
+  color: var(--success-fg) !important;
+}
+
+.negative {
+  color: var(--danger-fg) !important;
+}
+
+.accent {
+  color: var(--accent-fg) !important;
+}
+
+.step-detail {
+  margin-top: 12px;
+  padding: 4px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-lg);
+}
+
+.detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 34px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-name {
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.detail-value {
+  min-width: 96px;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-sub {
+  padding-left: 14px;
+  border-left: 2px solid var(--border-soft);
+}
+
+.detail-sub .detail-row {
+  min-height: 28px;
+  padding: 5px 0;
+}
+
+.detail-sub .detail-name,
+.detail-sub .detail-value {
+  color: var(--fg-3);
+  font-weight: 500;
+}
+
+.step-empty {
+  margin-top: 12px;
+  padding: 10px 12px;
+  color: var(--fg-4);
+  background: var(--bg);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--r-lg);
+  font-size: 13px;
+}
+
+.timeline-remark {
+  margin-top: 16px;
+  padding: 12px 14px;
+  color: var(--fg-2);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--r-lg);
+}
+
+.remark-title {
+  margin-bottom: 4px;
+  color: var(--warning-fg);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.remark-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.timeline-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.slip-footer .btn {
+.timeline-footer .btn {
   height: 34px;
   padding: 0 16px;
-  font-size: 13px;
-  font-weight: 500;
   color: var(--fg-2);
   background: var(--bg);
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
   cursor: pointer;
-  transition: all .12s;
   font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .12s;
 }
 
-.slip-footer .btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
+.timeline-footer .btn:hover:not(:disabled) {
   color: var(--fg);
+  border-color: var(--border-strong);
 }
 
-.slip-footer .btn:disabled {
-  cursor: default;
+.timeline-footer .btn:disabled {
   color: var(--fg-4);
   background: var(--bg-hover, #F2F2F7);
+  cursor: default;
 }
 
-.slip-footer .btn-primary {
+.timeline-footer .btn-primary {
+  color: #fff;
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(99, 91, 255, .25);
 }
 
-.slip-footer .btn-primary:hover:not(:disabled) {
+.timeline-footer .btn-primary:hover:not(:disabled) {
+  color: #fff;
   background: var(--accent-hover);
   border-color: var(--accent-hover);
-  color: #fff;
   box-shadow: 0 4px 10px rgba(99, 91, 255, .35);
 }
 
-@media (max-width: 600px) {
-  :deep(.el-dialog) {
-    width: 92vw !important;
-    margin: 5vh auto !important;
+@media (max-width: 760px) {
+  .timeline-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px 48px 14px 16px;
   }
 
-  .slip-body {
+  .timeline-body {
     padding: 16px;
   }
 
-  .slip-header {
-    padding: 16px 40px 12px;
+  .timeline-summary {
+    grid-template-columns: 1fr;
+    padding: 16px;
   }
 
-  .slip-hero-value {
+  .summary-value {
     font-size: 28px;
   }
 
-  .slip-total .slip-line-value {
+  .salary-timeline {
+    padding-left: 18px;
+  }
+
+  .salary-timeline::before {
+    left: 6px;
+  }
+
+  .timeline-step::before {
+    left: -18px;
+  }
+
+  .step-content {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .step-amount {
     font-size: 16px;
+  }
+
+  .timeline-footer {
+    flex-wrap: wrap;
+  }
+
+  .timeline-footer .btn {
+    flex: 1 1 120px;
   }
 }
 </style>
