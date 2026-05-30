@@ -38,7 +38,10 @@ const filters = reactive({
   name: '',
   status: '',
   hall_type: '',
+  orderType: '',
+  moneyRange: [null, null] as [number | null, number | null],
   enddatatime: [] as string[],
+  ordertime: [] as [Date, Date] | [],
   performtime: [] as [Date, Date] | [],
   completiontime: [] as [Date, Date] | []
 })
@@ -113,20 +116,32 @@ async function fetchTasks() {
     const completiontimeParam = filters.completiontime.length === 2
       ? [formatDateTime(filters.completiontime[0]), formatDateTime(filters.completiontime[1], true)]
       : []
+    const ordertimeParam = filters.ordertime.length === 2
+      ? [formatDateTime(filters.ordertime[0]), formatDateTime(filters.ordertime[1], true)]
+      : []
+
+    // 接单金额区间（单边时上下限取同值）
+    const moneyNums = filters.moneyRange.filter((v): v is number => typeof v === 'number')
+    let bountymoney: number[] = []
+    if (moneyNums.length === 2) {
+      bountymoney = [Math.min(moneyNums[0]!, moneyNums[1]!), Math.max(moneyNums[0]!, moneyNums[1]!)]
+    } else if (moneyNums.length === 1) {
+      bountymoney = [moneyNums[0]!, moneyNums[0]!]
+    }
 
     const res = await getMyTaskList({
       page: pagination.page,
       limit: pagination.limit,
       status: filters.status,
       name: filters.name,
-      orderType: '',
+      orderType: filters.orderType,
       hall_type: filters.hall_type,
       order: 'desc',
       sort: 'change_time',
-      bountymoney: [],
+      bountymoney,
       completiontime: completiontimeParam,
       enddatatime: filters.enddatatime || [],
-      ordertime: [],
+      ordertime: ordertimeParam,
       performtime: performtimeParam
     })
 
@@ -152,7 +167,10 @@ function handleReset() {
   filters.name = ''
   filters.status = ''
   filters.hall_type = ''
+  filters.orderType = ''
+  filters.moneyRange = [null, null]
   filters.enddatatime = []
+  filters.ordertime = []
   filters.performtime = []
   filters.completiontime = []
   pagination.page = 1
@@ -267,12 +285,38 @@ fetchTasks()
             <el-input v-model="filters.name" placeholder="搜索项目名称" clearable />
           </el-form-item>
 
+          <el-form-item label="项目/任务">
+            <el-select v-model="filters.orderType" placeholder="全部" clearable style="width: 120px">
+              <el-option label="项目" value="1" />
+              <el-option label="任务" value="2" />
+            </el-select>
+          </el-form-item>
+
           <el-form-item label="任务状态">
             <el-select v-model="filters.status" placeholder="全部状态" clearable style="width: 130px">
               <el-option label="待执行" value="1" />
               <el-option label="执行中" value="2" />
               <el-option label="已完结" value="3" />
             </el-select>
+          </el-form-item>
+
+          <el-form-item label="接单金额">
+            <div class="money-range">
+              <el-input-number v-model="filters.moneyRange[0]" :min="0" :controls="false" placeholder="最低" />
+              <span class="range-sep">-</span>
+              <el-input-number v-model="filters.moneyRange[1]" :min="0" :controls="false" placeholder="最高" />
+            </div>
+          </el-form-item>
+
+          <el-form-item label="发布时间">
+            <el-date-picker
+              v-model="filters.ordertime"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :shortcuts="dateShortcuts"
+            />
           </el-form-item>
 
           <el-form-item label="接单时间">
@@ -436,6 +480,20 @@ fetchTasks()
 
 .filter-form :deep(.el-form-item) {
   margin-bottom: 12px;
+}
+
+.money-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.money-range :deep(.el-input-number) {
+  width: 110px;
+}
+
+.range-sep {
+  color: var(--fg-3);
 }
 
 .filter-form :deep(.el-input__wrapper),

@@ -55,7 +55,7 @@ export interface TaskListRequest {
   hall_type?: string
   order?: 'asc' | 'desc'
   sort?: string
-  bountymoney?: string[]
+  bountymoney?: number[]
   completiontime?: string[]
   enddatatime?: string[]
   ordertime?: string[]
