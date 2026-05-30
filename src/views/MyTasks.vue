@@ -235,6 +235,16 @@ function getStatusPill(status: string): string {
   return statusPillMap[status] || 'pill-muted'
 }
 
+// 格式化备注（后端可能返回数组或字符串）
+function formatDescription(desc: any): string {
+  if (Array.isArray(desc)) {
+    return desc
+      .map((d) => (d && d.condition_title ? `${d.condition_title}：${d.condition}` : d))
+      .join('；')
+  }
+  return desc || ''
+}
+
 function getSummaries({ columns, data }: { columns: any[]; data: TaskOrder[] }) {
   const sums: string[] = []
   columns.forEach((column, index) => {
@@ -406,12 +416,23 @@ fetchTasks()
             </el-table-column>
           </el-table-column>
           <el-table-column prop="hallTypeTitle" label="任务类型" width="100" show-overflow-tooltip />
+          <el-table-column prop="ordertime" label="开始日期" width="170" />
           <el-table-column prop="performtime" label="接单时间" width="170" />
           <el-table-column prop="enddatatime" label="截止时间" width="170" />
+          <el-table-column prop="hall_duration" label="工期" width="90" align="center">
+            <template #default="{ row }">
+              {{ row.hall_duration ? row.hall_duration + ' 个工作日' : '-' }}
+            </template>
+          </el-table-column>
           <el-table-column prop="completiontime" label="完结时间" width="170" />
           <el-table-column label="逾期" width="120">
             <template #default="{ row }">
               <span class="pill" :class="getOverduePill(row)">{{ getOverdueText(row) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="备注" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ formatDescription(row.description) || '-' }}
             </template>
           </el-table-column>
           <el-table-column label="操作" width="90" fixed="right">
