@@ -225,6 +225,34 @@ function isImageFile(url: string): boolean {
   return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'].includes(ext)
 }
 
+// 获取文件类型
+function getFileType(url: string): string {
+  if (!url) return 'default'
+  const ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase()
+  if (['xlsx', 'xls', 'csv'].includes(ext)) return 'excel'
+  if (['ppt', 'pptx'].includes(ext)) return 'ppt'
+  if (ext === 'pdf') return 'pdf'
+  if (['doc', 'docx'].includes(ext)) return 'word'
+  if (ext === 'txt') return 'txt'
+  if (['zip', 'rar', '7z'].includes(ext)) return 'zip'
+  return 'default'
+}
+
+// 文件类型徽标（缩写 + 颜色）
+const DEFAULT_BADGE = { label: 'FILE', color: '#6b7280' }
+const fileBadgeMap: Record<string, { label: string; color: string }> = {
+  excel: { label: 'XLS', color: '#217346' },
+  ppt: { label: 'PPT', color: '#c43e1c' },
+  pdf: { label: 'PDF', color: '#d93025' },
+  word: { label: 'DOC', color: '#2b579a' },
+  txt: { label: 'TXT', color: '#5f6368' },
+  zip: { label: 'ZIP', color: '#c1843a' }
+}
+
+function getFileBadge(url: string) {
+  return fileBadgeMap[getFileType(url)] || DEFAULT_BADGE
+}
+
 // 提交接取任务（表单模式）
 async function submitTakeTask() {
   if (!currentTask.value) return
@@ -502,12 +530,21 @@ fetchTasks()
                   v-if="isImageFile(item.fileurl)"
                   :src="item.fileurl"
                   :preview-src-list="[item.fileurl]"
-                  fit="contain"
-                  style="width: 64px; height: 64px;"
+                  :preview-teleported="true"
+                  fit="cover"
+                  class="attachment-thumb"
                 />
-                <el-link v-else :href="item.fileurl" target="_blank" type="primary">
-                  {{ item.filename }}
-                </el-link>
+                <a
+                  v-else
+                  :href="item.fileurl"
+                  target="_blank"
+                  rel="noopener"
+                  class="attachment-thumb file-badge"
+                  :style="{ '--badge-color': getFileBadge(item.fileurl).color }"
+                >
+                  {{ getFileBadge(item.fileurl).label }}
+                </a>
+                <p class="attachment-name">{{ item.filename }}</p>
               </div>
             </div>
           </div>
@@ -849,7 +886,44 @@ fetchTasks()
 }
 
 .attachment-item {
+  width: 80px;
   text-align: center;
+}
+
+.attachment-thumb {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  display: block;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+
+.file-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #fff;
+  background: var(--badge-color);
+  border-color: transparent;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+
+.file-badge:hover {
+  opacity: .85;
+}
+
+.attachment-name {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--fg-2);
+  word-break: break-all;
 }
 
 @media screen and (max-width: 768px) {
@@ -868,6 +942,8 @@ fetchTasks()
 :deep(.el-descriptions__label) {
   color: var(--fg-3);
   font-weight: 500;
+  white-space: nowrap;
+  min-width: 88px;
 }
 
 :deep(.el-descriptions__content) {
