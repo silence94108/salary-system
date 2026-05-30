@@ -442,18 +442,18 @@ fetchTasks()
     <el-dialog
       v-model="detailVisible"
       title="任务详情"
-      :width="isMobile ? '95%' : '700px'"
+      :width="isMobile ? '95%' : 'min(900px, 92vw)'"
       :close-on-click-modal="false"
       @close="closeDetail"
     >
       <div v-loading="detailLoading" class="task-detail-content">
         <template v-if="currentTask">
           <!-- 基本信息 -->
-          <el-descriptions :column="isMobile ? 1 : 3" border>
+          <el-descriptions :column="isMobile ? 1 : 2" border>
             <el-descriptions-item label="发布公司" :span="isMobile ? 1 : 2">
               {{ currentTask.company || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="佣金">
+            <el-descriptions-item label="佣金" :span="isMobile ? 1 : 2">
               <template v-if="currentTask.moneytype === 2">
                 接取后分配（佣金总额：¥{{ currentTask.bountymoney || '0' }}）
               </template>
@@ -464,8 +464,8 @@ fetchTasks()
             </el-descriptions-item>
           </el-descriptions>
 
-          <el-descriptions :column="isMobile ? 1 : 3" border style="margin-top: -1px;">
-            <el-descriptions-item label="项目名称">
+          <el-descriptions :column="isMobile ? 1 : 2" border style="margin-top: -1px;">
+            <el-descriptions-item label="项目名称" :span="isMobile ? 1 : 2">
               {{ currentTask.name || '-' }}
             </el-descriptions-item>
             <el-descriptions-item label="发布人">
@@ -476,14 +476,14 @@ fetchTasks()
             </el-descriptions-item>
           </el-descriptions>
 
-          <el-descriptions :column="isMobile ? 1 : 3" border style="margin-top: -1px;">
+          <el-descriptions :column="isMobile ? 1 : 2" border style="margin-top: -1px;">
             <el-descriptions-item label="接单方式">
               {{ currentTask.tasktype ? (currentTask.tasktype == 1 ? '先抢先得' : '需要审批') : '-' }}
             </el-descriptions-item>
             <el-descriptions-item label="需求人数">
               {{ currentTask.num || '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="客户名称" v-if="currentTask.customername">
+            <el-descriptions-item label="客户名称" :span="isMobile ? 1 : 2" v-if="currentTask.customername">
               {{ currentTask.customername }}
             </el-descriptions-item>
           </el-descriptions>
