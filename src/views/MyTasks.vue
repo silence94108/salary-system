@@ -11,6 +11,7 @@ const tasks = ref<TaskOrder[]>([])
 const loading = ref(false)
 const total = ref(0)
 const isMobile = ref(false)
+const viewMode = ref<'table' | 'card'>('table')
 
 // 详情弹窗
 const detailVisible = ref(false)
@@ -381,10 +382,16 @@ fetchTasks()
     <section class="card table-card">
       <div class="card-head">
         <div class="card-title">任务列表</div>
-        <div class="card-meta">共 {{ total }} 条记录</div>
+        <div class="card-head-right">
+          <span class="card-meta">共 {{ total }} 条记录</span>
+          <el-radio-group v-model="viewMode" size="small">
+            <el-radio-button value="table">表格</el-radio-button>
+            <el-radio-button value="card">卡片</el-radio-button>
+          </el-radio-group>
+        </div>
       </div>
 
-      <div class="table-wrapper">
+      <div class="table-wrapper" v-if="viewMode === 'table'">
         <el-table
           :data="tasks"
           v-loading="loading"
@@ -448,6 +455,44 @@ fetchTasks()
             />
           </template>
         </el-table>
+      </div>
+      <div class="card-view" v-else v-loading="loading">
+        <EmptyState
+          v-if="tasks.length === 0 && !loading"
+          type="search"
+          title="暂无任务数据"
+          description="调整筛选条件或等待新任务分配"
+        />
+        <div v-else class="my-task-grid">
+          <div v-for="task in tasks" :key="task.id" class="my-task-card">
+            <div class="mtc-head">
+              <span class="mtc-name">{{ task.hall_customer || '-' }}</span>
+              <span class="pill" :class="getStatusPill(task.statustxt)">{{ task.statustxt }}</span>
+            </div>
+            <div class="mtc-body">
+              <div class="mtc-row"><span class="k">类型</span><span class="v">{{ task.hallTypeTitle || '-' }}</span></div>
+              <div class="mtc-row"><span class="k">接单</span><span class="v">{{ task.performtime || '-' }}</span></div>
+              <div class="mtc-row"><span class="k">截止</span><span class="v">{{ task.enddatatime || '-' }}</span></div>
+              <div class="mtc-row"><span class="k">完结</span><span class="v">{{ task.completiontime || '-' }}</span></div>
+              <div class="mtc-row">
+                <span class="k">逾期</span>
+                <span class="pill" :class="getOverduePill(task)">{{ getOverdueText(task) }}</span>
+              </div>
+              <div class="mtc-row" v-if="formatDescription(task.description)">
+                <span class="k">备注</span>
+                <span class="v">{{ formatDescription(task.description) }}</span>
+              </div>
+            </div>
+            <div class="mtc-money">
+              <span>总佣金 <b class="num primary">¥{{ parseFloat(task.bountymoney || '0').toFixed(2) }}</b></span>
+              <span>基础 <b class="num">¥{{ parseFloat(task.base_bountymoney || task.bountymoney || '0').toFixed(2) }}</b></span>
+              <span>加价 <b class="num">¥{{ parseFloat(task.add_bountymoney || '0').toFixed(2) }}</b></span>
+            </div>
+            <div class="mtc-foot">
+              <el-button link type="primary" @click="handleDetail(task)">详情</el-button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 分页 -->
@@ -541,6 +586,111 @@ fetchTasks()
   padding: 16px 20px;
   border-top: 1px solid var(--border-soft);
   flex-shrink: 0;
+}
+
+.card-head-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.card-view {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.my-task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.my-task-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  padding: 16px;
+  transition: box-shadow .15s, border-color .15s;
+}
+
+.my-task-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.mtc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mtc-name {
+  font-weight: 600;
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.mtc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.mtc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mtc-row .k {
+  color: var(--fg-3);
+  width: 42px;
+  flex-shrink: 0;
+}
+
+.mtc-row .v {
+  color: var(--fg-2);
+  word-break: break-all;
+}
+
+.mtc-money {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+
+.mtc-money .num {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mtc-money .num.primary {
+  color: var(--accent-fg);
+}
+
+.mtc-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
 }
 
 /* el-table 视觉对齐 */
