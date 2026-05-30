@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
-import { getMyTaskList } from '@/api/project'
+import { getMyTaskList, getProjectDetail } from '@/api/project'
 import type { TaskOrder } from '@/types'
 import EmptyState from '@/components/EmptyState.vue'
+import TaskDetailDialog from '@/components/TaskDetailDialog.vue'
 
 // 任务列表
 const tasks = ref<TaskOrder[]>([])
 const loading = ref(false)
 const total = ref(0)
 const isMobile = ref(false)
+
+// 详情弹窗
+const detailVisible = ref(false)
+const detailLoading = ref(false)
+const currentTask = ref<any>(null)
 
 function checkMobile() {
   isMobile.value = window.innerWidth <= 768
@@ -162,6 +168,21 @@ function handleSizeChange(size: number) {
   pagination.limit = size
   pagination.page = 1
   fetchTasks()
+}
+
+// 查看任务详情
+async function handleDetail(task: TaskOrder) {
+  detailLoading.value = true
+  detailVisible.value = true
+  try {
+    const res = await getProjectDetail({ id: task.id })
+    currentTask.value = res.code === 1 ? (res.data || task) : task
+  } catch (error) {
+    console.error('获取任务详情失败:', error)
+    currentTask.value = task
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 // 逾期 pill
@@ -349,6 +370,11 @@ fetchTasks()
               <span class="pill" :class="getOverduePill(row)">{{ getOverdueText(row) }}</span>
             </template>
           </el-table-column>
+          <el-table-column label="操作" width="90" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="handleDetail(row)">详情</el-button>
+            </template>
+          </el-table-column>
           <template #empty>
             <EmptyState
               type="search"
@@ -373,6 +399,12 @@ fetchTasks()
         />
       </div>
     </section>
+
+    <TaskDetailDialog
+      v-model:visible="detailVisible"
+      :task="currentTask"
+      :loading="detailLoading"
+    />
   </div>
 </template>
 
