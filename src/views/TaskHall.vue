@@ -2,19 +2,18 @@
 import { ref, reactive } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getTaskHallList, checkTaskStatus, takeTask, getProjectDetail } from '@/api/project'
+import { getTaskHallList, checkTaskStatus, takeTask } from '@/api/project'
 import type { TaskOrder } from '@/types'
-import TaskDetailDialog from '@/components/TaskDetailDialog.vue'
+import TaskDetailDrawer from '@/components/TaskDetailDrawer.vue'
 
 // 任务列表
 const tasks = ref<TaskOrder[]>([])
 const loading = ref(false)
 const total = ref(0)
 
-// 详情弹窗
+// 详情抽屉
 const detailVisible = ref(false)
-const detailLoading = ref(false)
-const currentTask = ref<any>(null)
+const detailTaskId = ref<number | string>('')
 const detailStartWithForm = ref(false) // 打开详情时是否直接进入接取表单
 
 // 筛选条件
@@ -111,7 +110,7 @@ async function handleReceive(task: TaskOrder) {
         return
       }
       // 打开详情弹窗并显示表单
-      await openDetailWithForm(task)
+      openDetailWithForm(task)
     } catch (error) {
       console.error('检查任务状态失败:', error)
       ElMessage.error('检查任务状态失败，请稍后再试')
@@ -153,43 +152,17 @@ async function handleReceive(task: TaskOrder) {
 }
 
 // 打开详情弹窗（带表单，用于接取）
-async function openDetailWithForm(task: TaskOrder) {
+function openDetailWithForm(task: TaskOrder) {
   detailStartWithForm.value = true
-  detailLoading.value = true
+  detailTaskId.value = task.id
   detailVisible.value = true
-  try {
-    const res = await getProjectDetail({ id: task.id })
-    if (res.code === 1) {
-      currentTask.value = res.data || task
-    } else {
-      currentTask.value = task
-    }
-  } catch (error) {
-    console.error('获取任务详情失败:', error)
-    currentTask.value = task
-  } finally {
-    detailLoading.value = false
-  }
 }
 
 // 查看详情（仅查看，不带表单）
-async function handleDetail(task: TaskOrder) {
+function handleDetail(task: TaskOrder) {
   detailStartWithForm.value = false
-  detailLoading.value = true
+  detailTaskId.value = task.id
   detailVisible.value = true
-  try {
-    const res = await getProjectDetail({ id: task.id })
-    if (res.code === 1) {
-      currentTask.value = res.data || task
-    } else {
-      currentTask.value = task
-    }
-  } catch (error) {
-    console.error('获取任务详情失败:', error)
-    currentTask.value = task
-  } finally {
-    detailLoading.value = false
-  }
 }
 
 // 接取成功后从列表移除并刷新
@@ -317,11 +290,11 @@ fetchTasks()
       </div>
     </div>
 
-    <!-- 任务详情弹窗 -->
-    <TaskDetailDialog
+    <!-- 任务详情抽屉 -->
+    <TaskDetailDrawer
       v-model:visible="detailVisible"
-      :task="currentTask"
-      :loading="detailLoading"
+      :task-id="detailTaskId"
+      list-type="hall"
       allow-take
       :start-with-form="detailStartWithForm"
       @taken="onTaken"

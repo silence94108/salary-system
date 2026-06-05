@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
-import { getMyTaskList, getProjectDetail } from '@/api/project'
+import { getMyTaskList } from '@/api/project'
 import type { TaskOrder } from '@/types'
 import EmptyState from '@/components/EmptyState.vue'
-import TaskDetailDialog from '@/components/TaskDetailDialog.vue'
+import TaskDetailDrawer from '@/components/TaskDetailDrawer.vue'
 
 // 任务列表
 const tasks = ref<TaskOrder[]>([])
@@ -13,10 +13,9 @@ const total = ref(0)
 const isMobile = ref(false)
 const viewMode = ref<'table' | 'card'>('table')
 
-// 详情弹窗
+// 详情抽屉
 const detailVisible = ref(false)
-const detailLoading = ref(false)
-const currentTask = ref<any>(null)
+const detailTaskId = ref<number | string>('')
 
 function checkMobile() {
   isMobile.value = window.innerWidth <= 768
@@ -190,18 +189,9 @@ function handleSizeChange(size: number) {
 }
 
 // 查看任务详情
-async function handleDetail(task: TaskOrder) {
-  detailLoading.value = true
+function handleDetail(task: TaskOrder) {
+  detailTaskId.value = task.id
   detailVisible.value = true
-  try {
-    const res = await getProjectDetail({ id: task.id })
-    currentTask.value = res.code === 1 ? (res.data || task) : task
-  } catch (error) {
-    console.error('获取任务详情失败:', error)
-    currentTask.value = task
-  } finally {
-    detailLoading.value = false
-  }
 }
 
 // 逾期 pill
@@ -510,10 +500,10 @@ fetchTasks()
       </div>
     </section>
 
-    <TaskDetailDialog
+    <TaskDetailDrawer
       v-model:visible="detailVisible"
-      :task="currentTask"
-      :loading="detailLoading"
+      :task-id="detailTaskId"
+      list-type="myTask"
     />
   </div>
 </template>
