@@ -133,14 +133,14 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* 主按钮——保留流光 */
-.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link) {
+/* 主按钮——保留流光（plain 走 EP 默认浅底，避免紫底紫字） */
+.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):not(.is-plain) {
   background: var(--gradient-warm);
   border: none;
   box-shadow: 0 1px 1px rgba(0,0,0,.06), 0 2px 5px rgba(99, 91, 255, 0.3);
 }
 
-.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link)::before {
+.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):not(.is-plain)::before {
   content: '';
   position: absolute;
   top: 0;
@@ -157,11 +157,11 @@
   transition: transform var(--duration-slow) var(--easing-standard);
 }
 
-.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):hover::before {
+.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):not(.is-plain):hover::before {
   transform: translateX(100%);
 }
 
-.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):hover {
+.el-button--primary:not(.is-disabled):not(.is-text):not(.is-link):not(.is-plain):hover {
   box-shadow: 0 4px 12px -2px rgba(99, 91, 255, 0.4);
 }
 
@@ -242,12 +242,21 @@
 /* ============================================================
  * Dialog & Drawer 增强
  * ============================================================ */
-.el-dialog,
-.el-drawer {
+.el-dialog {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-2xl);
 }
+
+.el-drawer {
+  overflow: hidden;
+  box-shadow: var(--shadow-2xl);
+}
+/* 抽屉按滑出方向贴边：贴住屏幕的边直角，开口侧圆角 */
+.el-drawer.rtl { border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+.el-drawer.ltr { border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
+.el-drawer.btt { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.el-drawer.ttb { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 
 .el-dialog__header {
   padding: var(--space-5) var(--space-6);
